@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+BASE_URL = os.getenv("BASE_URL", "https://palset.pythonanywhere.com")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-in-production")
 
 #DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
