@@ -33,6 +33,12 @@
           <dt>Distance</dt>
           <dd>{{ booking.distance_km }} km</dd>
         </div>
+        {% if eta_minutes %}
+        <div>
+          <dt>Estimated Time</dt>
+          <dd>{{ eta_minutes }} minutes</dd>
+        </div>
+        {% endif %}
         <div>
           <dt>Total</dt>
           <dd>$ {{ booking.total_amount }}</dd>
@@ -41,6 +47,9 @@
 
       <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
         <a class="btn secondary" href="tel:{{ TAXI_OWNER_PHONE }}">Call driver</a>
+        {% if whatsapp_message %}
+        <a class="btn" href="{{ whatsapp_message }}" target="_blank" rel="noopener">WhatsApp</a>
+        {% endif %}
         <a class="btn" href="/rides">Back to home.</a>
       </div>
     </section>

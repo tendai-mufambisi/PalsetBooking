@@ -201,10 +201,60 @@ class MultiStepBookingWizardView(View):
                 except RideBooking.DoesNotExist:
                     pass
 
+            # Calculate estimated travelling time
+            eta_minutes = None
+            if booking and booking.distance_km:
+                try:
+                    avg_speed = float(getattr(settings, 'AVERAGE_SPEED_KMH', 40.0))
+                    eta_minutes = int(round((float(booking.distance_km) / avg_speed) * 60))
+                except Exception:
+                    pass
+
+            # Generate WhatsApp message
+            whatsapp_message = None
+            if booking:
+                try:
+                    from urllib.parse import quote
+                    payment_status = "Pending"
+                    if booking.payment_option == "POA":
+                        payment_status = "Pay on Arrival (Cash)"
+                    elif booking.payment_option == "PAYNOW":
+                        payment_status = "Pay Online (Paynow)"
+                    
+                    msg = f"""Booking ID: {booking.id}
+
+Pickup: {booking.pickup_address}
+Dropoff: {booking.dropoff_address}
+Distance: {booking.distance_km} km"""
+                    
+                    if eta_minutes:
+                        msg += f"\nEstimated Time: {eta_minutes} minutes"
+                    
+                    msg += f"""
+
+Total: ${booking.total_amount}
+Payment: {payment_status}
+
+Passengers: {booking.num_adults} adult(s)"""
+                    
+                    if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
+                        msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
+                    
+                    if booking.luggage_count > 0:
+                        msg += f"\nLuggage: {booking.luggage_count} bag(s)"
+                    
+                    # Remove + from phone number for WhatsApp API
+                    phone = settings.TAXI_OWNER_PHONE.lstrip('+')
+                    whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
+                except Exception as e:
+                    logger.exception('Error generating WhatsApp message: %s', e)
+
             context['step1_data'] = wizard_data.get('step1', {})
             context['step2_data'] = wizard_data.get('step2', {})
             context['step3_data'] = wizard_data.get('step3', {})
             context['booking'] = booking
+            context['eta_minutes'] = eta_minutes
+            context['whatsapp_message'] = whatsapp_message
             return render(request, 'rides/booking_wizard/step5.html', context)
 
         return redirect('rides:booking_wizard_start')
@@ -579,6 +629,56 @@ class BookingSuccessView(TemplateView):
         booking = get_object_or_404(RideBooking, pk=self.kwargs.get('pk'))
         ctx['booking'] = booking
         ctx['TAXI_OWNER_PHONE'] = settings.TAXI_OWNER_PHONE
+        
+        # Calculate estimated travelling time
+        eta_minutes = None
+        if booking.distance_km:
+            try:
+                avg_speed = float(getattr(settings, 'AVERAGE_SPEED_KMH', 40.0))
+                eta_minutes = int(round((float(booking.distance_km) / avg_speed) * 60))
+            except Exception:
+                pass
+        ctx['eta_minutes'] = eta_minutes
+        
+        # Generate WhatsApp message
+        whatsapp_message = None
+        try:
+            from urllib.parse import quote
+            payment_status = "Pending"
+            if booking.payment_option == "POA":
+                payment_status = "Pay on Arrival (Cash)"
+            elif booking.payment_option == "PAYNOW":
+                payment_status = "Pay Online (Paynow)"
+            
+            msg = f"""Booking ID: {booking.id}
+
+Pickup: {booking.pickup_address}
+Dropoff: {booking.dropoff_address}
+Distance: {booking.distance_km} km"""
+            
+            if eta_minutes:
+                msg += f"\nEstimated Time: {eta_minutes} minutes"
+            
+            msg += f"""
+
+Total: ${booking.total_amount}
+Payment: {payment_status}
+
+Passengers: {booking.num_adults} adult(s)"""
+            
+            if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
+                msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
+            
+            if booking.luggage_count > 0:
+                msg += f"\nLuggage: {booking.luggage_count} bag(s)"
+            
+            # Remove + from phone number for WhatsApp API
+            phone = settings.TAXI_OWNER_PHONE.lstrip('+')
+            whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
+        except Exception as e:
+            logger.exception('Error generating WhatsApp message: %s', e)
+        
+        ctx['whatsapp_message'] = whatsapp_message
         return ctx
 
 
@@ -886,7 +986,7 @@ class PaynowReturnView(APIView):
                         if booking.pickup_lat and booking.pickup_lng and booking.dropoff_lat and booking.dropoff_lng:
                             maps_url = f"https://www.google.com/maps/dir/?api=1&origin={booking.pickup_lat},{booking.pickup_lng}&destination={booking.dropoff_lat},{booking.dropoff_lng}&travelmode=driving"
                         else:
-                            from urllib.parse import urlencode
+                            from urllib.parse import urlencode, quote
                             params = {
                                 'api': 1,
                                 'origin': booking.pickup_address,
@@ -895,6 +995,38 @@ class PaynowReturnView(APIView):
                             }
                             maps_url = "https://www.google.com/maps/dir/?" + urlencode(params)
 
+                        # Generate WhatsApp message
+                        whatsapp_message = None
+                        try:
+                            payment_status = "PAID" if payment.status == Payment.STATUS_PAID else "PENDING"
+                            msg = f"""Booking ID: {booking.id}
+
+Pickup: {booking.pickup_address}
+Dropoff: {booking.dropoff_address}
+Distance: {booking.distance_km} km"""
+                            
+                            if eta_minutes:
+                                msg += f"\nEstimated Time: {eta_minutes} minutes"
+                            
+                            msg += f"""
+
+Total: ${booking.total_amount}
+Payment Status: {payment_status}
+
+Passengers: {booking.num_adults} adult(s)"""
+                            
+                            if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
+                                msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
+                            
+                            if booking.luggage_count > 0:
+                                msg += f"\nLuggage: {booking.luggage_count} bag(s)"
+                            
+                            # Remove + from phone number for WhatsApp API
+                            phone = settings.TAXI_OWNER_PHONE.lstrip('+')
+                            whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
+                        except Exception as e:
+                            logger.exception('Error generating WhatsApp message for paynow_return: %s', e)
+
                         poll_url = reverse('rides:paynow_poll', args=[payment.pk])
                         logger.info('Rendering return page with payment. poll_url: %s', poll_url)
                         return render(request, 'rides/paynow_return.html', {
@@ -902,6 +1034,7 @@ class PaynowReturnView(APIView):
                             'booking': booking,
                             'eta_minutes': eta_minutes,
                             'maps_url': maps_url,
+                            'whatsapp_message': whatsapp_message,
                             'poll_url': poll_url,
                             'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
                         })

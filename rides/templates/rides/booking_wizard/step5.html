@@ -60,6 +60,16 @@
                 <strong>{{ booking.distance_km|floatformat:1 }} km</strong>
             </div>
 
+            <!-- Estimated Travelling Time -->
+            {% if eta_minutes %}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span style="display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-clock"></i> Estimated Time:
+                </span>
+                <strong style="color: #ff9800;">{{ eta_minutes }} minutes</strong>
+            </div>
+            {% endif %}
+
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Estimated Fare:</span>
                 <strong style="color: #007bff; font-size: 18px;">${{ booking.total_amount|floatformat:2 }}</strong>
@@ -135,11 +145,18 @@
     </div>
 
     <!-- Driver Contact -->
-    <div style="background: white; border: 2px solid #007bff; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
-        <p style="font-size: 13px; color: #666; margin-bottom: 8px;">Need help or update your booking?</p>
-        <a href="tel:{{ TAXI_OWNER_PHONE }}" style="font-size: 16px; font-weight: 700; color: #007bff; text-decoration: none;">
-            <i class="bi bi-telephone"></i> {{ TAXI_OWNER_PHONE }}
-        </a>
+    <div style="background: white; border: 2px solid #007bff; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+        <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Need help or update your booking?</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="tel:{{ TAXI_OWNER_PHONE }}" style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 700; color: white; background: #007bff; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="bi bi-telephone"></i> Call Driver
+            </a>
+            {% if whatsapp_message %}
+            <a href="{{ whatsapp_message }}" target="_blank" rel="noopener" style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 700; color: white; background: #25D366; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="bi bi-whatsapp"></i> Send WhatsApp
+            </a>
+            {% endif %}
+        </div>
     </div>
 
 {% else %}
@@ -157,12 +174,8 @@
     <button type="button" class="btn btn-primary" onclick="window.location.href='{% url "rides:booking_wizard_start" %}'" style="flex: 1;">
         <i class="bi bi-plus-lg"></i> New Booking
     </button>
-</div>
-
-<!-- Print/Share Options -->
-<div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-    <button type="button" onclick="window.print()" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; font-size: 13px;">
-        <i class="bi bi-printer"></i> Print Confirmation
+    <button type="button" class="btn btn-outline-primary" onclick="window.print()" style="flex: 1;">
+        <i class="bi bi-printer"></i> Print
     </button>
 </div>
 

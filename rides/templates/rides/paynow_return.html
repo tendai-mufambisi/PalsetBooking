@@ -63,7 +63,17 @@
         </dl>
 
         {% if maps_url %}<p class="no-print"><a href="{{ maps_url }}" target="_blank" rel="noopener">Open directions in Google Maps</a></p>{% endif %}
-        <p><strong>To call the driver:</strong> <a href="tel:{{ TAXI_OWNER_PHONE }}">{{ TAXI_OWNER_PHONE }}</a></p>
+        <p style="margin-bottom: 12px;"><strong>Need to contact the driver?</strong></p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+          <a href="tel:{{ TAXI_OWNER_PHONE }}" style="flex: 1; min-width: 150px; font-size: 13px; font-weight: 700; color: white; background: #007bff; text-decoration: none; padding: 10px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i class="bi bi-telephone"></i> Call
+          </a>
+          {% if whatsapp_message %}
+          <a href="{{ whatsapp_message }}" target="_blank" rel="noopener" style="flex: 1; min-width: 150px; font-size: 13px; font-weight: 700; color: white; background: #25D366; text-decoration: none; padding: 10px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <i class="bi bi-whatsapp"></i> WhatsApp
+          </a>
+          {% endif %}
+        </div>
 
         <div id="payment-status">
           {% if payment.status == payment.STATUS_PAID %}
