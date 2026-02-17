@@ -6,7 +6,7 @@ Django==6.0
 djangorestframework==3.16.1
 idna==3.11
 iniconfig==2.3.0
-mysqlclient==2.2.7
+PyMySQL==1.1.2
 packaging==25.0
 paynow==1.0.8
 pluggy==1.6.0

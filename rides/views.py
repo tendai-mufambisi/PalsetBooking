@@ -12,7 +12,7 @@ from .models import RideBooking, Payment
 from .services.pricing import PricingService
 from .services.paynow import PaynowService
 from .services.email_service import EmailService
-from .forms import BookingForm
+from .forms import BookingForm, BookingStep1Form, BookingStep2Form, BookingStep3Form, BookingStep4Form, BookingStep5Form
 
 logger = logging.getLogger(__name__)
 
@@ -615,3 +615,150 @@ class PriceEstimateView(APIView):
         )
 
         return Response(breakdown)
+
+
+# Wizard-based booking views (for new step-by-step booking_wizard.html)
+
+class BookingWizardView(TemplateView):
+    """Multi-step wizard view handling all 5 steps of the booking flow"""
+    template_name = 'rides/booking_wizard.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        # Load current wizard state from session
+        wizard_state = self.request.session.get('booking_wizard_state', {})
+        ctx['GOOGLE_MAPS_CLIENT_KEY'] = settings.GOOGLE_MAPS_CLIENT_KEY
+        ctx['TAXI_OWNER_PHONE'] = settings.TAXI_OWNER_PHONE
+        ctx['wizard_state'] = wizard_state
+        ctx['current_step'] = wizard_state.get('step', 1)
+        return ctx
+
+    def get(self, request, *args, **kwargs):
+        """Render the wizard template"""
+        # Initialize session state if not exists
+        if 'booking_wizard_state' not in request.session:
+            request.session['booking_wizard_state'] = {
+                'step': 1,
+                'data': {
+                    'pickup_address': '',
+                    'pickup_lat': None,
+                    'pickup_lng': None,
+                    'dropoff_address': '',
+                    'dropoff_lat': None,
+                    'dropoff_lng': None,
+                    'distance_km': None,
+                    'num_adults': 1,
+                    'num_kids_seated': 0,
+                    'num_kids_carried': 0,
+                    'luggage_count': 0,
+                    'phone': '',
+                    'email': '',
+                    'special_instructions': '',
+                    'payment_option': None,
+                    'price_breakdown': None,
+                    'total_amount': None,
+                },
+                'visited_steps': [1],
+            }
+            request.session.modified = True
+
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Handle form submission at each step"""
+        import json
+        from .forms import (
+            BookingStep1Form, BookingStep2Form, BookingStep3Form,
+            BookingStep4Form, BookingStep5Form
+        )
+
+        # Get current step from POST data
+        current_step = int(request.POST.get('step', 1))
+
+        # Map step number to form class
+        step_forms = {
+            1: BookingStep1Form,
+            2: BookingStep2Form,
+            3: BookingStep3Form,
+            4: BookingStep4Form,
+            5: BookingStep5Form,
+        }
+
+        form_class = step_forms.get(current_step, BookingStep1Form)
+        form = form_class(request.POST)
+
+        if form.is_valid():
+            # Update session with validated data
+            wizard_state = request.session.get('booking_wizard_state', {})
+            wizard_state['data'].update(form.cleaned_data)
+            wizard_state['step'] = min(current_step + 1, 5)
+            visited = wizard_state.get('visited_steps', [])
+            if current_step not in visited:
+                visited.append(current_step)
+            wizard_state['visited_steps'] = visited
+
+            request.session['booking_wizard_state'] = wizard_state
+            request.session.modified = True
+
+            return Response({
+                'success': True,
+                'next_step': wizard_state['step'],
+                'data': wizard_state['data']
+            })
+        else:
+            return Response({
+                'success': False,
+                'errors': form.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DistanceCalculateView(APIView):
+    """Calculate distance between pickup and dropoff coordinates"""
+
+    def post(self, request):
+        """
+        POST /api/booking/distance/
+        Request body: { pickup_lat, pickup_lng, dropoff_lat, dropoff_lng }
+        Response: { distance_km: <float> }
+        """
+        from .services.distance import DistanceService
+
+        pickup_lat = request.data.get('pickup_lat')
+        pickup_lng = request.data.get('pickup_lng')
+        dropoff_lat = request.data.get('dropoff_lat')
+        dropoff_lng = request.data.get('dropoff_lng')
+
+        if not all([pickup_lat, pickup_lng, dropoff_lat, dropoff_lng]):
+            return Response(
+                {'detail': 'Missing coordinates'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            distance = DistanceService.get_distance_km(
+                (float(pickup_lat), float(pickup_lng)),
+                (float(dropoff_lat), float(dropoff_lng))
+            )
+            return Response({'distance_km': distance})
+        except Exception as exc:
+            logger.exception('Distance calculation failed')
+            return Response(
+                {'detail': f'Unable to calculate distance: {exc}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class WizardStateView(APIView):
+    """Get or update the current wizard session state"""
+
+    def get(self, request):
+        """GET /api/booking/wizard-state/"""
+        wizard_state = request.session.get('booking_wizard_state', {})
+        return Response(wizard_state)
+
+    def post(self, request):
+        """POST /api/booking/wizard-state/ - Save state to session"""
+        wizard_state = request.data.get('state', {})
+        request.session['booking_wizard_state'] = wizard_state
+        request.session.modified = True
+        return Response({'success': True})

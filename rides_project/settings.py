@@ -132,16 +132,18 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "enquiries@easytransit.co.z
 # New split keys: use a client key for browser (Maps JS + Places) and a server key for
 # server-to-server calls (Distance Matrix). For backwards compatibility the old
 # GOOGLE_MAPS_API_KEY env var is still accepted if either new var is not set.
-GOOGLE_MAPS_CLIENT_KEY = os.getenv("GOOGLE_MAPS_CLIENT_KEY", os.getenv("GOOGLE_MAPS_API_KEY", ""))
-GOOGLE_MAPS_SERVER_KEY = os.getenv("GOOGLE_MAPS_SERVER_KEY", os.getenv("GOOGLE_MAPS_API_KEY", ""))
+GOOGLE_MAPS_CLIENT_KEY ='AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw'
+GOOGLE_MAPS_SERVER_KEY ='AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw'
+
 # Backwards-compatible single var retained for older deployments
-GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", GOOGLE_MAPS_CLIENT_KEY)
+#GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", GOOGLE_MAPS_CLIENT_KEY)
+GOOGLE_MAPS_API_KEY = 'AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw'
+
 # Cache timeout for distance results (seconds)
 GOOGLE_DISTANCE_CACHE_TIMEOUT = int(os.getenv("GOOGLE_DISTANCE_CACHE_TIMEOUT", str(6 * 3600)))
 
 PAYNOW_INTEGRATION_ID='22865'
 PAYNOW_INTEGRATION_KEY='1aa3dd1c-5b72-4205-a3bc-f7a54906f3e5'
-
 
 PAYNOW_RETURN_URL = os.getenv("PAYNOW_RETURN_URL", f"{BASE_URL}/rides/paynow/return/")
 PAYNOW_RESULT_URL = os.getenv("PAYNOW_RESULT_URL", f"{BASE_URL}/rides/paynow/result/")
@@ -168,7 +170,23 @@ PRICING = {
     "LUGGAGE_FEE": 5.0,
 }
 
+
 # Use JSONField default for Django < 3.1 alternative
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# Booking Wizard Configuration
+BOOKING_WIZARD_SESSION_TIMEOUT = int(os.getenv("BOOKING_WIZARD_SESSION_TIMEOUT", 3600))  # 1 hour
+SESSION_COOKIE_AGE = BOOKING_WIZARD_SESSION_TIMEOUT
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# Geolocation & Maps
+ENABLE_GEOLOCATION = True
+AVERAGE_SPEED_KMH = float(os.getenv("AVERAGE_SPEED_KMH", 40.0))  # For ETA calculation
+
+# Wizard UI Configuration
+WIZARD_MIN_DISTANCE_KM = float(os.getenv("WIZARD_MIN_DISTANCE_KM", 0.5))
+WIZARD_MAX_PASSENGERS = int(os.getenv("WIZARD_MAX_PASSENGERS", 20))
+SPECIAL_INSTRUCTIONS_MAX_LENGTH = 300
+
 
 
