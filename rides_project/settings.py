@@ -132,10 +132,12 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "enquiries@easytransit.co.z
 # New split keys: use a client key for browser (Maps JS + Places) and a server key for
 # server-to-server calls (Distance Matrix). For backwards compatibility the old
 # GOOGLE_MAPS_API_KEY env var is still accepted if either new var is not set.
-GOOGLE_MAPS_CLIENT_KEY = os.getenv("GOOGLE_MAPS_CLIENT_KEY", os.getenv("GOOGLE_MAPS_API_KEY", ""))
-GOOGLE_MAPS_SERVER_KEY = os.getenv("GOOGLE_MAPS_SERVER_KEY", os.getenv("GOOGLE_MAPS_API_KEY", ""))
+GOOGLE_MAPS_CLIENT_KEY = "AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw"
+#GOOGLE_MAPS_SERVER_KEY = os.getenv("GOOGLE_MAPS_SERVER_KEY", os.getenv("GOOGLE_MAPS_API_KEY", ""))
 # Backwards-compatible single var retained for older deployments
-GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", GOOGLE_MAPS_CLIENT_KEY)
+#GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", GOOGLE_MAPS_CLIENT_KEY)
+GOOGLE_MAPS_API_KEY = "AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw"
+
 # Cache timeout for distance results (seconds)
 GOOGLE_DISTANCE_CACHE_TIMEOUT = int(os.getenv("GOOGLE_DISTANCE_CACHE_TIMEOUT", str(6 * 3600)))
 
@@ -161,14 +163,59 @@ PRICING = {
         {"min": 21, "max": 25, "price": 35.0},
         {"min": 26, "max": 35, "price": 40.0},
     ],
-    # For distance above 35 km, charge $40 + 1.30*(distance-35)
-    "ABOVE_35_PER_KM": 1.30,
-    "EXTRA_ADULT_FEE": 10.0,
-    "KID_SEATED_FACTOR": 0.5,
-    "LUGGAGE_FEE": 5.0,
+    # For distance above 35 km, charge $40 + 1.0*(distance-35)
+    "ABOVE_35_PER_KM": 1.0,
+    "BASE_PASSENGERS": 3,  # Bracket price covers up to 3 passengers
+    "EXTRA_ADULT_FEE": 10.0,  # Each additional passenger pays this
+    "KID_SEATED_FACTOR": 0.5,  # Kids (7-13 yrs) pay 50% of bracket price
+    "FREE_LUGGAGE_ITEMS": 5,  # First 5 bags are free
+    "LUGGAGE_FEE": 5.0,  # Additional bags cost $5 each
 }
 
 # Use JSONField default for Django < 3.1 alternative
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+# Logging Configuration for Debugging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'rides': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'rides.services': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'rides.services.paynow': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 

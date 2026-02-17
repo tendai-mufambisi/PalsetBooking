@@ -38,6 +38,7 @@ class RideBooking(models.Model):
 
     phone = models.CharField(max_length=32)
     email = models.EmailField()
+    extra_instructions = models.TextField(max_length=500, blank=True, null=True, default="")
 
     payment_option = models.CharField(max_length=16, choices=[(PAYMENT_ON_ARRIVAL, 'Pay on Arrival'), (PAYMENT_PAYNOW, 'Pay Online (Paynow)')])
 

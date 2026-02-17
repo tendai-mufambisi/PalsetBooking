@@ -1,0 +1,162 @@
+{% extends "rides/booking_wizard/base_wizard.html" %}
+
+{% block title %}Step 2: Passengers - Book a Ride{% endblock %}
+
+{% block content %}
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Who's traveling?</h2>
+
+<form method="POST" id="step2_form">
+    {% csrf_token %}
+
+    <input type="hidden" id="num_adults" name="num_adults" value="1">
+    <input type="hidden" id="num_kids_seated" name="num_kids_seated" value="0">
+    <input type="hidden" id="num_kids_carried" name="num_kids_carried" value="0">
+    <input type="hidden" id="luggage_count" name="luggage_count" value="0">
+
+    <!-- Adults -->
+    <div class="form-group">
+        <label class="form-label"><i class="bi bi-person"></i> Adults</label>
+        <div class="field-counter">
+            <button type="button" class="btn-decrement" data-field="num_adults">−</button>
+            <input type="text" id="display_num_adults" readonly value="1">
+            <button type="button" class="btn-increment" data-field="num_adults">+</button>
+        </div>
+        <small class="form-text">At least 1 adult required</small>
+    </div>
+
+    <!-- Optional Details Toggle -->
+    <div class="form-group">
+        <button type="button" class="btn btn-secondary" id="toggle_children" style="width: 100%; margin-bottom: 20px;">
+            <i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)
+        </button>
+    </div>
+
+    <!-- Children & Luggage (Initially Hidden) -->
+    <div id="optional_details" style="display: none;">
+        <!-- Kids Seated -->
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-chair"></i> Kids (Seated)</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_kids_seated">−</button>
+                <input type="text" id="display_num_kids_seated" readonly value="0">
+                <button type="button" class="btn-increment" data-field="num_kids_seated">+</button>
+            </div>
+            <small class="form-text">Children with seat requirement</small>
+        </div>
+
+        <!-- Kids Carried -->
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-backpack"></i> Kids (Carried)</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_kids_carried">−</button>
+                <input type="text" id="display_num_kids_carried" readonly value="0">
+                <button type="button" class="btn-increment" data-field="num_kids_carried">+</button>
+            </div>
+            <small class="form-text">Infants or children carried (free)</small>
+        </div>
+
+        <!-- Luggage -->
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-suitcase-lg"></i> Luggage Bags</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="luggage_count">−</button>
+                <input type="text" id="display_luggage_count" readonly value="0">
+                <button type="button" class="btn-increment" data-field="luggage_count">+</button>
+            </div>
+            <small class="form-text">Additional bags will incur extra charges</small>
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+        <i class="bi bi-info-circle"></i>
+        <strong>Pricing includes:</strong> Base fare for up to 3 adults, kids seated at 50% fare
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-group-wizard">
+        <button type="button" class="btn btn-secondary" id="prev_btn" style="flex: 1;">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <button type="submit" class="btn btn-primary" style="flex: 1;">
+            Next <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</form>
+
+<script>
+    // Field counter logic
+    const fields = {
+        num_adults: { min: 1, max: 10, initial: 1 },
+        num_kids_seated: { min: 0, max: 10, initial: 0 },
+        num_kids_carried: { min: 0, max: 5, initial: 0 },
+        luggage_count: { min: 0, max: 10, initial: 0 },
+    };
+
+    // Initialize from form values or defaults
+    function initializeCounters() {
+        Object.keys(fields).forEach(field => {
+            const hiddenInput = document.getElementById(field);
+            const displayInput = document.getElementById(`display_${field}`);
+            const value = parseInt(hiddenInput.value) || fields[field].initial;
+            hiddenInput.value = value;
+            displayInput.value = value;
+        });
+    }
+
+    // Increment/Decrement handlers
+    document.querySelectorAll('.btn-increment').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const field = btn.dataset.field;
+            const hiddenInput = document.getElementById(field);
+            const displayInput = document.getElementById(`display_${field}`);
+            let value = parseInt(hiddenInput.value) || 0;
+
+            if (value < fields[field].max) {
+                value++;
+                hiddenInput.value = value;
+                displayInput.value = value;
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-decrement').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const field = btn.dataset.field;
+            const hiddenInput = document.getElementById(field);
+            const displayInput = document.getElementById(`display_${field}`);
+            let value = parseInt(hiddenInput.value) || 0;
+
+            if (value > fields[field].min) {
+                value--;
+                hiddenInput.value = value;
+                displayInput.value = value;
+            }
+        });
+    });
+
+    // Toggle optional details
+    document.getElementById('toggle_children').addEventListener('click', (e) => {
+        e.preventDefault();
+        const optionalDetails = document.getElementById('optional_details');
+        const toggleBtn = document.getElementById('toggle_children');
+        const isHidden = optionalDetails.style.display === 'none';
+
+        optionalDetails.style.display = isHidden ? 'block' : 'none';
+        toggleBtn.innerHTML = isHidden
+            ? '<i class="bi bi-chevron-up"></i> Hide Children & Luggage'
+            : '<i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)';
+    });
+
+    // Back button
+    document.getElementById('prev_btn').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '{% url "rides:booking_wizard" step=1 %}';
+    });
+
+    // Initialize on load
+    window.addEventListener('load', initializeCounters);
+</script>
+{% endblock %}

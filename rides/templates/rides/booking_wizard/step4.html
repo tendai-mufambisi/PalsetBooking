@@ -1,0 +1,150 @@
+{% extends "rides/booking_wizard/base_wizard.html" %}
+
+{% block title %}Step 4: Fare & Payment - Book a Ride{% endblock %}
+
+{% block content %}
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Review and choose payment</h2>
+
+{% if error_message %}
+    <div class="error-message">
+        <i class="bi bi-exclamation-triangle"></i>
+        {{ error_message }}
+    </div>
+{% endif %}
+
+<form method="POST" id="step4_form">
+    {% csrf_token %}
+
+    <!-- Fare Breakdown Summary -->
+    {% if fare_breakdown %}
+        <div class="fare-summary">
+            <h4 style="margin-bottom: 16px; font-size: 16px; color: #333;">Fare Details</h4>
+
+            <div class="fare-row">
+                <span><i class="bi bi-map"></i> Distance:</span>
+                <strong>{{ fare_breakdown.distance_km|floatformat:1 }} km</strong>
+            </div>
+
+            <div class="fare-row">
+                <span><i class="bi bi-person"></i> Base Fare ({{ fare_breakdown.num_adults|add:fare_breakdown.kids_seated }} passengers):</span>
+                <strong>${{ fare_breakdown.base_distance_price|floatformat:2 }}</strong>
+            </div>
+
+            {% if fare_breakdown.extra_adults > 0 %}
+                <div class="fare-row">
+                    <span><i class="bi bi-people"></i> Extra Adults ({{ fare_breakdown.extra_adults }}):</span>
+                    <strong>${{ fare_breakdown.extra_adults_fee|floatformat:2 }}</strong>
+                </div>
+            {% endif %}
+
+            {% if fare_breakdown.kids_seated > 0 %}
+                <div class="fare-row">
+                    <span><i class="bi bi-chair"></i> Kids Seated Discount (50%):</span>
+                    <strong>-${{ fare_breakdown.kids_seated_fee|floatformat:2 }}</strong>
+                </div>
+            {% endif %}
+
+            {% if fare_breakdown.luggage_count > 0 %}
+                <div class="fare-row">
+                    <span><i class="bi bi-suitcase-lg"></i> Luggage ({{ fare_breakdown.luggage_count }} bags):</span>
+                    <strong>${{ fare_breakdown.luggage_fee|floatformat:2 }}</strong>
+                </div>
+            {% endif %}
+
+            <div class="fare-row total">
+                <span>Total Estimated Fare:</span>
+                <strong>${{ fare_breakdown.total|floatformat:2 }}</strong>
+            </div>
+        </div>
+    {% else %}
+        <div class="error-message">
+            <i class="bi bi-exclamation-triangle"></i>
+            Unable to calculate fare at this time.
+        </div>
+    {% endif %}
+
+    <!-- Payment Method Selection -->
+    <div class="form-group">
+        <label class="form-label" style="margin-bottom: 16px;"><i class="bi bi-credit-card"></i> Select Payment Method *</label>
+
+        <div class="payment-option">
+            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
+                <input type="radio" name="payment_method" value="POA" required>
+                <span>
+                    <strong>Pay on Arrival (Cash)</strong>
+                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                        Pay with cash when the driver arrives
+                    </div>
+                </span>
+            </label>
+        </div>
+
+        <div class="payment-option">
+            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
+                <input type="radio" name="payment_method" value="PAYNOW" required>
+                <span>
+                    <strong>Pay Online (Paynow)</strong>
+                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                        Secure online payment via Paynow
+                    </div>
+                </span>
+            </label>
+        </div>
+
+        {% if form.payment_method.errors %}
+            <div class="error-message" style="margin-top: 8px;">
+                {% for error in form.payment_method.errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Terms & Conditions -->
+    <div class="info-box">
+        <i class="bi bi-check-circle"></i>
+        By booking, you agree to our Terms of Service and accept the estimated fare shown above
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-group-wizard">
+        <button type="button" class="btn btn-secondary" id="prev_btn" style="flex: 1;">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <button type="submit" class="btn btn-primary" id="confirm_btn" style="flex: 1;">
+            Confirm Booking <i class="bi bi-check-lg"></i>
+        </button>
+    </div>
+</form>
+
+<script>
+    // Payment method selection styling
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+
+    paymentRadios.forEach((radio, index) => {
+        radio.addEventListener('change', () => {
+            paymentOptions.forEach(opt => opt.classList.remove('selected'));
+            if (radio.checked) {
+                paymentOptions[index].classList.add('selected');
+            }
+        });
+
+        // Initialize selected state
+        if (radio.checked) {
+            paymentOptions[index].classList.add('selected');
+        }
+    });
+
+    // Back button
+    document.getElementById('prev_btn').addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '{% url "rides:booking_wizard" step=3 %}';
+    });
+
+    // Confirm button with loading state
+    const confirmBtn = document.getElementById('confirm_btn');
+    document.getElementById('step4_form').addEventListener('submit', () => {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<span class="loading-spinner" style="display: inline-block; margin-right: 8px;"></span> Processing...';
+    });
+</script>
+{% endblock %}

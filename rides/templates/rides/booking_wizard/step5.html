@@ -1,0 +1,173 @@
+{% extends "rides/booking_wizard/base_wizard.html" %}
+
+{% block title %}Confirmation - Book a Ride{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 20px;;">
+    <div style="font-size: 48px; color: #28a745; margin-bottom: 16px;">
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+    <h2 style="font-size: 24px; color: #333; margin-bottom: 8px;">Booking Confirmed!</h2>
+    <p style="font-size: 16px; color: #666; margin-bottom: 24px;">
+        Your ride has been successfully booked
+    </p>
+</div>
+
+{% if booking %}
+    <!-- Booking Summary Card -->
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #333;">
+            <i class="bi bi-info-circle"></i> Booking Summary
+        </h3>
+
+        <div style="display: grid; gap: 12px; font-size: 14px;">
+            <!-- Booking ID -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Booking ID:</span>
+                <strong style="color: #007bff; font-family: monospace;">{{ booking.id }}</strong>
+            </div>
+
+            <!-- Status -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Status:</span>
+                <strong style="color: #28a745;">
+                    {% if booking.status == "CONFIRMED" %}
+                        ✓ Confirmed
+                    {% elif booking.status == "PENDING" %}
+                        ⏳ Pending
+                    {% else %}
+                        {{ booking.get_status_display }}
+                    {% endif %}
+                </strong>
+            </div>
+
+            <!-- Route -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Route:</span>
+                <div style="text-align: right; max-width: 60%;">
+                    <div style="color: #666; margin-bottom: 4px;">
+                        <i class="bi bi-geo-alt"></i> {{ step1_data.pickup_address|truncatewords:5 }}
+                    </div>
+                    <div style="color: #666;">
+                        <i class="bi bi-pin"></i> {{ step1_data.dropoff_address|truncatewords:5 }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distance & Fare -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Distance:</span>
+                <strong>{{ booking.distance_km|floatformat:1 }} km</strong>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Estimated Fare:</span>
+                <strong style="color: #007bff; font-size: 18px;">${{ booking.total_amount|floatformat:2 }}</strong>
+            </div>
+
+            <!-- Passengers -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Passengers:</span>
+                <strong>
+                    {{ booking.num_adults }} adult(s)
+                    {% if booking.num_kids_seated > 0 %}, {{ booking.num_kids_seated }} kid(s) seated{% endif %}
+                    {% if booking.num_kids_carried > 0 %}, {{ booking.num_kids_carried }} carried{% endif %}
+                </strong>
+            </div>
+
+            <!-- Luggage -->
+            {% if booking.num_luggage_bags > 0 %}
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                    <span>Luggage:</span>
+                    <strong>{{ booking.luggage_count }} bag(s)</strong>
+                </div>
+            {% endif %}
+
+            <!-- Contact -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Phone:</span>
+                <strong>{{ booking.phone }}</strong>
+            </div>
+
+            {% if booking.email %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
+                    <span>Email:</span>
+                    <strong>{{ booking.email }}</strong>
+                </div>
+            {% endif %}
+
+            <!-- Payment Method -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
+                <span>Payment:</span>
+                <strong>
+                    {% if booking.payment_option == "POA" %}
+                        💰 Pay on Arrival (Cash)
+                    {% elif booking.payment_option == "PAYNOW" %}
+                        💳 Pay Online (Paynow)
+                    {% else %}
+                        {{ booking.get_payment_option_display }}
+                    {% endif %}
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="info-box">
+        <h4 style="margin-bottom: 8px; font-size: 14px;">
+            <i class="bi bi-bell"></i> What's Next?
+        </h4>
+        {% if booking.payment_option == "POA" %}
+            <p style="margin-bottom: 8px;">
+                ✓ Your driver will arrive shortly. You'll receive updates and can contact the driver when needed.
+            </p>
+            <p>
+                💰 Please have cash ready to pay ${{ booking.total_amount }} on arrival.
+            </p>
+        {% else %}
+            <p style="margin-bottom: 8px;">
+                ✓ Complete your payment via Paynow to finalize the booking.
+            </p>
+            <p>
+                🚗 Once payment is confirmed, your driver will be assigned and will arrive shortly.
+            </p>
+        {% endif %}
+    </div>
+
+    <!-- Driver Contact -->
+    <div style="background: white; border: 2px solid #007bff; border-radius: 8px; padding: 16px; margin-bottom: 24px; text-align: center;">
+        <p style="font-size: 13px; color: #666; margin-bottom: 8px;">Need help or update your booking?</p>
+        <a href="tel:{{ TAXI_OWNER_PHONE }}" style="font-size: 16px; font-weight: 700; color: #007bff; text-decoration: none;">
+            <i class="bi bi-telephone"></i> {{ TAXI_OWNER_PHONE }}
+        </a>
+    </div>
+
+{% else %}
+    <div class="info-box">
+        <i class="bi bi-info-circle"></i>
+        Your booking details are being confirmed. Check your email for updates.
+    </div>
+{% endif %}
+
+<!-- Action Buttons -->
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary" onclick="window.location.href='/'" style="flex: 1;">
+        <i class="bi bi-house"></i> Home
+    </button>
+    <button type="button" class="btn btn-primary" onclick="window.location.href='{% url "rides:booking_wizard_start" %}'" style="flex: 1;">
+        <i class="bi bi-plus-lg"></i> New Booking
+    </button>
+</div>
+
+<!-- Print/Share Options -->
+<div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+    <button type="button" onclick="window.print()" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline; font-size: 13px;">
+        <i class="bi bi-printer"></i> Print Confirmation
+    </button>
+</div>
+
+<script>
+    // Show print dialog option
+    console.log('Booking confirmed! Booking ID: {{ booking.id }}');
+</script>
+{% endblock %}

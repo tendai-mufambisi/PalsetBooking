@@ -30,7 +30,9 @@ class PaynowService:
         self.result_url = settings.PAYNOW_RESULT_URL
 
     def create_transaction(self, amount: float, reference: str, email: str, phone: str, return_url: str = None) -> dict:
-       
+        logger.info('=== PAYNOW CREATE_TRANSACTION START ===')
+        logger.info('amount=%s, reference=%s, email=%s, phone=%s', amount, reference, email, phone)
+
         if not self.integration_id or not self.integration_key:
             raise RuntimeError("Paynow integration credentials not set")
 
@@ -57,6 +59,17 @@ class PaynowService:
             # on behalf of the user. The customer must pick the method on Paynow's hosted page.
             response = paynow.send(payment)
             logger.debug('SDK init response received')
+            logger.info('=== SDK RESPONSE DETAILS ===')
+            logger.info('Response object type: %s', type(response))
+            logger.info('Response object attributes: %s', dir(response))
+
+            # Try to access all common attributes on the response
+            for attr in ['success', 'error', 'status', 'redirect_url', 'redirectUrl', 'poll_url', 'pollUrl', 'message', 'data', 'instruction']:
+                try:
+                    val = getattr(response, attr, 'ATTRIBUTE_NOT_FOUND')
+                    logger.info('response.%s = %s (type: %s)', attr, val, type(val).__name__)
+                except Exception as ex:
+                    logger.exception('Error accessing response.%s: %s', attr, ex)
 
             # Diagnostic logging
             logger.debug('SDK InitResponse repr: %s', getattr(response, '__dict__', {}))
@@ -67,6 +80,9 @@ class PaynowService:
             def _clean_value(v):
                 if v is None or isinstance(v, (str, int, float, bool)):
                     return v
+                # Don't stringify type objects
+                if isinstance(v, type):
+                    return None
                 try:
                     if isinstance(v, dict):
                         return {str(k): _clean_value(val) for k, val in v.items()}
@@ -146,7 +162,7 @@ class PaynowService:
             
         except Exception as e:
             # Fall back to HTTP implementation if SDK not available or fails
-            logger.exception('SDK flow failed: %s', e)
+            logger.info('SDK flow not available, falling back to HTTP: %s', e)
             # For the HTTP fallback, ensure authemail is set to the merchant's email in test mode
             authemail = getattr(settings, 'PAYNOW_MERCHANT_EMAIL', None) or email
             payload = {
@@ -164,7 +180,11 @@ class PaynowService:
             verify_ssl = getattr(settings, 'PAYNOW_VERIFY_SSL', True)
 
             try:
+                logger.info('Sending HTTP request to Paynow: %s', self.CREATE_URL)
+                logger.info('Payload: %s', payload)
                 resp = requests.post(self.CREATE_URL, data=payload, timeout=15, verify=verify_ssl)
+                logger.info('Response status: %s', resp.status_code)
+                logger.info('Response headers: %s', dict(resp.headers))
             except requests.exceptions.SSLError as e:
                 logger.exception('SSL error when contacting Paynow init endpoint: %s', e)
                 return {
@@ -225,6 +245,7 @@ class PaynowService:
             try:
                 # If the response body is empty but status is 200, treat as a benign empty response
                 text = (resp.text or '').strip()
+                logger.info('Response text length: %s, first 500 chars: %s', len(text), text[:500])
                 if resp.status_code == 200 and text == '':
                     logger.info('Paynow returned empty 200 response; returning safe fallback. Headers: %s', resp.headers)
                     return {
@@ -238,7 +259,19 @@ class PaynowService:
                 # isn't always caught by ValueError handlers in some environments, so
                 # catch it explicitly and fall back to returning the raw response.
                 try:
-                    return resp.json()
+                    json_response = resp.json()
+                    logger.info('Successfully parsed JSON response: %s', json_response)
+                    # Wrap the raw Paynow JSON response in our expected structure
+                    wrapped_response = {
+                        'reference': reference,
+                        'redirectUrl': json_response.get('redirectUrl') or json_response.get('redirect_url'),
+                        'pollUrl': json_response.get('pollUrl') or json_response.get('poll_url'),
+                        'paynowreference': json_response.get('paynowreference') or json_response.get('paynow_reference'),
+                        'paynow_reference': json_response.get('paynowreference') or json_response.get('paynow_reference'),
+                        'response': json_response,
+                    }
+                    logger.info('Wrapped response: %s', wrapped_response)
+                    return wrapped_response
                 except Exception as json_exc:
                     logger.exception('Paynow returned non-JSON response; returning raw HTML. Exception: %s', json_exc)
                     # Limit logged output size for safety
@@ -384,7 +417,51 @@ class PaynowService:
             from paynow import Paynow
             paynow = Paynow(self.integration_id, self.integration_key, self.return_url, self.result_url)
             status = paynow.check_transaction_status(poll_url)
-            return {'paid': getattr(status, 'paid', False), 'status': getattr(status, 'status', None)}
+            
+            # Log all attributes of the status object to debug
+            logger.info('=== VERIFY_PAYMENT: SDK Status Object ===')
+            logger.info(f'Status object type: {type(status)}')
+            logger.info(f'Status object: {status}')
+            logger.info(f'Status repr: {repr(status)}')
+            logger.info(f'Status dir: {[attr for attr in dir(status) if not attr.startswith("_")]}')
+            
+            # Try multiple common attribute names
+            paid_via_paid = getattr(status, 'paid', None)
+            paid_via_success = getattr(status, 'success', None)
+            paid_via_payment_received = getattr(status, 'payment_received', None)
+            paid_via_data = None
+            
+            # Check if status has a 'data' attribute that might contain payment info
+            data_attr = getattr(status, 'data', None)
+            if data_attr:
+                paid_via_data = data_attr.get('paid') if isinstance(data_attr, dict) else getattr(data_attr, 'paid', None)
+            
+            logger.info(f'paid attribute: {paid_via_paid}')
+            logger.info(f'success attribute: {paid_via_success}')
+            logger.info(f'payment_received attribute: {paid_via_payment_received}')
+            logger.info(f'data.paid: {paid_via_data}')
+            
+            status_str = getattr(status, 'status', None)
+            logger.info(f'status attribute: {status_str}')
+            
+            # Determine if paid based on available attributes
+            is_paid = False
+            if paid_via_paid is True:
+                is_paid = True
+            elif paid_via_success is True:
+                is_paid = True
+            elif paid_via_payment_received is True:
+                is_paid = True
+            elif paid_via_data is True:
+                is_paid = True
+            elif status_str and isinstance(status_str, str):
+                # Check status string for payment indicators
+                status_lower = status_str.lower()
+                if any(x in status_lower for x in ('paid', 'success', 'ok', 'completed')):
+                    is_paid = True
+            
+            logger.info(f'Final decision: paid={is_paid}')
+            return {'paid': is_paid, 'status': status_str}
         except Exception:
             # Fallback to an HTTP probe that attempts to handle common Paynow responses.
             # This is more tolerant for environments without the Paynow SDK.

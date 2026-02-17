@@ -1,0 +1,284 @@
+{% extends "rides/booking_wizard/base_wizard.html" %}
+
+{% block title %}Step 1: Location - Book a Ride{% endblock %}
+
+{% block content %}
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Where are you going?</h2>
+
+{% if form.non_field_errors %}
+    <div class="error-message">
+        {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<form method="POST" id="step1_form">
+    {% csrf_token %}
+
+    <!-- Pickup Location -->
+    <div class="form-group">
+        <label for="pickup_address" class="form-label">
+            <i class="bi bi-geo-alt"></i> Pickup Location
+        </label>
+        {{ form.pickup_address }}
+        <button type="button" class="location-btn" id="use_current_location" style="margin-top: 8px;">
+            <i class="bi bi-pin-map"></i> Use My Current Location
+        </button>
+        {% if form.pickup_address.errors %}
+            <div class="error-message" style="margin-top: 8px;">
+                {% for error in form.pickup_address.errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Hidden pickup coordinates -->
+    <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="">
+    <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="">
+
+    <!-- Dropoff Location -->
+    <div class="form-group">
+        <label for="dropoff_address" class="form-label">
+            <i class="bi bi-pin"></i> Dropoff Location
+        </label>
+        {{ form.dropoff_address }}
+        {% if form.dropoff_address.errors %}
+            <div class="error-message" style="margin-top: 8px;">
+                {% for error in form.dropoff_address.errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Hidden dropoff coordinates -->
+    <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="">
+    <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="">
+
+    <!-- Map Preview -->
+    <div class="map-container" id="map"></div>
+
+    <!-- Error/Info Box -->
+    <div class="info-box" id="step1_info" style="display: none;">
+        <i class="bi bi-info-circle"></i>
+        <span id="step1_info_text"></span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-group-wizard">
+        <button type="button" class="btn btn-secondary" onclick="window.location.href='/'" style="flex: 1;">
+            <i class="bi bi-x-lg"></i> Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" id="next_btn" disabled style="flex: 1;">
+            Next <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</form>
+
+<script>
+    const GOOGLE_MAPS_API_KEY = '{{ GOOGLE_MAPS_CLIENT_KEY }}';
+    let map;
+    let pickupAutocomplete;
+    let dropoffAutocomplete;
+    let pickupMarker, dropoffMarker;
+    let polyline;
+
+    function showAPIError() {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.style.cssText = 'margin-bottom: 20px;';
+        errorDiv.innerHTML = `
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Google Maps Not Available:</strong> The location features are unavailable because Google Maps API key is not configured.
+            Please contact your administrator.
+        `;
+        const mapContainer = document.getElementById('map');
+        if (mapContainer) {
+            mapContainer.parentElement.insertBefore(errorDiv, mapContainer);
+        }
+    }
+
+    function initMap() {
+        if (!window.google || !window.google.maps) {
+            console.warn('Google Maps API not loaded');
+            showAPIError();
+            return;
+        }
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: -17.825, lng: 31.033 }, // Harare center
+            zoom: 13,
+            disableDefaultUI: false,
+        });
+    }
+
+    function initAutocomplete() {
+        if (!window.google || !window.google.maps) {
+            console.warn('Google Maps API not loaded - autocomplete disabled');
+            return;
+        }
+        const pickupInput = document.getElementById('pickup_address');
+        const dropoffInput = document.getElementById('dropoff_address');
+
+        pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+            componentRestrictions: { country: 'zw' },
+            fields: ['geometry', 'formatted_address', 'place_id'],
+        });
+
+        dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+            componentRestrictions: { country: 'zw' },
+            fields: ['geometry', 'formatted_address', 'place_id'],
+        });
+
+        pickupAutocomplete.addListener('place_changed', () => {
+            const place = pickupAutocomplete.getPlace();
+            if (place.geometry) {
+                document.getElementById('pickup_latitude').value = place.geometry.location.lat();
+                document.getElementById('pickup_longitude').value = place.geometry.location.lng();
+                updateMap();
+                validateStep1();
+            }
+        });
+
+        dropoffAutocomplete.addListener('place_changed', () => {
+            const place = dropoffAutocomplete.getPlace();
+            if (place.geometry) {
+                document.getElementById('dropoff_latitude').value = place.geometry.location.lat();
+                document.getElementById('dropoff_longitude').value = place.geometry.location.lng();
+                updateMap();
+                validateStep1();
+            }
+        });
+    }
+
+    function updateMap() {
+        if (!map) return; // Map not initialized
+        const pickupLat = parseFloat(document.getElementById('pickup_latitude').value);
+        const pickupLng = parseFloat(document.getElementById('pickup_longitude').value);
+        const dropoffLat = parseFloat(document.getElementById('dropoff_latitude').value);
+        const dropoffLng = parseFloat(document.getElementById('dropoff_longitude').value);
+
+        if (isNaN(pickupLat) || isNaN(pickupLng)) return;
+
+        // Update/clear existing markers
+        if (pickupMarker) pickupMarker.setMap(null);
+        if (dropoffMarker) dropoffMarker.setMap(null);
+        if (polyline) polyline.setMap(null);
+
+        // Pickup marker
+        pickupMarker = new google.maps.Marker({
+            map: map,
+            position: { lat: pickupLat, lng: pickupLng },
+            title: 'Pickup',
+            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        });
+
+        // Fit pickup to map
+        map.setCenter({ lat: pickupLat, lng: pickupLng });
+        map.setZoom(14);
+
+        // If dropoff also provided, draw route
+        if (!isNaN(dropoffLat) && !isNaN(dropoffLng)) {
+            dropoffMarker = new google.maps.Marker({
+                map: map,
+                position: { lat: dropoffLat, lng: dropoffLng },
+                title: 'Dropoff',
+                icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+            });
+
+            // Draw polyline
+            polyline = new google.maps.Polyline({
+                map: map,
+                path: [
+                    { lat: pickupLat, lng: pickupLng },
+                    { lat: dropoffLat, lng: dropoffLng },
+                ],
+                strokeColor: '#667eea',
+                strokeWeight: 2,
+            });
+
+            // Fit bounds to show both markers
+            const bounds = new google.maps.LatLngBounds(
+                { lat: pickupLat, lng: pickupLng },
+                { lat: dropoffLat, lng: dropoffLng }
+            );
+            map.fitBounds(bounds);
+            map.setZoom(Math.max(map.getZoom() - 1, 13));
+        }
+    }
+
+    function validateStep1() {
+        const pickupLat = document.getElementById('pickup_latitude').value;
+        const pickupLng = document.getElementById('pickup_longitude').value;
+        const dropoffLat = document.getElementById('dropoff_latitude').value;
+        const dropoffLng = document.getElementById('dropoff_longitude').value;
+
+        const isValid = pickupLat && pickupLng && dropoffLat && dropoffLng;
+        document.getElementById('next_btn').disabled = !isValid;
+
+        if (isValid) {
+            document.getElementById('step1_info').style.display = 'none';
+        }
+    }
+
+    document.getElementById('use_current_location').addEventListener('click', () => {
+        if (navigator.geolocation) {
+            const btn = document.getElementById('use_current_location');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="loading-spinner" style="display: inline-block;"></i> Getting location...';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+
+                    document.getElementById('pickup_latitude').value = lat;
+                    document.getElementById('pickup_longitude').value = lng;
+
+                    // Use Google's reverse geocoding to get address
+                    if (window.google && window.google.maps) {
+                        const geocoder = new google.maps.Geocoder();
+                        geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                            if (status === 'OK' && results.length > 0) {
+                                document.getElementById('pickup_address').value = results[0].formatted_address;
+                            } else {
+                                document.getElementById('pickup_address').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                            }
+                            updateMap();
+                            validateStep1();
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        });
+                    } else {
+                        // Fallback without geocoding
+                        document.getElementById('pickup_address').value = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                        updateMap();
+                        validateStep1();
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    document.getElementById('step1_info').style.display = 'block';
+                    document.getElementById('step1_info_text').textContent = 'Unable to get your location. Please enable location permissions.';
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }
+            );
+        } else {
+            alert('Geolocation is not supported by your browser.');
+        }
+    });
+
+    // Initialize on page load
+    window.addEventListener('load', () => {
+        initMap();
+        initAutocomplete();
+        // Check if Maps loaded successfully
+        setTimeout(() => {
+            if (!map) {
+                showAPIError();
+            }
+        }, 1000);
+    });
+</script>
+{% endblock %}
