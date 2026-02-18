@@ -221,27 +221,32 @@ class MultiStepBookingWizardView(View):
                     elif booking.payment_option == "PAYNOW":
                         payment_status = "Pay Online (Paynow)"
                     
-                    msg = f"""Booking ID: {booking.id}
+                    msg = f"""Hello Easy Transit, I have just booked a ride on your platform 🚗
 
-Pickup: {booking.pickup_address}
-Dropoff: {booking.dropoff_address}
-Distance: {booking.distance_km} km"""
+*Booking Details:*
+
+*Booking ID:* {booking.id}
+*Pickup:* {booking.pickup_address}
+*Dropoff:* {booking.dropoff_address}
+*Distance:* {booking.distance_km} km"""
                     
                     if eta_minutes:
-                        msg += f"\nEstimated Time: {eta_minutes} minutes"
+                        msg += f"\n*Estimated Time:* {eta_minutes} minutes"
                     
                     msg += f"""
 
-Total: ${booking.total_amount}
-Payment: {payment_status}
+*Total Fare:* ${booking.total_amount}
+*Payment Method:* {payment_status}
 
-Passengers: {booking.num_adults} adult(s)"""
+*Passengers:* {booking.num_adults} adult(s)"""
                     
                     if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
                         msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
                     
                     if booking.luggage_count > 0:
-                        msg += f"\nLuggage: {booking.luggage_count} bag(s)"
+                        msg += f"\n*Luggage:* {booking.luggage_count} bag(s)"
+                    
+                    msg += f"\n\nThank you! Ready for my ride."
                     
                     # Remove + from phone number for WhatsApp API
                     phone = settings.TAXI_OWNER_PHONE.lstrip('+')
@@ -650,27 +655,32 @@ class BookingSuccessView(TemplateView):
             elif booking.payment_option == "PAYNOW":
                 payment_status = "Pay Online (Paynow)"
             
-            msg = f"""Booking ID: {booking.id}
+            msg = f"""Hello Easy Transit, I have just booked a ride on your platform 🚗
 
-Pickup: {booking.pickup_address}
-Dropoff: {booking.dropoff_address}
-Distance: {booking.distance_km} km"""
+*Booking Details:*
+
+*Booking ID:* {booking.id}
+*Pickup:* {booking.pickup_address}
+*Dropoff:* {booking.dropoff_address}
+*Distance:* {booking.distance_km} km"""
             
             if eta_minutes:
-                msg += f"\nEstimated Time: {eta_minutes} minutes"
+                msg += f"\n*Estimated Time:* {eta_minutes} minutes"
             
             msg += f"""
 
-Total: ${booking.total_amount}
-Payment: {payment_status}
+*Total Fare:* ${booking.total_amount}
+*Payment Method:* {payment_status}
 
-Passengers: {booking.num_adults} adult(s)"""
+*Passengers:* {booking.num_adults} adult(s)"""
             
             if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
                 msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
             
             if booking.luggage_count > 0:
-                msg += f"\nLuggage: {booking.luggage_count} bag(s)"
+                msg += f"\n*Luggage:* {booking.luggage_count} bag(s)"
+            
+            msg += f"\n\nThank you! Ready for my ride."
             
             # Remove + from phone number for WhatsApp API
             phone = settings.TAXI_OWNER_PHONE.lstrip('+')
@@ -998,28 +1008,33 @@ class PaynowReturnView(APIView):
                         # Generate WhatsApp message
                         whatsapp_message = None
                         try:
-                            payment_status = "PAID" if payment.status == Payment.STATUS_PAID else "PENDING"
-                            msg = f"""Booking ID: {booking.id}
+                            payment_status = "PAID ✅" if payment.status == Payment.STATUS_PAID else "PENDING ⏳"
+                            msg = f"""Hello Easy Transit, I have just booked a ride on your platform 🚗
 
-Pickup: {booking.pickup_address}
-Dropoff: {booking.dropoff_address}
-Distance: {booking.distance_km} km"""
+*Booking Details:*
+
+*Booking ID:* {booking.id}
+*Pickup:* {booking.pickup_address}
+*Dropoff:* {booking.dropoff_address}
+*Distance:* {booking.distance_km} km"""
                             
                             if eta_minutes:
-                                msg += f"\nEstimated Time: {eta_minutes} minutes"
+                                msg += f"\n*Estimated Time:* {eta_minutes} minutes"
                             
                             msg += f"""
 
-Total: ${booking.total_amount}
-Payment Status: {payment_status}
+*Total Fare:* ${booking.total_amount}
+*Payment Status:* {payment_status}
 
-Passengers: {booking.num_adults} adult(s)"""
+*Passengers:* {booking.num_adults} adult(s)"""
                             
                             if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
                                 msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
                             
                             if booking.luggage_count > 0:
-                                msg += f"\nLuggage: {booking.luggage_count} bag(s)"
+                                msg += f"\n*Luggage:* {booking.luggage_count} bag(s)"
+                            
+                            msg += f"\n\nThank you! Ready for my ride."
                             
                             # Remove + from phone number for WhatsApp API
                             phone = settings.TAXI_OWNER_PHONE.lstrip('+')
