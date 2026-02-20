@@ -5,6 +5,13 @@
 {% block content %}
 <h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Where are you going?</h2>
 
+{% if request.GET.missing_coords %}
+    <div class="error-message" style="margin-bottom:12px;">
+        <i class="bi bi-exclamation-triangle"></i>
+        We couldn't determine coordinates for the saved addresses. Please re-select pickup and dropoff locations from the suggestions so we can calculate the fare.
+    </div>
+{% endif %}
+
 {% if form.non_field_errors %}
     <div class="error-message">
         {% for error in form.non_field_errors %}

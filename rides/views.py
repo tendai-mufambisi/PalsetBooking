@@ -311,6 +311,22 @@ class MultiStepBookingWizardView(View):
             step1 = wizard_data.get('step1', {})
             step2 = wizard_data.get('step2', {})
 
+            # Ensure coordinates are present and valid; if not, send user back to step 1
+            def _coords_valid(val):
+                try:
+                    return val is not None and str(val) != '' and float(val) == float(val)
+                except Exception:
+                    return False
+
+            p_lat = step1.get('pickup_latitude')
+            p_lng = step1.get('pickup_longitude')
+            d_lat = step1.get('dropoff_latitude')
+            d_lng = step1.get('dropoff_longitude')
+
+            if not (_coords_valid(p_lat) and _coords_valid(p_lng) and _coords_valid(d_lat) and _coords_valid(d_lng)):
+                from django.urls import reverse
+                return redirect(reverse('rides:booking_wizard', kwargs={'step': 1}) + '?missing_coords=1')
+
             try:
                 distance_km = float(step1.get('distance_km', 0))
                 if distance_km == 0:
