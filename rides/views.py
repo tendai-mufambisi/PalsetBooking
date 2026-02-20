@@ -227,6 +227,14 @@ class MultiStepBookingWizardView(View):
                 del self.request.session[key]
         self.request.session.modified = True
 
+    def clear_wizard_steps(self):
+        """Clear only the saved step data (step1..step4) but keep other wizard-related keys like booking id."""
+        for step_key in ['step1', 'step2', 'step3', 'step4']:
+            session_key = self.get_session_key(step_key)
+            if session_key in self.request.session:
+                del self.request.session[session_key]
+        self.request.session.modified = True
+
     def get(self, request, step=1):
         """Render the form for the current step."""
         step = int(step)
@@ -246,11 +254,29 @@ class MultiStepBookingWizardView(View):
         # Restore previous step data from session if user navigates back
         wizard_data = self.get_wizard_data()
 
+        # Allow callers to force-start a new booking by passing ?reset=1 (or true/yes)
+        if step == 1:
+            reset_param = (request.GET.get('reset') or '').lower()
+            if reset_param in ('1', 'true', 'yes'):
+                # Clear wizard state so the form shows empty values
+                self.clear_wizard_session()
+                wizard_data = {}
+            else:
+                # If a booking was just completed (booking_id present) and user
+                # navigates back to the start, clear only the saved step data
+                # so a fresh form is shown while preserving booking reference.
+                booking_key = self.get_session_key('booking_id')
+                if booking_key in request.session:
+                    self.clear_wizard_steps()
+                    wizard_data = {}
+
         if step == 1:
             form = Step1PickupDropoffForm(
                 initial=wizard_data.get('step1', {})
             )
             context['form'] = form
+            # Pass step1 saved values so template can populate hidden coords
+            context['step1_data'] = wizard_data.get('step1', {})
             return render(request, 'rides/booking_wizard/step1.html', context)
 
         elif step == 2:

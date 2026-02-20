@@ -1,5 +1,6 @@
 from typing import Tuple
 import logging
+import math
 import requests
 from django.core.cache import cache
 from django.conf import settings
@@ -29,8 +30,20 @@ class DistanceService:
 
         # Prefer a server-specific key; fall back to the legacy single key if not provided
         api_key = getattr(settings, "GOOGLE_MAPS_SERVER_KEY", None) or getattr(settings, "GOOGLE_MAPS_API_KEY", None)
+        # If no server key is configured, fall back to a local haversine distance
         if not api_key:
-            raise RuntimeError("GOOGLE_MAPS_SERVER_KEY or GOOGLE_MAPS_API_KEY is not configured in settings")
+            logger.warning("No Google Maps server API key configured; using haversine fallback")
+            lat1, lng1 = float(origin[0]), float(origin[1])
+            lat2, lng2 = float(destination[0]), float(destination[1])
+            distance_km = DistanceService._haversine_km(lat1, lng1, lat2, lng2)
+            # cache the computed value where appropriate
+            try:
+                if use_cache:
+                    cache.set(DistanceService._cache_key(lat1, lng1, lat2, lng2), distance_km,
+                              getattr(settings, "GOOGLE_DISTANCE_CACHE_TIMEOUT", 6 * 3600))
+            except Exception:
+                logger.exception("Failed to set distance cache (non-fatal)")
+            return distance_km
 
         lat1, lng1 = float(origin[0]), float(origin[1])
         lat2, lng2 = float(destination[0]), float(destination[1])
@@ -56,11 +69,23 @@ class DistanceService:
             data = resp.json()
         except requests.RequestException as exc:
             logger.exception("Google Distance Matrix request failed")
-            raise RuntimeError(f"Error calling Google Distance Matrix API: {exc}")
+            # Fall back to haversine if the remote API call fails
+            try:
+                distance_km = DistanceService._haversine_km(lat1, lng1, lat2, lng2)
+                logger.warning("Using haversine fallback after requests error")
+                return distance_km
+            except Exception:
+                raise RuntimeError(f"Error calling Google Distance Matrix API: {exc}")
 
         if data.get("status") != "OK":
             logger.error("Google API returned non-OK status: %s", data)
-            raise RuntimeError(f"Google Distance Matrix API error: {data.get('status')}")
+            # fallback to haversine rather than failing the whole flow
+            try:
+                distance_km = DistanceService._haversine_km(lat1, lng1, lat2, lng2)
+                logger.warning("Using haversine fallback after non-OK Google response")
+                return distance_km
+            except Exception:
+                raise RuntimeError(f"Google Distance Matrix API error: {data.get('status')}")
 
         try:
             element = data["rows"][0]["elements"][0]
@@ -70,7 +95,12 @@ class DistanceService:
 
         if element.get("status") != "OK":
             logger.error("Element status not OK: %s", element)
-            raise RuntimeError(f"Route not available: {element.get('status')}")
+            try:
+                distance_km = DistanceService._haversine_km(lat1, lng1, lat2, lng2)
+                logger.warning("Using haversine fallback after element status not OK")
+                return distance_km
+            except Exception:
+                raise RuntimeError(f"Route not available: {element.get('status')}")
 
         meters = element["distance"]["value"]
         distance_km = float(meters) / 1000.0
@@ -84,4 +114,20 @@ class DistanceService:
 
         logger.debug("Computed distance %s km for %s -> %s", distance_km, origin, destination)
         return distance_km
+
+    @staticmethod
+    def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        """Compute great-circle distance between two points (in kilometers).
+
+        This is a fallback when the Distance Matrix API is unavailable.
+        """
+        # Convert decimal degrees to radians
+        rlat1, rlon1, rlat2, rlon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+        dlat = rlat2 - rlat1
+        dlon = rlon2 - rlon1
+        a = math.sin(dlat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlon / 2) ** 2
+        c = 2 * math.asin(min(1, math.sqrt(a)))
+        # Earth's radius in kilometers (average)
+        R = 6371.0088
+        return float(R * c)
 

@@ -33,8 +33,8 @@
     </div>
 
     <!-- Hidden pickup coordinates -->
-    <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="">
-    <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="">
+    <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="{{ step1_data.pickup_latitude|default:'' }}">
+    <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="{{ step1_data.pickup_longitude|default:'' }}">
 
     <!-- Pickup scheduling -->
     <div class="form-row" style="display:flex; gap:12px; margin-top:12px;">
@@ -94,8 +94,8 @@
     </div>
 
     <!-- Hidden dropoff coordinates -->
-    <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="">
-    <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="">
+    <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="{{ step1_data.dropoff_latitude|default:'' }}">
+    <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="{{ step1_data.dropoff_longitude|default:'' }}">
 
     <!-- Map Preview -->
     <div class="map-container" id="map"></div>
@@ -108,6 +108,9 @@
 
     <!-- Action Buttons -->
     <div class="btn-group-wizard">
+        <button type="button" class="btn btn-outline-secondary" id="start_new_btn" style="flex: 1; margin-right:8px;">
+            <i class="bi bi-plus-circle"></i> Start New Booking
+        </button>
         <button type="button" class="btn btn-secondary" onclick="window.location.href='/'" style="flex: 1;">
             <i class="bi bi-x-lg"></i> Cancel
         </button>
@@ -116,6 +119,18 @@
         </button>
     </div>
 </form>
+
+<!-- Start New Booking Modal (simple confirm) -->
+<div id="start_new_modal" class="modal" tabindex="-1" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; width:90%; max-width:420px; border-radius:8px;">
+        <h4 style="margin-top:0;">Start a new booking?</h4>
+        <p>This will clear the current saved locations and start a fresh booking.</p>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
+            <button id="start_new_cancel" class="btn btn-secondary">Cancel</button>
+            <button id="start_new_confirm" class="btn btn-danger">Start New</button>
+        </div>
+    </div>
+</div>
 
 <script>
     const GOOGLE_MAPS_API_KEY = '{{ GOOGLE_MAPS_CLIENT_KEY }}';
@@ -351,6 +366,61 @@
                 showAPIError();
             }
         }, 1000);
+        // If hidden coords were pre-filled server-side, update map & validation
+        try {
+            const pLat = document.getElementById('pickup_latitude').value;
+            const pLng = document.getElementById('pickup_longitude').value;
+            const dLat = document.getElementById('dropoff_latitude').value;
+            const dLng = document.getElementById('dropoff_longitude').value;
+            if (pLat && pLng) {
+                // If form fields for addresses are empty, try to leave them as-is; map can use coords
+                updateMap();
+            }
+            validateStep1();
+        } catch (err) {
+            console.warn('Init prefill handling failed', err);
+        }
+        // Start New Booking button behavior
+        const startBtn = document.getElementById('start_new_btn');
+        const modal = document.getElementById('start_new_modal');
+        const cancelBtn = document.getElementById('start_new_cancel');
+        const confirmBtn = document.getElementById('start_new_confirm');
+        if (startBtn && modal) {
+            startBtn.addEventListener('click', () => { modal.style.display = 'flex'; });
+        }
+        if (cancelBtn && modal) {
+            cancelBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+        }
+        if (confirmBtn && modal) {
+            confirmBtn.addEventListener('click', async () => {
+                confirmBtn.disabled = true;
+                // Call server to clear wizard session
+                try {
+                    const res = await fetch(window.location.pathname + '?reset=1', { method: 'GET', credentials: 'same-origin' });
+                    if (res.ok) {
+                        // Clear visible inputs and hidden fields
+                        const inputsToClear = ['pickup_address','dropoff_address','pickup_latitude','pickup_longitude','dropoff_latitude','dropoff_longitude','id_arrival_airline','id_arrival_flight_number'];
+                        inputsToClear.forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = '';
+                        });
+                        // Uncheck airport checkbox
+                        const airportCb = document.getElementById('pickup_is_airport');
+                        if (airportCb) { airportCb.checked = false; }
+                        updateMap();
+                        validateStep1();
+                    } else {
+                        console.error('Reset request failed', res.statusText);
+                        alert('Unable to start new booking. Please try again.');
+                    }
+                } catch (err) {
+                    console.error('Reset request error', err);
+                    alert('Unable to start new booking. Please try again.');
+                }
+                confirmBtn.disabled = false;
+                modal.style.display = 'none';
+            });
+        }
     });
 </script>
 {% endblock %}
