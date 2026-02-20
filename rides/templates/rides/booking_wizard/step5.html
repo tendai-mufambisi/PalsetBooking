@@ -24,7 +24,7 @@
             <!-- Booking ID -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Booking ID:</span>
-                <strong style="color: #007bff; font-family: monospace;">{{ booking.id }}</strong>
+                <strong style="color: #007bff; font-family: monospace;">{{ booking.reference|default:booking.id }}</strong>
             </div>
 
             <!-- Status -->
@@ -84,6 +84,27 @@
                     {% if booking.num_kids_carried > 0 %}, {{ booking.num_kids_carried }} carried{% endif %}
                 </strong>
             </div>
+
+            <!-- Passenger Name / Salutation -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Passenger:</span>
+                <strong>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</strong>
+            </div>
+
+            <!-- Airport / Flight (if available) -->
+            {% if booking.pickup_is_airport %}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Airport / Flight:</span>
+                <div style="text-align: right; max-width: 60%;">
+                    <strong>
+                        {% if booking.arrival_airline %}{{ booking.arrival_airline }}{% endif %}
+                        {% if booking.arrival_flight_number %} - {{ booking.arrival_flight_number }}{% endif %}
+                        {% if booking.arrival_date %} on {{ booking.arrival_date }}{% endif %}
+                        {% if booking.arrival_time %} at {{ booking.arrival_time }}{% endif %}
+                    </strong>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Luggage -->
             {% if booking.num_luggage_bags > 0 %}
@@ -181,6 +202,6 @@
 
 <script>
     // Show print dialog option
-    console.log('Booking confirmed! Booking ID: {{ booking.id }}');
+    console.log('Booking confirmed! Booking ID: {{ booking.reference|default:booking.id }}');
 </script>
 {% endblock %}

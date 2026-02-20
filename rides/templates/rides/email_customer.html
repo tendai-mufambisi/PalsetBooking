@@ -14,13 +14,19 @@
   </head>
   <body>
     <div class="card">
-      <h2>Thanks for your booking {{ booking.id }}</h2>
+      <h2>Thanks for your booking {{ booking.reference|default:booking.id }}</h2>
       <dl>
         <div><dt>Pickup</dt><dd>{{ booking.pickup_address }}</dd></div>
+        <div><dt>Pickup date/time</dt><dd>{% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %} {% if booking.pickup_time %}{{ booking.pickup_time }}{% endif %}</dd></div>
         <div><dt>Dropoff</dt><dd>{{ booking.dropoff_address }}</dd></div>
+        {% if booking.pickup_is_airport %}
+          <div><dt>Arrival</dt><dd>{{ booking.arrival_airline }} {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %} {% if booking.arrival_time %}{{ booking.arrival_time }}{% endif %}</dd></div>
+        {% endif %}
         <div><dt>Distance</dt><dd>{{ booking.distance_km }} km</dd></div>
         <div><dt>Total</dt><dd>$ {{ booking.total_amount }}</dd></div>
         <div><dt>Payment status</dt><dd>{{ payment_status }}</dd></div>
+        <div><dt>Passenger</dt><dd>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% endif %}</dd></div>
+        {% if booking.extra_instructions %}<div><dt>Notes</dt><dd>{{ booking.extra_instructions }}</dd></div>{% endif %}
       </dl>
       <p>We may contact you at {{ booking.phone }} if required. Thank you for choosing us.</p>
     </div>

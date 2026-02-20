@@ -1,69 +1,110 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
-{% block title %}Step 2: Passengers - Book a Ride{% endblock %}
+{% block title %}Step 2: Passengers & Pickup Details - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Who's traveling?</h2>
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">When & Who?</h2>
 
 <form method="POST" id="step2_form">
     {% csrf_token %}
 
+    <!-- Pickup Date and Time -->
+    <div class="form-group">
+        <label for="id_pickup_date" class="form-label"><i class="bi bi-calendar-event"></i> Pickup Date</label>
+        <input type="date" id="id_pickup_date" name="pickup_date" class="form-control" value="{% if step1_data.pickup_date %}{{ step1_data.pickup_date }}{% endif %}">
+        {% if form.pickup_date.errors %}
+            <div class="error-message">{{ form.pickup_date.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="form-group">
+        <label for="id_pickup_time" class="form-label"><i class="bi bi-clock"></i> Pickup Time</label>
+        <input type="time" id="id_pickup_time" name="pickup_time" class="form-control" value="{% if step1_data.pickup_time %}{{ step1_data.pickup_time }}{% endif %}">
+        {% if form.pickup_time.errors %}
+            <div class="error-message">{{ form.pickup_time.errors }}</div>
+        {% endif %}
+    </div>
+    <!-- Note: Arrival/flight details are captured on Step 1 only -->
+
+    <!-- Passengers Section -->
+    <div class="form-group">
+        <label style="font-weight: bold; margin-bottom: 10px; display: block;"><i class="bi bi-people"></i> Passengers</label>
+        <div id="passengers_container">
+            <!-- Passengers will be added here dynamically -->
+        </div>
+        <button type="button" id="add_passenger_btn" class="btn btn-sm btn-secondary" style="width: 100%; margin-top: 10px;">
+            <i class="bi bi-plus-circle"></i> Add Passenger
+        </button>
+        {% if form.passengers_json.errors %}
+            <div class="error-message">{{ form.passengers_json.errors }}</div>
+        {% endif %}
+    </div>
+    
+    <!-- Hidden JSON with passenger details (fallback if form field not present) -->
+    <input type="hidden" id="passengers_json" name="passengers_json" value="[]">
+
+    <!-- Hidden fields for passenger counts -->
     <input type="hidden" id="num_adults" name="num_adults" value="1">
     <input type="hidden" id="num_kids_seated" name="num_kids_seated" value="0">
     <input type="hidden" id="num_kids_carried" name="num_kids_carried" value="0">
     <input type="hidden" id="luggage_count" name="luggage_count" value="0">
 
-    <!-- Adults -->
-    <div class="form-group">
-        <label class="form-label"><i class="bi bi-person"></i> Adults</label>
-        <div class="field-counter">
-            <button type="button" class="btn-decrement" data-field="num_adults">−</button>
-            <input type="text" id="display_num_adults" readonly value="1">
-            <button type="button" class="btn-increment" data-field="num_adults">+</button>
-        </div>
-        <small class="form-text">At least 1 adult required</small>
-    </div>
+    <!-- Passengers & Luggage Section -->
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+        <h4><i class="bi bi-suitcase-lg"></i> Additional Details</h4>
 
-    <!-- Optional Details Toggle -->
-    <div class="form-group">
-        <button type="button" class="btn btn-secondary" id="toggle_children" style="width: 100%; margin-bottom: 20px;">
-            <i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)
-        </button>
-    </div>
-
-    <!-- Children & Luggage (Initially Hidden) -->
-    <div id="optional_details" style="display: none;">
-        <!-- Kids Seated -->
+        <!-- Adults -->
         <div class="form-group">
-            <label class="form-label"><i class="bi bi-chair"></i> Kids (Seated)</label>
+            <label class="form-label"><i class="bi bi-person"></i> Adults Count</label>
             <div class="field-counter">
-                <button type="button" class="btn-decrement" data-field="num_kids_seated">−</button>
-                <input type="text" id="display_num_kids_seated" readonly value="0">
-                <button type="button" class="btn-increment" data-field="num_kids_seated">+</button>
+                <button type="button" class="btn-decrement" data-field="num_adults">−</button>
+                <input type="text" id="display_num_adults" readonly value="1">
+                <button type="button" class="btn-increment" data-field="num_adults">+</button>
             </div>
-            <small class="form-text">Children with seat requirement</small>
+            <!-- <small class="form-text">At least 1 adult required</small> -->
         </div>
 
-        <!-- Kids Carried -->
+        <!-- Optional Details Toggle -->
         <div class="form-group">
-            <label class="form-label"><i class="bi bi-backpack"></i> Kids (Carried)</label>
-            <div class="field-counter">
-                <button type="button" class="btn-decrement" data-field="num_kids_carried">−</button>
-                <input type="text" id="display_num_kids_carried" readonly value="0">
-                <button type="button" class="btn-increment" data-field="num_kids_carried">+</button>
-            </div>
-            <small class="form-text">Infants or children carried (free)</small>
+            <button type="button" class="btn btn-secondary" id="toggle_children" style="width: 100%; margin-bottom: 20px;">
+                <i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)
+            </button>
         </div>
 
-        <!-- Luggage -->
-        <div class="form-group">
-            <label class="form-label"><i class="bi bi-suitcase-lg"></i> Luggage Bags</label>
-            <div class="field-counter">
-                <button type="button" class="btn-decrement" data-field="luggage_count">−</button>
-                <input type="text" id="display_luggage_count" readonly value="0">
-                <button type="button" class="btn-increment" data-field="luggage_count">+</button>
+        <!-- Children & Luggage (Initially Hidden) -->
+        <div id="optional_details" style="display: none;">
+            <!-- Kids Seated -->
+            <div class="form-group">
+                <label class="form-label"><i class="bi bi-chair"></i> Kids (Seated)</label>
+                <div class="field-counter">
+                    <button type="button" class="btn-decrement" data-field="num_kids_seated">−</button>
+                    <input type="text" id="display_num_kids_seated" readonly value="0">
+                    <button type="button" class="btn-increment" data-field="num_kids_seated">+</button>
+                </div>
+                <small class="form-text">Children with seat requirement</small>
             </div>
-            <small class="form-text">Additional bags will incur extra charges</small>
+
+            <!-- Kids Carried -->
+            <div class="form-group">
+                <label class="form-label"><i class="bi bi-backpack"></i> Kids (Carried)</label>
+                <div class="field-counter">
+                    <button type="button" class="btn-decrement" data-field="num_kids_carried">−</button>
+                    <input type="text" id="display_num_kids_carried" readonly value="0">
+                    <button type="button" class="btn-increment" data-field="num_kids_carried">+</button>
+                </div>
+                <small class="form-text">Infants or children carried (free)</small>
+            </div>
+
+            <!-- Luggage -->
+            <div class="form-group">
+                <label class="form-label"><i class="bi bi-suitcase-lg"></i> Luggage Bags</label>
+                <div class="field-counter">
+                    <button type="button" class="btn-decrement" data-field="luggage_count">−</button>
+                    <input type="text" id="display_luggage_count" readonly value="0">
+                    <button type="button" class="btn-increment" data-field="luggage_count">+</button>
+                </div>
+                <small class="form-text">Charges will be incurred from the 6th bag onwards</small>
+            </div>
         </div>
     </div>
 
@@ -84,7 +125,173 @@
     </div>
 </form>
 
+<style>
+    .error-message {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+    
+    .passenger-item {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        border-left: 4px solid #0066cc;
+        position: relative;
+    }
+    
+    .passenger-item.error {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+    
+    .passenger-remove {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+    
+    .passenger-remove:hover {
+        background: #c82333;
+    }
+    
+    .salutation-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+</style>
+
 <script>
+    const SALUTATIONS = ['Mr', 'Mrs', 'Miss', 'Ms', 'Professor', 'Dr', 'Doc', 'Rev', 'Hon'];
+    let passengers = [];
+
+    // Initialize passengers from session if available
+    function initializePassengers() {
+        const pj = document.getElementById('passengers_json');
+        const storedPassengers = pj ? pj.value : null;
+        if (storedPassengers) {
+            try {
+                passengers = JSON.parse(storedPassengers);
+                renderPassengers();
+            } catch (e) {
+                console.log('No existing passengers');
+            }
+        }
+        // If no passengers, add one by default
+        if (passengers.length === 0) {
+            passengers.push({ salutation: 'Mr', name: '' });
+            renderPassengers();
+        }
+    }
+
+    // Render passengers
+    function renderPassengers() {
+        const container = document.getElementById('passengers_container');
+        container.innerHTML = '';
+        
+        passengers.forEach((passenger, index) => {
+            const div = document.createElement('div');
+            div.className = 'passenger-item';
+            div.id = `passenger_${index}`;
+            
+            div.innerHTML = `
+                <button type="button" class="passenger-remove" onclick="removePassenger(${index})">Remove</button>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-bottom: 10px;">
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; margin-bottom: 5px;">Salutation</label>
+                        <select class="salutation-select" id="salutation_${index}" onchange="updatePassenger(${index})">
+                            ${SALUTATIONS.map(s => `<option value="${s}" ${s === passenger.salutation ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; margin-bottom: 5px;">Full Name</label>
+                        <input type="text" class="form-control" id="name_${index}" placeholder="Enter full name" value="${passenger.name || ''}" onchange="updatePassenger(${index})">
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(div);
+        });
+        
+        updatePassengersJson();
+    }
+
+    // Update passenger data
+    function updatePassenger(index) {
+        const salutation = document.getElementById(`salutation_${index}`).value;
+        const name = document.getElementById(`name_${index}`).value.trim();
+        
+        if (passengers[index]) {
+            passengers[index].salutation = salutation;
+            passengers[index].name = name;
+            updatePassengersJson();
+        }
+    }
+
+    // Add passenger
+    const addPassengerBtn = document.getElementById('add_passenger_btn');
+    if (addPassengerBtn) {
+        addPassengerBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            passengers.push({ salutation: 'Mr', name: '' });
+            renderPassengers();
+        });
+    }
+
+    // Remove passenger
+    window.removePassenger = function(index) {
+        if (passengers.length > 1) {
+            passengers.splice(index, 1);
+            renderPassengers();
+        } else {
+            alert('At least one passenger is required');
+        }
+    };
+
+    // Update hidden JSON field
+    function updatePassengersJson() {
+        const pj = document.getElementById('passengers_json');
+        if (pj) {
+            pj.value = JSON.stringify(passengers);
+        }
+    }
+
+    // Toggle flight details based on airport pickup checkbox
+    // Toggle flight details based on airport pickup checkbox
+    const airportCheckbox = document.getElementById('id_is_airport_pickup');
+    if (airportCheckbox) {
+        airportCheckbox.addEventListener('change', (e) => {
+            const flightDetails = document.getElementById('flight_details');
+            if (!flightDetails) return;
+            const flightInputs = flightDetails.querySelectorAll('input, select');
+            
+            if (e.target.checked) {
+                flightDetails.style.display = 'block';
+                flightInputs.forEach(input => {
+                    const name = input.getAttribute('name');
+                    if (name && name.startsWith('flight_')) {
+                        input.setAttribute('required', 'required');
+                    }
+                });
+            } else {
+                flightDetails.style.display = 'none';
+                flightInputs.forEach(input => {
+                    input.removeAttribute('required');
+                });
+            }
+        });
+    }
+
     // Field counter logic
     const fields = {
         num_adults: { min: 1, max: 10, initial: 1 },
@@ -98,9 +305,9 @@
         Object.keys(fields).forEach(field => {
             const hiddenInput = document.getElementById(field);
             const displayInput = document.getElementById(`display_${field}`);
-            const value = parseInt(hiddenInput.value) || fields[field].initial;
-            hiddenInput.value = value;
-            displayInput.value = value;
+            const value = (hiddenInput && parseInt(hiddenInput.value)) || fields[field].initial;
+            if (hiddenInput) hiddenInput.value = value;
+            if (displayInput) displayInput.value = value;
         });
     }
 
@@ -111,12 +318,12 @@
             const field = btn.dataset.field;
             const hiddenInput = document.getElementById(field);
             const displayInput = document.getElementById(`display_${field}`);
-            let value = parseInt(hiddenInput.value) || 0;
+            let value = (hiddenInput && parseInt(hiddenInput.value)) || 0;
 
             if (value < fields[field].max) {
                 value++;
-                hiddenInput.value = value;
-                displayInput.value = value;
+                if (hiddenInput) hiddenInput.value = value;
+                if (displayInput) displayInput.value = value;
             }
         });
     });
@@ -127,28 +334,32 @@
             const field = btn.dataset.field;
             const hiddenInput = document.getElementById(field);
             const displayInput = document.getElementById(`display_${field}`);
-            let value = parseInt(hiddenInput.value) || 0;
+            let value = (hiddenInput && parseInt(hiddenInput.value)) || 0;
 
             if (value > fields[field].min) {
                 value--;
-                hiddenInput.value = value;
-                displayInput.value = value;
+                if (hiddenInput) hiddenInput.value = value;
+                if (displayInput) displayInput.value = value;
             }
         });
     });
 
     // Toggle optional details
-    document.getElementById('toggle_children').addEventListener('click', (e) => {
-        e.preventDefault();
-        const optionalDetails = document.getElementById('optional_details');
-        const toggleBtn = document.getElementById('toggle_children');
-        const isHidden = optionalDetails.style.display === 'none';
+    const toggleChildrenBtn = document.getElementById('toggle_children');
+    if (toggleChildrenBtn) {
+        toggleChildrenBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const optionalDetails = document.getElementById('optional_details');
+            const toggleBtn = toggleChildrenBtn;
+            if (!optionalDetails) return;
+            const isHidden = optionalDetails.style.display === 'none';
 
-        optionalDetails.style.display = isHidden ? 'block' : 'none';
-        toggleBtn.innerHTML = isHidden
-            ? '<i class="bi bi-chevron-up"></i> Hide Children & Luggage'
-            : '<i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)';
-    });
+            optionalDetails.style.display = isHidden ? 'block' : 'none';
+            toggleBtn.innerHTML = isHidden
+                ? '<i class="bi bi-chevron-up"></i> Hide Children & Luggage'
+                : '<i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)';
+        });
+    }
 
     // Back button
     document.getElementById('prev_btn').addEventListener('click', (e) => {
@@ -157,6 +368,9 @@
     });
 
     // Initialize on load
-    window.addEventListener('load', initializeCounters);
+    window.addEventListener('load', () => {
+        initializeCounters();
+        initializePassengers();
+    });
 </script>
 {% endblock %}

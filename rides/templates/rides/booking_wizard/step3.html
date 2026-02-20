@@ -16,10 +16,24 @@
 <form method="POST" id="step3_form">
     {% csrf_token %}
 
+    <!-- Passenger Name / Salutation -->
+    <div class="form-row" style="display:flex; gap:12px; margin-bottom:12px;">
+        <div style="flex:0 0 160px">
+            <label for="id_salutation" class="form-label">Salutation</label>
+            {{ form.salutation }}
+            <!-- <small class="form-text text-muted">e.g. Mr, Mrs, Dr, Prof</small> -->
+        </div>
+        <div style="flex:1">
+            <label for="id_passenger_full_name" class="form-label">Passenger full name *</label>
+            {{ form.passenger_full_name }}
+            <!-- <small class="form-text text-muted">Provide full name for respectful service (e.g. John Doe)</small> -->
+        </div>
+    </div>
+
     <!-- Phone Number -->
     <div class="form-group">
         <label for="phone" class="form-label"><i class="bi bi-telephone"></i> Phone Number *</label>
-        <input type="tel" id="phone" name="phone" class="form-control" placeholder="+263 77 000 0000" required>
+        {{ form.phone }}
         <small class="form-text">We'll use this to reach you about your ride</small>
         {% if form.phone.errors %}
             <div class="error-message" style="margin-top: 8px;">
@@ -31,8 +45,8 @@
     <!-- Email -->
     <div class="form-group">
         <label for="email" class="form-label"><i class="bi bi-envelope"></i> Email (Optional)</label>
-        <input type="email" id="email" name="email" class="form-control" placeholder="your.email@example.com">
-        <small class="form-text">Confirmation and receipt will be sent here</small>
+        {{ form.email }}
+        <!-- <small class="form-text">Confirmation and receipt will be sent here</small> -->
         {% if form.email.errors %}
             <div class="error-message" style="margin-top: 8px;">
                 {% for error in form.email.errors %}{{ error }}{% endfor %}
@@ -45,8 +59,8 @@
         <label for="extra_instructions" class="form-label">
             <i class="bi bi-chat-left-text"></i> Extra Instructions (Optional)
         </label>
-        <textarea id="extra_instructions" name="extra_instructions" class="form-control" placeholder="E.g., 'Please wait at back gate', 'I have a pet'" maxlength="500"></textarea>
-        <small class="form-text">500 characters max. E.g., "Please wait at back gate", "I have a pet", etc.</small>
+        {{ form.extra_instructions }}
+        <!-- <small class="form-text">500 characters max. E.g., "Please wait at back gate", "I have a pet", etc.</small> -->
         <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
             <span class="text-muted" id="char_count">0 / 500 characters</span>
         </div>
@@ -80,18 +94,23 @@
     const charCount = document.getElementById('char_count');
 
     function updateCharCount() {
-        const length = extraInstructionsInput.value.length;
-        charCount.textContent = `${length} / 500 characters`;
+        const length = (extraInstructionsInput && extraInstructionsInput.value) ? extraInstructionsInput.value.length : 0;
+        if (charCount) charCount.textContent = `${length} / 500 characters`;
     }
 
-    extraInstructionsInput.addEventListener('input', updateCharCount);
-    extraInstructionsInput.addEventListener('change', updateCharCount);
+    if (extraInstructionsInput) {
+        extraInstructionsInput.addEventListener('input', updateCharCount);
+        extraInstructionsInput.addEventListener('change', updateCharCount);
+    }
 
     // Back button
-    document.getElementById('prev_btn').addEventListener('click', (e) => {
+    const prevBtn = document.getElementById('prev_btn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
         e.preventDefault();
         window.location.href = '{% url "rides:booking_wizard" step=2 %}';
     });
+    }
 
     // Initialize char count on load
     window.addEventListener('load', updateCharCount);

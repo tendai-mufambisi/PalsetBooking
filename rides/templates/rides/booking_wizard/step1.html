@@ -36,6 +36,35 @@
     <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="">
     <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="">
 
+    <!-- Pickup scheduling -->
+    <div class="form-row" style="display:flex; gap:12px; margin-top:12px;">
+        <div style="flex:1">{{ form.pickup_date }}</div>
+        <div style="flex:1">{{ form.pickup_time }}</div>
+    </div>
+
+    <div style="margin-top:12px;">
+        <label for="pickup_is_airport" class="form-label">
+            {{ form.pickup_is_airport }} Pickup is at an airport
+        </label>
+    </div>
+
+    <div id="airport_fields" style="display: none; margin-top:12px;">
+        <div class="form-group">
+            <label for="id_arrival_airline">Airline</label>
+            {{ form.arrival_airline }}
+            <!-- <small class="form-text text-muted">Example: Airlink, Emirates</small> -->
+        </div>
+        <div class="form-group">
+            <label for="id_arrival_flight_number">Flight Number</label>
+            {{ form.arrival_flight_number }}
+            <!-- <small class="form-text text-muted">Example: 40Z10, EK405</small> -->
+        </div>
+        <div class="form-row" style="display:flex; gap:12px;">
+            <div style="flex:1">{{ form.arrival_date }}<small class="form-text text-muted">Arrival date</small></div>
+            <div style="flex:1">{{ form.arrival_time }}<small class="form-text text-muted">Arrival time</small></div>
+        </div>
+    </div>
+
     <!-- Dropoff Location -->
     <div class="form-group">
         <label for="dropoff_address" class="form-label">
@@ -209,8 +238,18 @@
         const pickupLng = document.getElementById('pickup_longitude').value;
         const dropoffLat = document.getElementById('dropoff_latitude').value;
         const dropoffLng = document.getElementById('dropoff_longitude').value;
+        const baseValid = pickupLat && pickupLng && dropoffLat && dropoffLng;
 
-        const isValid = pickupLat && pickupLng && dropoffLat && dropoffLng;
+        // If airport pickup selected, require airline and flight number
+        let airportValid = true;
+        const airportCheckbox = document.getElementById('pickup_is_airport');
+        if (airportCheckbox && airportCheckbox.checked) {
+            const airline = document.getElementById('id_arrival_airline') ? document.getElementById('id_arrival_airline').value : '';
+            const flight = document.getElementById('id_arrival_flight_number') ? document.getElementById('id_arrival_flight_number').value : '';
+            airportValid = airline.trim().length > 0 && flight.trim().length > 0;
+        }
+
+        const isValid = baseValid && airportValid;
         document.getElementById('next_btn').disabled = !isValid;
 
         if (isValid) {
@@ -218,12 +257,14 @@
         }
     }
 
-    document.getElementById('use_current_location').addEventListener('click', () => {
+    const useCurrentBtn = document.getElementById('use_current_location');
+    if (useCurrentBtn) {
+        useCurrentBtn.addEventListener('click', () => {
         if (navigator.geolocation) {
-            const btn = document.getElementById('use_current_location');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="loading-spinner" style="display: inline-block;"></i> Getting location...';
-            btn.disabled = true;
+                const btn = useCurrentBtn;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="loading-spinner" style="display: inline-block;"></i> Getting location...';
+                btn.disabled = true;
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
@@ -264,15 +305,31 @@
                     btn.disabled = false;
                 }
             );
-        } else {
-            alert('Geolocation is not supported by your browser.');
-        }
-    });
+                } else {
+                    alert('Geolocation is not supported by your browser.');
+                }
+        });
+    }
 
     // Initialize on page load
     window.addEventListener('load', () => {
         initMap();
         initAutocomplete();
+        // Airport checkbox toggle
+        const airportCheckbox = document.getElementById('pickup_is_airport');
+        const airportFields = document.getElementById('airport_fields');
+        function toggleAirportFields() {
+            if (airportCheckbox && airportCheckbox.checked) {
+                airportFields.style.display = 'block';
+            } else {
+                airportFields.style.display = 'none';
+            }
+            validateStep1();
+        }
+        if (airportCheckbox) {
+            airportCheckbox.addEventListener('change', toggleAirportFields);
+            toggleAirportFields();
+        }
         // Check if Maps loaded successfully
         setTimeout(() => {
             if (!map) {

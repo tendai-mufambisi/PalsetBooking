@@ -1,10 +1,17 @@
-Thanks for your booking ({{ booking.id }})
+Thanks for your booking ({{ booking.reference|default:booking.id }})
 
 Pickup: {{ booking.pickup_address }}
+Pickup date/time: {% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %}{% if booking.pickup_time %} {{ booking.pickup_time }}{% endif %}
+{% if booking.pickup_is_airport %}Arrival: {{ booking.arrival_airline }} {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %} {% if booking.arrival_time %}{{ booking.arrival_time }}{% endif %}{% endif %}
 Dropoff: {{ booking.dropoff_address }}
 Distance: {{ booking.distance_km }} km
 Total: ${{ booking.total_amount }}
 
+Passenger: {% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}
+
 Payment status: {{ payment_status }}
 
 We may contact you at {{ booking.phone }} if needed. Thank you for choosing us.
+{% if booking.extra_instructions %}
+Notes: {{ booking.extra_instructions }}
+{% endif %}

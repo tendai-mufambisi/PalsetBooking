@@ -10,7 +10,7 @@ app_name = 'rides'
 urlpatterns = [
     # Template-based booking form
     path('', BookingFormView.as_view(), name='home'),
-    path('bookings/success/<uuid:pk>/', BookingSuccessView.as_view(), name='booking_success'),
+    path('bookings/success/<str:pk>/', BookingSuccessView.as_view(), name='booking_success'),
 
     # Step-based wizard booking (multi-step)
     path('booking/step/<int:step>/', MultiStepBookingWizardView.as_view(), name='booking_wizard'),

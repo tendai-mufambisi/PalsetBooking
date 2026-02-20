@@ -1,12 +1,23 @@
-New ride booking: {{ booking.id }}
+New ride booking: {{ booking.reference|default:booking.id }}
 
 Pickup: {{ booking.pickup_address }}
+Pickup date/time: {% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %}{% if booking.pickup_time %} {{ booking.pickup_time }}{% endif %}
+Pickup is airport: {% if booking.pickup_is_airport %}Yes{% else %}No{% endif %}
+{% if booking.pickup_is_airport %}
+Arrival airline: {{ booking.arrival_airline }}
+Arrival flight: {{ booking.arrival_flight_number }}
+Arrival date/time: {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %}{% if booking.arrival_time %} {{ booking.arrival_time }}{% endif %}
+{% endif %}
 Dropoff: {{ booking.dropoff_address }}
 Distance: {{ booking.distance_km }} km
 Passengers: {{ booking.num_adults }} adults, {{ booking.num_kids_seated }} kids seated, {{ booking.num_kids_carried }} kids carried
 Luggage: {{ booking.luggage_count }}
 Phone: {{ booking.phone }}
 Email: {{ booking.email }}
+
+Passenger name: {% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}N/A{% endif %}
+
+Extra instructions: {{ booking.extra_instructions }}
 
 Payment status: {{ payment_status }}
 

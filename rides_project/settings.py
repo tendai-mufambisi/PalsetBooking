@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "rides",
 ]
 
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     # WhiteNoise should be directly after SecurityMiddleware so it can serve static files early

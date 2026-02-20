@@ -19,12 +19,23 @@
       <dl>
         <div>
           <dt>Booking ID</dt>
-          <dd>{{ booking.id }}</dd>
+          <dd>{{ booking.reference|default:booking.id }}</dd>
         </div>
         <div>
           <dt>Pickup</dt>
           <dd>{{ booking.pickup_address }}</dd>
         </div>
+        {% if booking.pickup_is_airport %}
+        <div>
+          <dt>Airport / Flight</dt>
+          <dd>
+            {% if booking.arrival_airline %}{{ booking.arrival_airline }}{% endif %}
+            {% if booking.arrival_flight_number %} - {{ booking.arrival_flight_number }}{% endif %}
+            {% if booking.arrival_date %} on {{ booking.arrival_date }}{% endif %}
+            {% if booking.arrival_time %} at {{ booking.arrival_time }}{% endif %}
+          </dd>
+        </div>
+        {% endif %}
         <div>
           <dt>Dropoff</dt>
           <dd>{{ booking.dropoff_address }}</dd>
@@ -37,10 +48,15 @@
         <div>
           <dt>Estimated Time</dt>
           <dd>{{ eta_minutes }} minutes</dd>
-        </div>
-        {% endif %}
         <div>
-          <dt>Total</dt>
+          <dt>Phone</dt>
+          <dd>{{ booking.phone }}</dd>
+        </div>
+
+        <div>
+          <dt>Passenger</dt>
+          <dd>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</dd>
+        </div>
           <dd>$ {{ booking.total_amount }}</dd>
         </div>
       </dl>

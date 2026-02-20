@@ -8,14 +8,21 @@
   </head>
   <body>
     <div class="card">
-      <h2>New ride booking: {{ booking.id }}</h2>
+      <h2>New ride booking: {{ booking.reference|default:booking.id }}</h2>
       <dl>
-        <div><dt>Pickup</dt><dd>{{ booking.pickup_address }}</dd></div>
+      <div><dt>Pickup</dt><dd>{{ booking.pickup_address }}</dd></div>
+      <div><dt>Pickup date/time</dt><dd>{% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %} {% if booking.pickup_time %}{{ booking.pickup_time }}{% endif %}</dd></div>
+      <div><dt>Airport pickup</dt><dd>{% if booking.pickup_is_airport %}Yes{% else %}No{% endif %}</dd></div>
+      {% if booking.pickup_is_airport %}
+      <div><dt>Arrival</dt><dd>{{ booking.arrival_airline }} - {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %} {% if booking.arrival_time %}{{ booking.arrival_time }}{% endif %}</dd></div>
+      {% endif %}
         <div><dt>Dropoff</dt><dd>{{ booking.dropoff_address }}</dd></div>
         <div><dt>Distance</dt><dd>{{ booking.distance_km }} km</dd></div>
         <div><dt>Passengers</dt><dd>{{ booking.num_adults }} adults, {{ booking.num_kids_seated }} kids seated, {{ booking.num_kids_carried }} kids carried</dd></div>
         <div><dt>Luggage</dt><dd>{{ booking.luggage_count }}</dd></div>
         <div><dt>Phone</dt><dd>{{ booking.phone }} / {{ booking.email }}</dd></div>
+        <div><dt>Passenger</dt><dd>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</dd></div>
+        <div><dt>Notes</dt><dd>{{ booking.extra_instructions }}</dd></div>
         <div><dt>Payment status</dt><dd>{{ payment_status }}</dd></div>
       </dl>
       <p>Call the driver/owner at {{ taxi_owner_phone }} to confirm the booking.</p>

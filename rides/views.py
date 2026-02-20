@@ -29,8 +29,10 @@ from django.middleware.csrf import get_token
 from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
+from django.core.exceptions import ValidationError
 
 from .models import RideBooking, Payment
+import datetime
 from .forms import (
     Step1PickupDropoffForm,
     Step2PassengersLuggageForm,
@@ -51,6 +53,107 @@ from .services.paynow import PaynowService
 from .services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
+
+def build_booking_message(booking, eta_minutes=None, payment_label_override: str | None = None):
+    """Return a multi-line plain-text summary of the booking suitable for WhatsApp sharing."""
+    try:
+        parts = []
+        parts.append("Hello Easy Transit, I have just booked a ride on your platform 🚗")
+        parts.append("")
+        parts.append("*Booking Details:*")
+        parts.append("")
+        bid = getattr(booking, 'reference', None) or str(booking.id)
+        parts.append(f"*Booking ID:* {bid}")
+
+        # Pickup with optional date/time
+        pickup_line = f"*Pickup:* {booking.pickup_address}"
+        if getattr(booking, 'pickup_date', None):
+            try:
+                pickup_line += f" on {booking.pickup_date.isoformat()}"
+            except Exception:
+                pickup_line += f" on {booking.pickup_date}"
+        if getattr(booking, 'pickup_time', None):
+            try:
+                pickup_line += f" at {booking.pickup_time.strftime('%H:%M') }"
+            except Exception:
+                pickup_line += f" at {booking.pickup_time}"
+        parts.append(pickup_line)
+
+        # Airport / arrival info
+        if getattr(booking, 'pickup_is_airport', False):
+            ar = getattr(booking, 'arrival_airline', None)
+            af = getattr(booking, 'arrival_flight_number', None)
+            ad = getattr(booking, 'arrival_date', None)
+            at = getattr(booking, 'arrival_time', None)
+            if ar or af or ad or at:
+                arr_parts = []
+                if ar:
+                    arr_parts.append(f"Airline: {ar}")
+                if af:
+                    arr_parts.append(f"Flight: {af}")
+                if ad:
+                    try:
+                        arr_parts.append(f"Arrival date: {ad.isoformat()}")
+                    except Exception:
+                        arr_parts.append(f"Arrival date: {ad}")
+                if at:
+                    try:
+                        arr_parts.append(f"Arrival time: {at.strftime('%H:%M')}")
+                    except Exception:
+                        arr_parts.append(f"Arrival time: {at}")
+                parts.append("*Arrival:* " + ", ".join(arr_parts))
+
+        parts.append(f"*Dropoff:* {booking.dropoff_address}")
+        parts.append(f"*Distance:* {booking.distance_km} km")
+        if eta_minutes:
+            parts.append(f"*Estimated Time:* {eta_minutes} minutes")
+
+        parts.append("")
+        parts.append(f"*Total Fare:* ${booking.total_amount}")
+        if payment_label_override:
+            parts.append(f"*Payment:* {payment_label_override}")
+        else:
+            po = getattr(booking, 'payment_option', '')
+            if po == RideBooking.PAYMENT_ON_ARRIVAL:
+                parts.append("*Payment:* Pay on Arrival (Cash)")
+            elif po == RideBooking.PAYMENT_PAYNOW:
+                parts.append("*Payment:* Pay Online (Paynow)")
+            else:
+                parts.append(f"*Payment:* {po}")
+
+        # Passenger summary
+        pfull = getattr(booking, 'passenger_full_name', None)
+        psal = getattr(booking, 'salutation', None)
+        if pfull:
+            parts.append("")
+            parts.append(f"*Passenger:* {psal + ' ' if psal else ''}{pfull}")
+        else:
+            parts.append("")
+            parts.append(f"*Passengers:* {booking.num_adults} adult(s)")
+            if booking.num_kids_seated or booking.num_kids_carried:
+                parts[-1] += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
+
+        if booking.luggage_count:
+            parts.append(f"*Luggage:* {booking.luggage_count} bag(s)")
+
+        # Extra instructions and contact
+        if getattr(booking, 'extra_instructions', None):
+            parts.append("")
+            parts.append(f"*Notes:* {booking.extra_instructions}")
+
+        parts.append("")
+        parts.append(f"Contact phone: {booking.phone}")
+        if getattr(booking, 'email', None):
+            parts.append(f"Contact email: {booking.email}")
+
+        parts.append("")
+        parts.append("Thank you! Ready for my ride.")
+
+        return "\n".join(parts)
+    except Exception as exc:
+        logger.exception('Error building booking message: %s', exc)
+        bid = getattr(booking, 'reference', None) or str(booking.id)
+        return f"Booking {bid} - Pickup: {booking.pickup_address} -> {booking.dropoff_address}"
 
 
 # ============================================================================
@@ -86,7 +189,35 @@ class MultiStepBookingWizardView(View):
         for key in ['step1', 'step2', 'step3', 'step4']:
             session_key = self.get_session_key(key)
             if session_key in self.request.session:
-                data[key] = self.request.session[session_key]
+                # Clone session data and convert ISO date/time strings back to objects
+                item = dict(self.request.session[session_key])
+                if key == 'step1':
+                    # parse dates/times if stored as ISO strings
+                    pd = item.get('pickup_date')
+                    pt = item.get('pickup_time')
+                    ad = item.get('arrival_date')
+                    at = item.get('arrival_time')
+                    try:
+                        if isinstance(pd, str) and pd:
+                            item['pickup_date'] = datetime.date.fromisoformat(pd)
+                    except Exception:
+                        pass
+                    try:
+                        if isinstance(pt, str) and pt:
+                            item['pickup_time'] = datetime.time.fromisoformat(pt)
+                    except Exception:
+                        pass
+                    try:
+                        if isinstance(ad, str) and ad:
+                            item['arrival_date'] = datetime.date.fromisoformat(ad)
+                    except Exception:
+                        pass
+                    try:
+                        if isinstance(at, str) and at:
+                            item['arrival_time'] = datetime.time.fromisoformat(at)
+                    except Exception:
+                        pass
+                data[key] = item
         return data
 
     def clear_wizard_session(self):
@@ -163,7 +294,15 @@ class MultiStepBookingWizardView(View):
                         (step1.get('dropoff_latitude'), step1.get('dropoff_longitude')),
                     )
                     step1['distance_km'] = distance_km
-                    self.request.session[self.get_session_key('step1')] = step1
+                    # Ensure session-stored step1 is JSON-serializable (convert dates/times)
+                    def _iso_date(d):
+                        return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
+                    session_step1 = dict(step1)
+                    session_step1['pickup_date'] = _iso_date(session_step1.get('pickup_date'))
+                    session_step1['pickup_time'] = _iso_date(session_step1.get('pickup_time'))
+                    session_step1['arrival_date'] = _iso_date(session_step1.get('arrival_date'))
+                    session_step1['arrival_time'] = _iso_date(session_step1.get('arrival_time'))
+                    self.request.session[self.get_session_key('step1')] = session_step1
                     self.request.session.modified = True
 
                 fare_breakdown = PricingService.calculate(
@@ -196,10 +335,14 @@ class MultiStepBookingWizardView(View):
             booking_id = request.session.get(f'{self.SESSION_KEY_PREFIX}_booking_id')
             booking = None
             if booking_id:
+                # booking_id may be a UUID (primary key) or a human-friendly reference like ET101
                 try:
                     booking = RideBooking.objects.get(pk=booking_id)
-                except RideBooking.DoesNotExist:
-                    pass
+                except Exception:
+                    try:
+                        booking = RideBooking.objects.get(reference=booking_id)
+                    except RideBooking.DoesNotExist:
+                        booking = None
 
             # Calculate estimated travelling time
             eta_minutes = None
@@ -221,34 +364,9 @@ class MultiStepBookingWizardView(View):
                     elif booking.payment_option == "PAYNOW":
                         payment_status = "Pay Online (Paynow)"
                     
-                    msg = f"""Hello Easy Transit, I have just booked a ride on your platform 🚗
-
-*Booking Details:*
-
-*Booking ID:* {booking.id}
-*Pickup:* {booking.pickup_address}
-*Dropoff:* {booking.dropoff_address}
-*Distance:* {booking.distance_km} km"""
-                    
-                    if eta_minutes:
-                        msg += f"\n*Estimated Time:* {eta_minutes} minutes"
-                    
-                    msg += f"""
-
-*Total Fare:* ${booking.total_amount}
-*Payment Method:* {payment_status}
-
-*Passengers:* {booking.num_adults} adult(s)"""
-                    
-                    if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
-                        msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
-                    
-                    if booking.luggage_count > 0:
-                        msg += f"\n*Luggage:* {booking.luggage_count} bag(s)"
-                    
-                    msg += f"\n\nThank you! Ready for my ride."
-                    
-                    # Remove + from phone number for WhatsApp API
+                    # Build detailed message and URL-encode it
+                    msg = build_booking_message(booking, eta_minutes=eta_minutes, payment_label_override=payment_status)
+                    from urllib.parse import quote
                     phone = settings.TAXI_OWNER_PHONE.lstrip('+')
                     whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
                 except Exception as e:
@@ -277,6 +395,9 @@ class MultiStepBookingWizardView(View):
             form = Step1PickupDropoffForm(request.POST)
             if form.is_valid():
                 # Save to session and progress
+                # Store date/time as ISO strings to keep session JSON-serializable
+                def _iso_date(d):
+                    return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
                 self.request.session[self.get_session_key('step1')] = {
                     'pickup_address': form.cleaned_data['pickup_address'],
                     'pickup_latitude': form.cleaned_data['pickup_latitude'],
@@ -285,6 +406,13 @@ class MultiStepBookingWizardView(View):
                     'dropoff_latitude': form.cleaned_data['dropoff_latitude'],
                     'dropoff_longitude': form.cleaned_data['dropoff_longitude'],
                     'distance_km': 0,  # Will be calculated in Step 4
+                    'pickup_date': _iso_date(form.cleaned_data.get('pickup_date')),
+                    'pickup_time': _iso_date(form.cleaned_data.get('pickup_time')),
+                    'pickup_is_airport': bool(form.cleaned_data.get('pickup_is_airport')),
+                    'arrival_airline': form.cleaned_data.get('arrival_airline'),
+                    'arrival_flight_number': form.cleaned_data.get('arrival_flight_number'),
+                    'arrival_date': _iso_date(form.cleaned_data.get('arrival_date')),
+                    'arrival_time': _iso_date(form.cleaned_data.get('arrival_time')),
                 }
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=2)
@@ -304,12 +432,27 @@ class MultiStepBookingWizardView(View):
 
             form = Step2PassengersLuggageForm(request.POST)
             if form.is_valid():
+                # persist passenger counts and optional passengers JSON from client
+                passengers_json = request.POST.get('passengers_json') or request.POST.get('passengersJson') or '[]'
+                # update step2 counts
                 self.request.session[self.get_session_key('step2')] = {
                     'num_adults': form.cleaned_data['num_adults'],
                     'num_kids_seated': form.cleaned_data['num_kids_seated'],
                     'num_kids_carried': form.cleaned_data['num_kids_carried'],
                     'luggage_count': form.cleaned_data['luggage_count'],
+                    'passengers_json': passengers_json,
                 }
+                # allow editing of pickup date/time from this step: merge into step1
+                step1_key = self.get_session_key('step1')
+                step1 = dict(self.request.session.get(step1_key, {}))
+                pd = request.POST.get('pickup_date')
+                pt = request.POST.get('pickup_time')
+                if pd:
+                    step1['pickup_date'] = pd
+                if pt:
+                    step1['pickup_time'] = pt
+                # save back to session
+                self.request.session[step1_key] = step1
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=3)
             else:
@@ -333,6 +476,8 @@ class MultiStepBookingWizardView(View):
                     'phone': form.cleaned_data['phone'],
                     'email': form.cleaned_data['email'],
                     'extra_instructions': form.cleaned_data['extra_instructions'],
+                    'salutation': form.cleaned_data.get('salutation'),
+                    'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
                 }
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=4)
@@ -392,14 +537,24 @@ class MultiStepBookingWizardView(View):
                             phone=step3['phone'],
                             email=step3['email'],
                             extra_instructions=step3.get('extra_instructions', ''),
+                            pickup_date=step1.get('pickup_date'),
+                            pickup_time=step1.get('pickup_time'),
+                            pickup_is_airport=step1.get('pickup_is_airport', False),
+                            arrival_airline=step1.get('arrival_airline'),
+                            arrival_flight_number=step1.get('arrival_flight_number'),
+                            arrival_date=step1.get('arrival_date'),
+                            arrival_time=step1.get('arrival_time'),
+                            salutation=step3.get('salutation'),
+                            passenger_full_name=step3.get('passenger_full_name'),
                             payment_option=payment_method,
                             price_breakdown=fare_breakdown,
                             total_amount=Decimal(str(fare_breakdown['total'])),
                             status=RideBooking.STATUS_PENDING,
                         )
 
-                        # Store booking ID in session
-                        self.request.session[f'{self.SESSION_KEY_PREFIX}_booking_id'] = str(booking.id)
+                        # Store booking reference (fallback to UUID) in session
+                        bref = getattr(booking, 'reference', None) or str(booking.id)
+                        self.request.session[f'{self.SESSION_KEY_PREFIX}_booking_id'] = str(bref)
                         self.request.session.modified = True
 
                         if payment_method == RideBooking.PAYMENT_ON_ARRIVAL:
@@ -444,11 +599,12 @@ class MultiStepBookingWizardView(View):
                             logger.info('Response keys: %s', paynow_response.keys() if isinstance(paynow_response, dict) else type(paynow_response))
                             logger.info('Response: %s', paynow_response)
 
-                            # Store payment and booking IDs in session for return flow
+                            # Store payment and booking refs/ids in session for return flow
+                            bref = getattr(booking, 'reference', None) or str(booking.id)
                             self.request.session['last_payment_id'] = str(payment.id)
-                            self.request.session['last_booking_id'] = str(booking.id)
+                            self.request.session['last_booking_id'] = str(bref)
                             self.request.session.modified = True
-                            logger.info('Stored in session: last_payment_id=%s, last_booking_id=%s', payment.id, booking.id)
+                            logger.info('Stored in session: last_payment_id=%s, last_booking_id=%s', payment.id, bref)
 
                             payment.paynow_response = paynow_response
                             # Extract Paynow reference
@@ -474,10 +630,11 @@ class MultiStepBookingWizardView(View):
 
                             # Fallback: show paynow redirect template
                             logger.warning('No redirect_url found in paynow_response, showing fallback template')
+                            bref = getattr(booking, 'reference', None) or str(booking.id)
                             return render(request, 'rides/paynow_redirect.html', {
                                 'redirect_url': redirect_url,
                                 'payment_id': str(payment.id),
-                                'booking_id': str(booking.id),
+                                'booking_id': str(bref),
                             })
 
                 except Exception as e:
@@ -631,7 +788,19 @@ class BookingSuccessView(TemplateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        booking = get_object_or_404(RideBooking, pk=self.kwargs.get('pk'))
+        booking = None
+        pk_val = self.kwargs.get('pk')
+        if pk_val:
+            try:
+                booking = RideBooking.objects.get(pk=pk_val)
+            except Exception:
+                try:
+                    booking = RideBooking.objects.get(reference=pk_val)
+                except RideBooking.DoesNotExist:
+                    booking = None
+        if not booking:
+            # Let original 404 behavior happen
+            booking = get_object_or_404(RideBooking, pk=self.kwargs.get('pk'))
         ctx['booking'] = booking
         ctx['TAXI_OWNER_PHONE'] = settings.TAXI_OWNER_PHONE
         
@@ -655,36 +824,9 @@ class BookingSuccessView(TemplateView):
             elif booking.payment_option == "PAYNOW":
                 payment_status = "Pay Online (Paynow)"
             
-            msg = f"""Hello Easy Transit, I have just booked a ride on your platform 🚗
-
-*Booking Details:*
-
-*Booking ID:* {booking.id}
-*Pickup:* {booking.pickup_address}
-*Dropoff:* {booking.dropoff_address}
-*Distance:* {booking.distance_km} km"""
-            
-            if eta_minutes:
-                msg += f"\n*Estimated Time:* {eta_minutes} minutes"
-            
-            msg += f"""
-
-*Total Fare:* ${booking.total_amount}
-*Payment Method:* {payment_status}
-
-*Passengers:* {booking.num_adults} adult(s)"""
-            
-            if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
-                msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
-            
-            if booking.luggage_count > 0:
-                msg += f"\n*Luggage:* {booking.luggage_count} bag(s)"
-            
-            msg += f"\n\nThank you! Ready for my ride."
-            
-            # Remove + from phone number for WhatsApp API
-            phone = settings.TAXI_OWNER_PHONE.lstrip('+')
-            whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
+                msg = build_booking_message(booking, eta_minutes=eta_minutes, payment_label_override=payment_status)
+                phone = settings.TAXI_OWNER_PHONE.lstrip('+')
+                whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
         except Exception as e:
             logger.exception('Error generating WhatsApp message: %s', e)
         
@@ -716,6 +858,18 @@ class CreateBookingView(APIView):
                 luggage_count=data.get('luggage_count', 0),
             )
 
+            # normalize passengers_json which may come as a JSON string or already as a list/dict
+            raw_passengers = data.get('passengers_json') or data.get('passengers')
+            passengers_json = None
+            if raw_passengers:
+                if isinstance(raw_passengers, str):
+                    try:
+                        passengers_json = json.loads(raw_passengers)
+                    except Exception:
+                        passengers_json = raw_passengers
+                else:
+                    passengers_json = raw_passengers
+
             booking = RideBooking.objects.create(
                 pickup_address=data['pickup_address'],
                 pickup_lat=data.get('pickup_lat'),
@@ -730,6 +884,16 @@ class CreateBookingView(APIView):
                 luggage_count=data.get('luggage_count', 0),
                 phone=data['phone'],
                 email=data['email'],
+                pickup_date=data.get('pickup_date'),
+                pickup_time=data.get('pickup_time'),
+                pickup_is_airport=data.get('pickup_is_airport', False),
+                arrival_airline=data.get('arrival_airline'),
+                arrival_flight_number=data.get('arrival_flight_number'),
+                arrival_date=data.get('arrival_date'),
+                arrival_time=data.get('arrival_time'),
+                salutation=data.get('salutation'),
+                passenger_full_name=data.get('passenger_full_name'),
+                passengers_json=passengers_json,
                 payment_option=data['payment_option'],
                 price_breakdown=breakdown,
                 total_amount=breakdown['total'],
@@ -1009,34 +1173,7 @@ class PaynowReturnView(APIView):
                         whatsapp_message = None
                         try:
                             payment_status = "PAID ✅" if payment.status == Payment.STATUS_PAID else "PENDING ⏳"
-                            msg = f"""Hello Easy Transit, I have just booked a ride on your platform 🚗
-
-*Booking Details:*
-
-*Booking ID:* {booking.id}
-*Pickup:* {booking.pickup_address}
-*Dropoff:* {booking.dropoff_address}
-*Distance:* {booking.distance_km} km"""
-                            
-                            if eta_minutes:
-                                msg += f"\n*Estimated Time:* {eta_minutes} minutes"
-                            
-                            msg += f"""
-
-*Total Fare:* ${booking.total_amount}
-*Payment Status:* {payment_status}
-
-*Passengers:* {booking.num_adults} adult(s)"""
-                            
-                            if booking.num_kids_seated > 0 or booking.num_kids_carried > 0:
-                                msg += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
-                            
-                            if booking.luggage_count > 0:
-                                msg += f"\n*Luggage:* {booking.luggage_count} bag(s)"
-                            
-                            msg += f"\n\nThank you! Ready for my ride."
-                            
-                            # Remove + from phone number for WhatsApp API
+                            msg = build_booking_message(booking, eta_minutes=eta_minutes, payment_label_override=payment_status)
                             phone = settings.TAXI_OWNER_PHONE.lstrip('+')
                             whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
                         except Exception as e:

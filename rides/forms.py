@@ -44,6 +44,31 @@ class Step1PickupDropoffForm(forms.Form):
         widget=forms.HiddenInput(attrs={'id': 'dropoff_longitude'}),
         required=False
     )
+    # Scheduling and airport-specific fields
+    pickup_date = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'pickup_date'})
+    )
+    pickup_time = forms.TimeField(
+        required=False,
+        widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time', 'id': 'pickup_time'})
+    )
+    pickup_is_airport = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={'id': 'pickup_is_airport', 'class': 'form-check-input'})
+    )
+    arrival_airline = forms.CharField(
+        max_length=64,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Airlink', 'id': 'id_arrival_airline'})
+    )
+    arrival_flight_number = forms.CharField(
+        max_length=32,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. 40Z10', 'id': 'id_arrival_flight_number'})
+    )
+    arrival_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'id_arrival_date'}))
+    arrival_time = forms.TimeField(required=False, widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time', 'id': 'id_arrival_time'}))
 
     def clean(self):
         cleaned = super().clean()
@@ -55,6 +80,11 @@ class Step1PickupDropoffForm(forms.Form):
         # Validate that coordinates are present after Places Autocomplete
         if not all([pickup_lat, pickup_lng, dropoff_lat, dropoff_lng]):
             raise ValidationError('Please select valid pickup and dropoff locations from the suggestions.')
+
+        # If user indicated airport pickup, require flight details
+        if cleaned.get('pickup_is_airport'):
+            if not cleaned.get('arrival_airline') or not cleaned.get('arrival_flight_number'):
+                raise ValidationError('For airport pickups please provide arrival airline and flight number.')
         
         return cleaned
 
@@ -119,6 +149,16 @@ class Step3ContactExtraForm(forms.Form):
             'rows': 3,
             'id': 'extra_instructions',
         })
+    )
+    # Passenger details
+    salutation = forms.CharField(
+        max_length=32,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Mr / Mrs / Dr', 'id': 'id_salutation'})
+    )
+    passenger_full_name = forms.CharField(
+        max_length=256,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name (e.g. John Doe)', 'id': 'id_passenger_full_name'})
     )
 
     def clean(self):
@@ -192,6 +232,13 @@ class BookingForm(forms.Form):
     pickup_address = forms.CharField(max_length=512)
     pickup_lat = forms.FloatField(required=False)
     pickup_lng = forms.FloatField(required=False)
+    pickup_date = forms.DateField(required=False)
+    pickup_time = forms.TimeField(required=False)
+    pickup_is_airport = forms.BooleanField(required=False)
+    arrival_airline = forms.CharField(max_length=64, required=False, widget=forms.TextInput(attrs={'placeholder': 'e.g. Airlink'}))
+    arrival_flight_number = forms.CharField(max_length=32, required=False, widget=forms.TextInput(attrs={'placeholder': 'e.g. 40Z10'}))
+    arrival_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+    arrival_time = forms.TimeField(required=False, widget=forms.TimeInput(attrs={'type': 'time'}))
     dropoff_address = forms.CharField(max_length=512)
     dropoff_lat = forms.FloatField(required=False)
     dropoff_lng = forms.FloatField(required=False)
@@ -205,6 +252,9 @@ class BookingForm(forms.Form):
 
     phone = forms.CharField(max_length=32)
     email = forms.EmailField()
+    salutation = forms.CharField(max_length=32, required=False)
+    salutation = forms.CharField(max_length=32, required=False, widget=forms.TextInput(attrs={'placeholder': 'Mr / Mrs / Dr'}))
+    passenger_full_name = forms.CharField(max_length=256, widget=forms.TextInput(attrs={'placeholder': 'Full name (e.g. John Doe)'}))
 
     payment_option = forms.ChoiceField(choices=[(RideBooking.PAYMENT_ON_ARRIVAL, 'Pay on Arrival'), (RideBooking.PAYMENT_PAYNOW, 'Pay Online')])
 
