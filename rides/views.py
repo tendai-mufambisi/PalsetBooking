@@ -116,6 +116,12 @@ def build_booking_message(booking, eta_minutes=None, payment_label_override: str
             po = getattr(booking, 'payment_option', '')
             if po == RideBooking.PAYMENT_ON_ARRIVAL:
                 parts.append("*Payment:* Pay on Arrival (Cash)")
+            elif po == RideBooking.PAYMENT_CARD_ON_ARRIVAL:
+                parts.append("*Payment:* Pay on Arrival (POS/CARD)")
+            elif po == RideBooking.PAYMENT_MONEY_TRANSFER:
+                parts.append("*Payment:* Money Transfer Agency")
+            elif po == RideBooking.PAYMENT_PAYLINK:
+                parts.append("*Payment:* Paylink")
             elif po == RideBooking.PAYMENT_PAYNOW:
                 parts.append("*Payment:* Pay Online (Paynow)")
             else:
@@ -599,21 +605,37 @@ class MultiStepBookingWizardView(View):
                         self.request.session[f'{self.SESSION_KEY_PREFIX}_booking_id'] = str(bref)
                         self.request.session.modified = True
 
-                        if payment_method == RideBooking.PAYMENT_ON_ARRIVAL:
-                            # Confirm booking immediately for cash payment
+                        # Handle payment methods that confirm immediately (non-online gateways)
+                        immediate_confirmation_methods = [
+                            RideBooking.PAYMENT_ON_ARRIVAL,
+                            RideBooking.PAYMENT_CARD_ON_ARRIVAL,
+                            RideBooking.PAYMENT_MONEY_TRANSFER,
+                            RideBooking.PAYMENT_PAYLINK,
+                        ]
+
+                        if payment_method in immediate_confirmation_methods:
+                            # Confirm booking immediately for non-online payment methods
                             booking.status = RideBooking.STATUS_CONFIRMED
                             booking.save()
 
                             Payment.objects.create(
                                 booking=booking,
-                                method=RideBooking.PAYMENT_ON_ARRIVAL,
+                                method=payment_method,
                                 amount=booking.total_amount,
                                 status=Payment.STATUS_PENDING,
                             )
 
+                            # Determine payment label for notifications
+                            payment_label = {
+                                RideBooking.PAYMENT_ON_ARRIVAL: 'Pay on Arrival (Cash)',
+                                RideBooking.PAYMENT_CARD_ON_ARRIVAL: 'Pay on Arrival (POS/CARD)',
+                                RideBooking.PAYMENT_MONEY_TRANSFER: 'Money Transfer Agency',
+                                RideBooking.PAYMENT_PAYLINK: 'Paylink',
+                            }.get(payment_method, payment_method)
+
                             # Send notifications
-                            EmailService.send_owner_notification(booking, payment_status='PAY ON ARRIVAL')
-                            EmailService.send_customer_notification(booking, payment_status='PAY ON ARRIVAL')
+                            EmailService.send_owner_notification(booking, payment_status=payment_label)
+                            EmailService.send_customer_notification(booking, payment_status=payment_label)
 
                             # Go to confirmation
                             return redirect('rides:booking_wizard', step=5)

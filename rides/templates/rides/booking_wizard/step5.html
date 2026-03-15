@@ -133,6 +133,12 @@
                 <strong>
                     {% if booking.payment_option == "POA" %}
                         💰 Pay on Arrival (Cash)
+                    {% elif booking.payment_option == "pos_card" %}
+                        💳 Pay on Arrival (POS/CARD)
+                    {% elif booking.payment_option == "money_transfer" %}
+                        💸 Money Transfer Agency
+                    {% elif booking.payment_option == "paylink" %}
+                        🔗 Paylink
                     {% elif booking.payment_option == "PAYNOW" %}
                         💳 Pay Online (Paynow)
                     {% else %}
@@ -148,21 +154,12 @@
         <h4 style="margin-bottom: 8px; font-size: 14px;">
             <i class="bi bi-bell"></i> What's Next?
         </h4>
-        {% if booking.payment_option == "POA" %}
-            <p style="margin-bottom: 8px;">
-                ✓ Your driver will arrive shortly. You'll receive updates and can contact the driver when needed.
-            </p>
-            <p>
-                💰 Please have cash ready to pay ${{ booking.total_amount }} on arrival.
-            </p>
-        {% else %}
-            <p style="margin-bottom: 8px;">
-                ✓ Complete your payment via Paynow to finalize the booking.
-            </p>
-            <p>
-                🚗 Once payment is confirmed, your driver will be assigned and will arrive shortly.
-            </p>
-        {% endif %}
+        <p style="margin-bottom: 8px;">
+            ✓ The driver will arrive exactly on the time you have requested
+        </p>
+        <p>
+            🚗 Pick up fm airport, the driver will be displaying a name board with the name you have provided during booking for easy identification in the arrivals hall.
+        </p>
     </div>
 
     <!-- Driver Contact -->

@@ -3,7 +3,7 @@
 {% block title %}Step 1: Location - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Where are you going?</h2>
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">My Trip Details</h2>
 
 {% if request.GET.missing_coords %}
     <div class="error-message" style="margin-bottom:12px;">
@@ -42,12 +42,8 @@
     <!-- Hidden pickup coordinates -->
     <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="{{ step1_data.pickup_latitude|default:'' }}">
     <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="{{ step1_data.pickup_longitude|default:'' }}">
-
-    <!-- Pickup scheduling -->
-    <div class="form-row" style="display:flex; gap:12px; margin-top:12px;">
-        <div style="flex:1">{{ form.pickup_date }}</div>
-        <div style="flex:1">{{ form.pickup_time }}</div>
-    </div>
+    <input type="hidden" id="pickup_date" name="pickup_date" value="{{ step1_data.pickup_date|default:'' }}">
+    <input type="hidden" id="pickup_time" name="pickup_time" value="{{ step1_data.pickup_time|default:'' }}">
 
     <div style="margin-top:14px;">
         <label for="pickup_is_airport" class="form-label" style="display:block;">

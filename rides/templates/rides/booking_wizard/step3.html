@@ -3,7 +3,7 @@
 {% block title %}Step 3: Contact Info - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">How should we contact you?</h2>
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">My Contact Details</h2>
 
 {% if form.non_field_errors %}
     <div class="error-message">
@@ -16,25 +16,10 @@
 <form method="POST" id="step3_form">
     {% csrf_token %}
 
-    <!-- Passenger Name / Salutation -->
-    <div class="form-row" style="display:flex; gap:12px; margin-bottom:12px;">
-        <div style="flex:0 0 160px">
-            <label for="id_salutation" class="form-label">Salutation</label>
-            {{ form.salutation }}
-            <!-- <small class="form-text text-muted">e.g. Mr, Mrs, Dr, Prof</small> -->
-        </div>
-        <div style="flex:1">
-            <label for="id_passenger_full_name" class="form-label">Passenger full name *</label>
-            {{ form.passenger_full_name }}
-            <!-- <small class="form-text text-muted">Provide full name for respectful service (e.g. John Doe)</small> -->
-        </div>
-    </div>
-
     <!-- Phone Number -->
     <div class="form-group">
         <label for="phone" class="form-label"><i class="bi bi-telephone"></i> Phone Number *</label>
         {{ form.phone }}
-        <small class="form-text">We'll use this to reach you about your ride</small>
         {% if form.phone.errors %}
             <div class="error-message" style="margin-top: 8px;">
                 {% for error in form.phone.errors %}{{ error }}{% endfor %}

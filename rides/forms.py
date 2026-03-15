@@ -197,6 +197,9 @@ class Step4FarePaymentForm(forms.Form):
     payment_method = forms.ChoiceField(
         choices=[
             (RideBooking.PAYMENT_ON_ARRIVAL, 'Pay on Arrival (Cash)'),
+            (RideBooking.PAYMENT_CARD_ON_ARRIVAL, 'Pay on Arrival (POS/CARD payment)'),
+            (RideBooking.PAYMENT_MONEY_TRANSFER, 'Pay Via Money Transfer Agency'),
+            (RideBooking.PAYMENT_PAYLINK, 'Paylink'),
             (RideBooking.PAYMENT_PAYNOW, 'Pay Online (Paynow)'),
         ],
         widget=forms.RadioSelect(attrs={

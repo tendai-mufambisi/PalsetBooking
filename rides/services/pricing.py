@@ -1,5 +1,25 @@
 from decimal import Decimal, ROUND_HALF_UP
+import logging
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+# Default pricing configuration used when settings.PRICING is missing or incomplete
+DEFAULT_PRICING = {
+    "MIN_DISTANCE_KM": 13.0,
+    "BRACKETS": [
+        {"min": 13, "max": 15, "price": 25.0},
+        {"min": 16, "max": 20, "price": 30.0},
+        {"min": 21, "max": 25, "price": 35.0},
+        {"min": 26, "max": 35, "price": 40.0},
+    ],
+    "ABOVE_35_PER_KM": 1.0,
+    "BASE_PASSENGERS": 3,
+    "EXTRA_ADULT_FEE": 10.0,
+    "KID_SEATED_FACTOR": 0.5,
+    "FREE_LUGGAGE_ITEMS": 5,
+    "LUGGAGE_FEE": 5.0,
+}
 
 
 class PricingService:
@@ -21,51 +41,75 @@ class PricingService:
 
     @classmethod
     def calculate(cls, distance_km: float, num_adults: int = 1, num_kids_seated: int = 0, num_kids_carried: int = 0, luggage_count: int = 0) -> dict:
-        if distance_km is None:
-            raise ValueError("distance_km is required")
+        # Coerce and validate inputs to avoid type errors caused by session/JSON strings
+        try:
+            if distance_km is None:
+                raise ValueError("distance_km is required")
+            distance = Decimal(str(float(distance_km)))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid distance_km: {exc}") from exc
+
+        try:
+            num_adults = int(num_adults)
+            num_kids_seated = int(num_kids_seated)
+            num_kids_carried = int(num_kids_carried)
+            luggage_count = int(luggage_count)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid passenger/luggage counts: {exc}") from exc
+
         if num_adults < 1:
             raise ValueError("At least one adult is required")
         if num_kids_seated < 0 or num_kids_carried < 0 or luggage_count < 0:
             raise ValueError("Counts cannot be negative")
 
-        distance = Decimal(str(distance_km))
-        pricing_cfg = settings.PRICING
+        # Use safe getattr for settings to avoid AttributeError in production when PRICING is missing
+        pricing_cfg = getattr(settings, 'PRICING', {}) or {}
 
         # Determine base distance price
         base_price = None
-        # Enforce minimum distance bracket (13 km)
-        effective_distance = max(distance, Decimal(str(pricing_cfg.get("MIN_DISTANCE_KM", 13.0))))
+        # Enforce minimum distance bracket
+        min_km = Decimal(str(pricing_cfg.get("MIN_DISTANCE_KM", DEFAULT_PRICING["MIN_DISTANCE_KM"])))
+        effective_distance = max(distance, min_km)
 
-        # Check defined brackets
-        for bracket in pricing_cfg.get("BRACKETS", []):
-            if Decimal(bracket["min"]) <= effective_distance <= Decimal(bracket["max"]):
-                base_price = Decimal(str(bracket["price"]))
-                break
+        # Use configured brackets or defaults
+        brackets = pricing_cfg.get("BRACKETS") or DEFAULT_PRICING["BRACKETS"]
+        for bracket in brackets:
+            try:
+                if Decimal(str(bracket.get("min"))) <= effective_distance <= Decimal(str(bracket.get("max"))):
+                    base_price = Decimal(str(bracket.get("price")))
+                    break
+            except Exception:
+                # Skip malformed bracket entries
+                logger.exception('Malformed pricing bracket: %s', bracket)
 
         if base_price is None:
             # If above 35, use special rule
             if effective_distance > Decimal("35"):
-                base_35 = Decimal("40.0")
-                per_km = Decimal(str(pricing_cfg.get("ABOVE_35_PER_KM", 1)))
+                base_35 = Decimal(str(DEFAULT_PRICING.get("BRACKETS")[-1]["price"]))
+                per_km = Decimal(str(pricing_cfg.get("ABOVE_35_PER_KM", DEFAULT_PRICING["ABOVE_35_PER_KM"])))
                 extra_km = effective_distance - Decimal("35")
                 base_price = base_35 + (per_km * extra_km)
             else:
-                # Fallback (shouldn't hit because of brackets): use lowest bracket
-                base_price = Decimal(str(pricing_cfg.get("BRACKETS")[0]["price"]))
+                # Fallback: use first bracket price from config or defaults
+                try:
+                    first_price = brackets[0].get("price")
+                    base_price = Decimal(str(first_price))
+                except Exception:
+                    base_price = Decimal(str(DEFAULT_PRICING["BRACKETS"][0]["price"]))
 
         # Extra adults
-        base_passengers = int(pricing_cfg.get("BASE_PASSENGERS", 3))
+        base_passengers = int(pricing_cfg.get("BASE_PASSENGERS", DEFAULT_PRICING["BASE_PASSENGERS"]))
         extra_adults = max(0, num_adults - base_passengers)
-        extra_adults_fee = Decimal(str(pricing_cfg.get("EXTRA_ADULT_FEE", 10.0))) * extra_adults
+        extra_adults_fee = Decimal(str(pricing_cfg.get("EXTRA_ADULT_FEE", DEFAULT_PRICING["EXTRA_ADULT_FEE"]))) * extra_adults
 
-        # Kids seated: 50% of the bracket base price
-        kid_factor = Decimal(str(pricing_cfg.get("KID_SEATED_FACTOR", 0.5)))
+        # Kids seated: factor of base price
+        kid_factor = Decimal(str(pricing_cfg.get("KID_SEATED_FACTOR", DEFAULT_PRICING["KID_SEATED_FACTOR"])))
         kids_seated_fee = base_price * kid_factor * Decimal(num_kids_seated)
 
-        # Luggage: First N items are free, then $5 per additional item
-        free_luggage = int(pricing_cfg.get("FREE_LUGGAGE_ITEMS", 5))
+        # Luggage: First N items are free
+        free_luggage = int(pricing_cfg.get("FREE_LUGGAGE_ITEMS", DEFAULT_PRICING["FREE_LUGGAGE_ITEMS"]))
         chargeable_luggage = max(0, luggage_count - free_luggage)
-        luggage_fee = Decimal(str(pricing_cfg.get("LUGGAGE_FEE", 5.0))) * Decimal(chargeable_luggage)
+        luggage_fee = Decimal(str(pricing_cfg.get("LUGGAGE_FEE", DEFAULT_PRICING["LUGGAGE_FEE"]))) * Decimal(chargeable_luggage)
 
         # Sum up
         subtotal = base_price + extra_adults_fee + kids_seated_fee + luggage_fee

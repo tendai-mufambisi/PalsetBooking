@@ -16,6 +16,9 @@ except Exception:
 
 class RideBooking(models.Model):
     PAYMENT_ON_ARRIVAL = 'POA'
+    PAYMENT_CARD_ON_ARRIVAL = 'pos_card'
+    PAYMENT_MONEY_TRANSFER = 'money_transfer'
+    PAYMENT_PAYLINK = 'paylink'
     PAYMENT_PAYNOW = 'PAYNOW'
 
     STATUS_PENDING = 'PENDING'
@@ -59,7 +62,13 @@ class RideBooking(models.Model):
     # Human-friendly booking reference (e.g. ET101)
     reference = models.CharField(max_length=16, unique=True, null=True, blank=True)
 
-    payment_option = models.CharField(max_length=16, choices=[(PAYMENT_ON_ARRIVAL, 'Pay on Arrival'), (PAYMENT_PAYNOW, 'Pay Online (Paynow)')])
+    payment_option = models.CharField(max_length=16, choices=[
+        (PAYMENT_ON_ARRIVAL, 'Pay on Arrival (Cash)'),
+        (PAYMENT_CARD_ON_ARRIVAL, 'Pay on Arrival (POS/CARD)'),
+        (PAYMENT_MONEY_TRANSFER, 'Money Transfer Agency'),
+        (PAYMENT_PAYLINK, 'Paylink'),
+        (PAYMENT_PAYNOW, 'Pay Online (Paynow)'),
+    ])
 
     status = models.CharField(max_length=16, choices=[(STATUS_PENDING, 'Pending'), (STATUS_CONFIRMED, 'Confirmed'), (STATUS_CANCELLED, 'Cancelled')], default=STATUS_PENDING)
 

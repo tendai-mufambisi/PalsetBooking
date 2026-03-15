@@ -3,28 +3,10 @@
 {% block title %}Step 2: Passengers & Pickup Details - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">When & Who?</h2>
+<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Passenger Details</h2>
 
 <form method="POST" id="step2_form">
     {% csrf_token %}
-
-    <!-- Pickup Date and Time -->
-    <div class="form-group">
-        <label for="id_pickup_date" class="form-label"><i class="bi bi-calendar-event"></i> Pickup Date</label>
-        <input type="date" id="id_pickup_date" name="pickup_date" class="form-control" value="{% if step1_data.pickup_date %}{{ step1_data.pickup_date }}{% endif %}">
-        {% if form.pickup_date.errors %}
-            <div class="error-message">{{ form.pickup_date.errors }}</div>
-        {% endif %}
-    </div>
-
-    <div class="form-group">
-        <label for="id_pickup_time" class="form-label"><i class="bi bi-clock"></i> Pickup Time</label>
-        <input type="time" id="id_pickup_time" name="pickup_time" class="form-control" value="{% if step1_data.pickup_time %}{{ step1_data.pickup_time }}{% endif %}">
-        {% if form.pickup_time.errors %}
-            <div class="error-message">{{ form.pickup_time.errors }}</div>
-        {% endif %}
-    </div>
-    <!-- Note: Arrival/flight details are captured on Step 1 only -->
 
     <!-- Passengers Section -->
     <div class="form-group">
@@ -51,7 +33,7 @@
 
     <!-- Passengers & Luggage Section -->
     <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-        <h4><i class="bi bi-suitcase-lg"></i> Additional Details</h4>
+        <h4><i class="bi bi-suitcase-lg"></i> Number Of Passengers</h4>
 
         <!-- Adults -->
         <div class="form-group">
