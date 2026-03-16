@@ -158,6 +158,7 @@ class Step3ContactExtraForm(forms.Form):
     )
     passenger_full_name = forms.CharField(
         max_length=256,
+        required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name (e.g. John Doe)', 'id': 'id_passenger_full_name'})
     )
 
