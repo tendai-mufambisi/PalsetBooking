@@ -102,6 +102,11 @@ class Step2PassengersLuggageForm(forms.Form):
         initial=0,
         widget=forms.HiddenInput()
     )
+    baby_car_seater = forms.IntegerField(
+        min_value=0,
+        initial=0,
+        widget=forms.HiddenInput()
+    )
     num_kids_carried = forms.IntegerField(
         min_value=0,
         initial=0,

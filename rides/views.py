@@ -565,6 +565,7 @@ class MultiStepBookingWizardView(View):
                         distance_km=distance_km,
                         num_adults=step2.get('num_adults', 1),
                         num_kids_seated=step2.get('num_kids_seated', 0),
+                        baby_car_seater=step2.get('baby_car_seater', 0),
                         num_kids_carried=step2.get('num_kids_carried', 0),
                         luggage_count=step2.get('luggage_count', 0),
                     )
@@ -580,6 +581,7 @@ class MultiStepBookingWizardView(View):
                             distance_km=Decimal(str(distance_km)),
                             num_adults=step2.get('num_adults', 1),
                             num_kids_seated=step2.get('num_kids_seated', 0),
+                            baby_car_seater=step2.get('baby_car_seater', 0),
                             num_kids_carried=step2.get('num_kids_carried', 0),
                             luggage_count=step2.get('luggage_count', 0),
                             phone=step3['phone'],

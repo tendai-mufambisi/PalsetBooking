@@ -37,6 +37,7 @@ class RideBooking(models.Model):
 
     num_adults = models.PositiveSmallIntegerField(default=1)
     num_kids_seated = models.PositiveSmallIntegerField(default=0)
+    baby_car_seater = models.PositiveSmallIntegerField(default=0)
     num_kids_carried = models.PositiveSmallIntegerField(default=0)
     luggage_count = models.PositiveSmallIntegerField(default=0)
 
