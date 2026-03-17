@@ -357,6 +357,7 @@ class MultiStepBookingWizardView(View):
                     distance_km=distance_km,
                     num_adults=step2.get('num_adults', 1),
                     num_kids_seated=step2.get('num_kids_seated', 0),
+                    baby_car_seater=step2.get('baby_car_seater', 0),
                     num_kids_carried=step2.get('num_kids_carried', 0),
                     luggage_count=step2.get('luggage_count', 0),
                 )
@@ -486,6 +487,7 @@ class MultiStepBookingWizardView(View):
                 self.request.session[self.get_session_key('step2')] = {
                     'num_adults': form.cleaned_data['num_adults'],
                     'num_kids_seated': form.cleaned_data['num_kids_seated'],
+                    'baby_car_seater': form.cleaned_data['baby_car_seater'],
                     'num_kids_carried': form.cleaned_data['num_kids_carried'],
                     'luggage_count': form.cleaned_data['luggage_count'],
                     'passengers_json': passengers_json,
@@ -809,6 +811,7 @@ class DistanceFareCalcView(APIView):
                 distance_km=distance_km,
                 num_adults=num_adults,
                 num_kids_seated=num_kids_seated,
+                baby_car_seater=request.POST.get('baby_car_seater', 0),
                 num_kids_carried=num_kids_carried,
                 luggage_count=luggage_count,
             )
@@ -920,6 +923,7 @@ class CreateBookingView(APIView):
                 distance_km=distance,
                 num_adults=data.get('num_adults', 1),
                 num_kids_seated=data.get('num_kids_seated', 0),
+                baby_car_seater=data.get('baby_car_seater', 0),
                 num_kids_carried=data.get('num_kids_carried', 0),
                 luggage_count=data.get('luggage_count', 0),
             )
@@ -1053,6 +1057,7 @@ class PriceEstimateView(APIView):
                 distance_km=distance,
                 num_adults=data.get('num_adults', 1),
                 num_kids_seated=data.get('num_kids_seated', 0),
+                baby_car_seater=data.get('baby_car_seater', 0),
                 num_kids_carried=data.get('num_kids_carried', 0),
                 luggage_count=data.get('luggage_count', 0),
             )
