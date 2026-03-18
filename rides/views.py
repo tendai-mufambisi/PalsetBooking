@@ -797,6 +797,8 @@ class DistanceFareCalcView(APIView):
 
             num_adults = int(data.get('num_adults', 1))
             num_kids_seated = int(data.get('num_kids_seated', 0))
+            num_kids_seated = int(data.get('num_kids_seated', 0))
+            baby_car_seater = int(data.get('baby_car_seater', 0))
             num_kids_carried = int(data.get('num_kids_carried', 0))
             luggage_count = int(data.get('luggage_count', 0))
 
@@ -811,7 +813,7 @@ class DistanceFareCalcView(APIView):
                 distance_km=distance_km,
                 num_adults=num_adults,
                 num_kids_seated=num_kids_seated,
-                baby_car_seater=request.POST.get('baby_car_seater', 0),
+                baby_car_seater=baby_car_seater,
                 num_kids_carried=num_kids_carried,
                 luggage_count=luggage_count,
             )
@@ -921,11 +923,11 @@ class CreateBookingView(APIView):
 
             breakdown = PricingService.calculate(
                 distance_km=distance,
-                num_adults=data.get('num_adults', 1),
-                num_kids_seated=data.get('num_kids_seated', 0),
-                baby_car_seater=data.get('baby_car_seater', 0),
-                num_kids_carried=data.get('num_kids_carried', 0),
-                luggage_count=data.get('luggage_count', 0),
+                num_adults=int(data.get('num_adults', 1)),
+                num_kids_seated=int(data.get('num_kids_seated', 0)),
+                baby_car_seater=int(data.get('baby_car_seater', 0)),
+                num_kids_carried=int(data.get('num_kids_carried', 0)),
+                luggage_count=int(data.get('luggage_count', 0)),
             )
 
             # normalize passengers_json which may come as a JSON string or already as a list/dict
@@ -1055,11 +1057,11 @@ class PriceEstimateView(APIView):
 
             breakdown = PricingService.calculate(
                 distance_km=distance,
-                num_adults=data.get('num_adults', 1),
-                num_kids_seated=data.get('num_kids_seated', 0),
-                baby_car_seater=data.get('baby_car_seater', 0),
-                num_kids_carried=data.get('num_kids_carried', 0),
-                luggage_count=data.get('luggage_count', 0),
+                num_adults=int(data.get('num_adults', 1)),
+                num_kids_seated=int(data.get('num_kids_seated', 0)),
+                baby_car_seater=int(data.get('baby_car_seater', 0)),
+                num_kids_carried=int(data.get('num_kids_carried', 0)),
+                luggage_count=int(data.get('luggage_count', 0)),
             )
 
             return Response(breakdown)
