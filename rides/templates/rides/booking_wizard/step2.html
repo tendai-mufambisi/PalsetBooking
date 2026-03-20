@@ -47,15 +47,8 @@
             <!-- <small class="form-text">At least 1 adult required</small> -->
         </div>
 
-        <!-- Optional Details Toggle -->
-        <div class="form-group">
-            <button type="button" class="btn btn-secondary" id="toggle_children" style="width: 100%; margin-bottom: 20px;">
-                <i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)
-            </button>
-        </div>
-
-        <!-- Children & Luggage (Initially Hidden) -->
-        <div id="optional_details" style="display: none;">
+        <!-- Children & Luggage (Always Visible) -->
+        <div id="optional_details" style="display: block;">
             <!-- Kids Seated -->
             <div class="form-group">
                 <label class="form-label"><i class="bi bi-chair"></i> Kids (Seated) - upto 10yrs <span style="color: #28a745; font-weight: 600;">$5 flat fare each</span></label>
@@ -339,22 +332,6 @@
         });
     });
 
-    // Toggle optional details
-    const toggleChildrenBtn = document.getElementById('toggle_children');
-    if (toggleChildrenBtn) {
-        toggleChildrenBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const optionalDetails = document.getElementById('optional_details');
-            const toggleBtn = toggleChildrenBtn;
-            if (!optionalDetails) return;
-            const isHidden = optionalDetails.style.display === 'none';
-
-            optionalDetails.style.display = isHidden ? 'block' : 'none';
-            toggleBtn.innerHTML = isHidden
-                ? '<i class="bi bi-chevron-up"></i> Hide Children & Luggage'
-                : '<i class="bi bi-chevron-down"></i> Add Children & Luggage (Optional)';
-        });
-    }
 
     // Back button
     document.getElementById('prev_btn').addEventListener('click', (e) => {

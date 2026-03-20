@@ -26,29 +26,42 @@
             </div>
 
             <div class="fare-row">
-                <span><i class="bi bi-person"></i> Base Fare ({{ fare_breakdown.num_adults|add:fare_breakdown.kids_seated }} passengers):</span>
+                <span><i class="bi bi-person"></i> Base Distance Fare:</span>
                 <strong>${{ fare_breakdown.base_distance_price|floatformat:2 }}</strong>
             </div>
 
             {% if fare_breakdown.extra_adults > 0 %}
                 <div class="fare-row">
-                    <span><i class="bi bi-people"></i> Extra Adults ({{ fare_breakdown.extra_adults }}):</span>
+                    <span><i class="bi bi-people"></i> Extra Adults ({{ fare_breakdown.extra_adults }} @ $10 each):</span>
                     <strong>${{ fare_breakdown.extra_adults_fee|floatformat:2 }}</strong>
                 </div>
             {% endif %}
 
             {% if fare_breakdown.kids_seated > 0 %}
                 <div class="fare-row">
-                    <span><i class="bi bi-chair"></i> Kids Seated Discount (50%):</span>
+                    <span><i class="bi bi-chair"></i> Kids Seated ({{ fare_breakdown.kids_seated }} @ 50% of base fare):</span>
                     <strong>-${{ fare_breakdown.kids_seated_fee|floatformat:2 }}</strong>
+                </div>
+            {% endif %}
+
+            {% if fare_breakdown.baby_car_seater > 0 %}
+                <div class="fare-row">
+                    <span><i class="bi bi-shield-baby"></i> Baby Car Seater ({{ fare_breakdown.baby_car_seater }} @ $10 each):</span>
+                    <strong>${{ fare_breakdown.baby_car_seater_fee|floatformat:2 }}</strong>
                 </div>
             {% endif %}
 
             {% if fare_breakdown.luggage_count > 0 %}
                 <div class="fare-row">
-                    <span><i class="bi bi-suitcase-lg"></i> Luggage ({{ fare_breakdown.luggage_count }} bags):</span>
+                    <span><i class="bi bi-suitcase-lg"></i> Luggage ({{ fare_breakdown.luggage_count }} bags @ $5 each after 5 free):</span>
                     <strong>${{ fare_breakdown.luggage_fee|floatformat:2 }}</strong>
                 </div>
+                {% if fare_breakdown.luggage_free > 0 %}
+                    <div class="fare-row" style="font-size: 12px; color: #666; margin-left: 20px;">
+                        <span>Free bags included: {{ fare_breakdown.luggage_free }}</span>
+                        <span>Chargeable bags: {{ fare_breakdown.luggage_chargeable }}</span>
+                    </div>
+                {% endif %}
             {% endif %}
 
             <div class="fare-row total">

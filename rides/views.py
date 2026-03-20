@@ -716,15 +716,39 @@ class MultiStepBookingWizardView(View):
                     return render(request, 'rides/booking_wizard/step4.html', context)
 
             else:
+                # Form invalid - but still calculate fare for display
+                step1 = wizard_data.get('step1', {})
+                step2 = wizard_data.get('step2', {})
+                try:
+                    distance_km = float(step1.get('distance_km', 0))
+                    if distance_km == 0:
+                        distance_km = DistanceService.get_distance_km(
+                            (step1.get('pickup_latitude'), step1.get('pickup_longitude')),
+                            (step1.get('dropoff_latitude'), step1.get('dropoff_longitude')),
+                        )
+                    fare_breakdown = PricingService.calculate(
+                        distance_km=distance_km,
+                        num_adults=step2.get('num_adults', 1),
+                        num_kids_seated=step2.get('num_kids_seated', 0),
+                        baby_car_seater=step2.get('baby_car_seater', 0),
+                        num_kids_carried=step2.get('num_kids_carried', 0),
+                        luggage_count=step2.get('luggage_count', 0),
+                    )
+                    context_extra = {'fare_breakdown': fare_breakdown}
+                except Exception as e:
+                    logger.exception('Fare calculation failed on re-render')
+                    context_extra = {'fare_error': str(e), 'estimated_fare': 'Unable to calculate'}
+                
                 context = {
                     'form': form,
                     'step': step,
                     'total_steps': 4,
-                    'step1_data': wizard_data.get('step1', {}),
-                    'step2_data': wizard_data.get('step2', {}),
+                    'step1_data': step1,
+                    'step2_data': step2,
                     'step3_data': wizard_data.get('step3', {}),
                     'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
                     'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
+                    **context_extra,
                 }
                 return render(request, 'rides/booking_wizard/step4.html', context)
 
@@ -797,8 +821,6 @@ class DistanceFareCalcView(APIView):
 
             num_adults = int(data.get('num_adults', 1))
             num_kids_seated = int(data.get('num_kids_seated', 0))
-            num_kids_seated = int(data.get('num_kids_seated', 0))
-            baby_car_seater = int(data.get('baby_car_seater', 0))
             num_kids_carried = int(data.get('num_kids_carried', 0))
             luggage_count = int(data.get('luggage_count', 0))
 
@@ -813,7 +835,7 @@ class DistanceFareCalcView(APIView):
                 distance_km=distance_km,
                 num_adults=num_adults,
                 num_kids_seated=num_kids_seated,
-                baby_car_seater=baby_car_seater,
+                baby_car_seater=request.POST.get('baby_car_seater', 0),
                 num_kids_carried=num_kids_carried,
                 luggage_count=luggage_count,
             )
@@ -923,11 +945,11 @@ class CreateBookingView(APIView):
 
             breakdown = PricingService.calculate(
                 distance_km=distance,
-                num_adults=int(data.get('num_adults', 1)),
-                num_kids_seated=int(data.get('num_kids_seated', 0)),
-                baby_car_seater=int(data.get('baby_car_seater', 0)),
-                num_kids_carried=int(data.get('num_kids_carried', 0)),
-                luggage_count=int(data.get('luggage_count', 0)),
+                num_adults=data.get('num_adults', 1),
+                num_kids_seated=data.get('num_kids_seated', 0),
+                baby_car_seater=data.get('baby_car_seater', 0),
+                num_kids_carried=data.get('num_kids_carried', 0),
+                luggage_count=data.get('luggage_count', 0),
             )
 
             # normalize passengers_json which may come as a JSON string or already as a list/dict
@@ -1057,11 +1079,11 @@ class PriceEstimateView(APIView):
 
             breakdown = PricingService.calculate(
                 distance_km=distance,
-                num_adults=int(data.get('num_adults', 1)),
-                num_kids_seated=int(data.get('num_kids_seated', 0)),
-                baby_car_seater=int(data.get('baby_car_seater', 0)),
-                num_kids_carried=int(data.get('num_kids_carried', 0)),
-                luggage_count=int(data.get('luggage_count', 0)),
+                num_adults=data.get('num_adults', 1),
+                num_kids_seated=data.get('num_kids_seated', 0),
+                baby_car_seater=data.get('baby_car_seater', 0),
+                num_kids_carried=data.get('num_kids_carried', 0),
+                luggage_count=data.get('luggage_count', 0),
             )
 
             return Response(breakdown)
