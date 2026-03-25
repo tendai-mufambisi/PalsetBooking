@@ -168,9 +168,8 @@ PRICING = {
     "ABOVE_35_PER_KM": 1.0,
     "BASE_PASSENGERS": 3,  # Bracket price covers up to 3 passengers
     "EXTRA_ADULT_FEE": 10.0,  # Each additional passenger pays this
-    "KID_SEATED_FACTOR": 0.5,  # Kids (7-13 yrs) pay 50% of bracket price
     "FREE_LUGGAGE_ITEMS": 5,  # First 5 bags are free
-    "LUGGAGE_FEE": 5.0,  # Additional bags cost $5 each
+    "LUGGAGE_FEE": 3.0,  # Additional bags cost $5 each
 }
 
 # Use JSONField default for Django < 3.1 alternative

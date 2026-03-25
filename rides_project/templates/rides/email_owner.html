@@ -5,7 +5,7 @@
   <strong>Dropoff:</strong> {{ booking.dropoff_address }}<br>
   <strong>Distance (km):</strong> {{ booking.distance_km }}</p>
 
-  <p><strong>Passengers:</strong> {{ booking.num_adults }} adults, {{ booking.num_kids_seated }} kids seated, {{ booking.num_kids_carried }} kids carried<br>
+  <p><strong>Passengers:</strong> {{ booking.num_adults }} adults{% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kids carried{% endif %}<br>
   <strong>Luggage:</strong> {{ booking.luggage_count }} bags</p>
 
   <p><strong>Total:</strong> ${{ booking.total_amount }}<br>

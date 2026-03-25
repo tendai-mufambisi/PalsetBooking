@@ -16,7 +16,6 @@ DEFAULT_PRICING = {
     "ABOVE_35_PER_KM": 1.0,
     "BASE_PASSENGERS": 3,
     "EXTRA_ADULT_FEE": 10.0,
-    "KID_SEATED_FACTOR": 0.5,
     "FREE_LUGGAGE_ITEMS": 5,
     "LUGGAGE_FEE": 5.0,
 }
@@ -30,7 +29,7 @@ class PricingService:
     - Distance brackets: 13-15 ($25), 16-20 ($30), 21-25 ($35), 26-35 ($40)
     - For distance >35km: price = $40 + 1.0 * (distance - 35)
     - Base fare covers up to 3 passengers. Extra passengers (>3) pay $10 each
-    - Kids (7-13 yrs) seated pay 50% of the bracket base price
+    - Kids seated are counted as adults
     - Kids carried are free
     - First 5 luggage items are free, then $5 per additional item
     """
@@ -62,6 +61,10 @@ class PricingService:
             raise ValueError("At least one adult is required")
         if num_kids_seated < 0 or baby_car_seater < 0 or num_kids_carried < 0 or luggage_count < 0:
             raise ValueError("Counts cannot be negative")
+
+        # Legacy compatibility: fold seated kids into adults for all fare logic.
+        num_adults = num_adults + num_kids_seated
+        num_kids_seated = 0
 
         # Use safe getattr for settings to avoid AttributeError in production when PRICING is missing
         pricing_cfg = getattr(settings, 'PRICING', {}) or {}
@@ -103,10 +106,6 @@ class PricingService:
         extra_adults = max(0, num_adults - base_passengers)
         extra_adults_fee = Decimal(str(pricing_cfg.get("EXTRA_ADULT_FEE", DEFAULT_PRICING["EXTRA_ADULT_FEE"]))) * extra_adults
 
-        # Kids seated: factor of base price
-        kid_factor = Decimal(str(pricing_cfg.get("KID_SEATED_FACTOR", DEFAULT_PRICING["KID_SEATED_FACTOR"])))
-        kids_seated_fee = base_price * kid_factor * Decimal(num_kids_seated)
-
         # Baby car seater: flat $10 fee
         baby_car_seater_fee = Decimal("10.00") * Decimal(baby_car_seater)
 
@@ -116,7 +115,7 @@ class PricingService:
         luggage_fee = Decimal(str(pricing_cfg.get("LUGGAGE_FEE", DEFAULT_PRICING["LUGGAGE_FEE"]))) * Decimal(chargeable_luggage)
 
         # Sum up
-        subtotal = base_price + extra_adults_fee + kids_seated_fee + baby_car_seater_fee + luggage_fee
+        subtotal = base_price + extra_adults_fee + baby_car_seater_fee + luggage_fee
         total = cls._round(subtotal)
 
         breakdown = {
@@ -125,11 +124,10 @@ class PricingService:
             "base_distance_price": float(cls._round(base_price)),
             "extra_adults": int(extra_adults),
             "extra_adults_fee": float(cls._round(extra_adults_fee)),
-            "kids_seated": int(num_kids_seated),
-            "kids_seated_fee": float(cls._round(kids_seated_fee)),
             "baby_car_seater": int(baby_car_seater),
             "baby_car_seater_fee": float(cls._round(baby_car_seater_fee)),
             "kids_carried": int(num_kids_carried),
+            "luggage_count": int(luggage_count),
             "luggage_free": int(min(luggage_count, free_luggage)),
             "luggage_chargeable": int(chargeable_luggage),
             "luggage_fee": float(cls._round(luggage_fee)),

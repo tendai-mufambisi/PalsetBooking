@@ -45,10 +45,6 @@
 
     <div class="form-row two-up">
       <div>
-        <label for="num_kids_seated">Kids (seated)</label>
-        <input id="num_kids_seated" class="input" name="num_kids_seated" type="number" value="0" min="0" inputmode="numeric">
-      </div>
-      <div>
         <label for="num_kids_carried">Kids (carried)</label>
         <input id="num_kids_carried" class="input" name="num_kids_carried" type="number" value="0" min="0" inputmode="numeric">
       </div>
@@ -194,7 +190,6 @@ function renderPreview(data){
     <ul>
       <li>Base distance price: $${data.base_distance_price.toFixed(2)}</li>
       <li>Extra adults: ${data.extra_adults} → $${data.extra_adults_fee.toFixed(2)}</li>
-      <li>Kids seated: ${data.kids_seated} → $${data.kids_seated_fee.toFixed(2)}</li>
       <li>Luggage: ${data.luggage_count} → $${data.luggage_fee.toFixed(2)}</li>
     </ul>
   `;
@@ -209,7 +204,6 @@ function gatherPayload(){
     dropoff_lat: parseFloat(document.getElementById('dropoff_lat').value) || null,
     dropoff_lng: parseFloat(document.getElementById('dropoff_lng').value) || null,
     num_adults: parseInt(document.querySelector('[name="num_adults"]').value) || 1,
-    num_kids_seated: parseInt(document.querySelector('[name="num_kids_seated"]').value) || 0,
     num_kids_carried: parseInt(document.querySelector('[name="num_kids_carried"]').value) || 0,
     luggage_count: parseInt(document.querySelector('[name="luggage_count"]').value) || 0,
   };
@@ -233,7 +227,7 @@ const schedulePreview = debounce(()=>{
   if(el) el.addEventListener('input', schedulePreview);
 });
 
-['num_adults','num_kids_seated','num_kids_carried','luggage_count'].forEach(name=>{
+['num_adults','num_kids_carried','luggage_count'].forEach(name=>{
   const el = document.querySelector('[name="'+name+'"]');
   if(el) el.addEventListener('change', schedulePreview);
 });

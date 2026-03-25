@@ -54,6 +54,20 @@ from .services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
 
+
+def merged_adult_count(num_adults, num_kids_seated=0) -> int:
+    """Merge seated kids into adult count for backward-compatible payload handling."""
+    try:
+        adults = int(num_adults or 0)
+    except (TypeError, ValueError):
+        adults = 0
+    try:
+        seated = int(num_kids_seated or 0)
+    except (TypeError, ValueError):
+        seated = 0
+
+    return max(1, adults + max(0, seated))
+
 def build_booking_message(booking, eta_minutes=None, payment_label_override: str | None = None):
     """Return a multi-line plain-text summary of the booking suitable for WhatsApp sharing."""
     try:
@@ -136,8 +150,8 @@ def build_booking_message(booking, eta_minutes=None, payment_label_override: str
         else:
             parts.append("")
             parts.append(f"*Passengers:* {booking.num_adults} adult(s)")
-            if booking.num_kids_seated or booking.num_kids_carried:
-                parts[-1] += f", {booking.num_kids_seated} kid(s) seated, {booking.num_kids_carried} carried"
+            if booking.num_kids_carried:
+                parts[-1] += f", {booking.num_kids_carried} carried"
 
         if booking.luggage_count:
             parts.append(f"*Luggage:* {booking.luggage_count} bag(s)")
@@ -355,8 +369,8 @@ class MultiStepBookingWizardView(View):
 
                 fare_breakdown = PricingService.calculate(
                     distance_km=distance_km,
-                    num_adults=step2.get('num_adults', 1),
-                    num_kids_seated=step2.get('num_kids_seated', 0),
+                    num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
+                    num_kids_seated=0,
                     baby_car_seater=step2.get('baby_car_seater', 0),
                     num_kids_carried=step2.get('num_kids_carried', 0),
                     luggage_count=step2.get('luggage_count', 0),
@@ -485,24 +499,13 @@ class MultiStepBookingWizardView(View):
                 passengers_json = request.POST.get('passengers_json') or request.POST.get('passengersJson') or '[]'
                 # update step2 counts
                 self.request.session[self.get_session_key('step2')] = {
-                    'num_adults': form.cleaned_data['num_adults'],
-                    'num_kids_seated': form.cleaned_data['num_kids_seated'],
+                    'num_adults': merged_adult_count(form.cleaned_data['num_adults'], request.POST.get('num_kids_seated', 0)),
+                    'num_kids_seated': 0,
                     'baby_car_seater': form.cleaned_data['baby_car_seater'],
                     'num_kids_carried': form.cleaned_data['num_kids_carried'],
                     'luggage_count': form.cleaned_data['luggage_count'],
                     'passengers_json': passengers_json,
                 }
-                # allow editing of pickup date/time from this step: merge into step1
-                step1_key = self.get_session_key('step1')
-                step1 = dict(self.request.session.get(step1_key, {}))
-                pd = request.POST.get('pickup_date')
-                pt = request.POST.get('pickup_time')
-                if pd:
-                    step1['pickup_date'] = pd
-                if pt:
-                    step1['pickup_time'] = pt
-                # save back to session
-                self.request.session[step1_key] = step1
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=3)
             else:
@@ -565,8 +568,8 @@ class MultiStepBookingWizardView(View):
 
                     fare_breakdown = PricingService.calculate(
                         distance_km=distance_km,
-                        num_adults=step2.get('num_adults', 1),
-                        num_kids_seated=step2.get('num_kids_seated', 0),
+                        num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
+                        num_kids_seated=0,
                         baby_car_seater=step2.get('baby_car_seater', 0),
                         num_kids_carried=step2.get('num_kids_carried', 0),
                         luggage_count=step2.get('luggage_count', 0),
@@ -581,8 +584,8 @@ class MultiStepBookingWizardView(View):
                             dropoff_lat=Decimal(str(step1['dropoff_latitude'])),
                             dropoff_lng=Decimal(str(step1['dropoff_longitude'])),
                             distance_km=Decimal(str(distance_km)),
-                            num_adults=step2.get('num_adults', 1),
-                            num_kids_seated=step2.get('num_kids_seated', 0),
+                            num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
+                            num_kids_seated=0,
                             baby_car_seater=step2.get('baby_car_seater', 0),
                             num_kids_carried=step2.get('num_kids_carried', 0),
                             luggage_count=step2.get('luggage_count', 0),
@@ -728,8 +731,8 @@ class MultiStepBookingWizardView(View):
                         )
                     fare_breakdown = PricingService.calculate(
                         distance_km=distance_km,
-                        num_adults=step2.get('num_adults', 1),
-                        num_kids_seated=step2.get('num_kids_seated', 0),
+                        num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
+                        num_kids_seated=0,
                         baby_car_seater=step2.get('baby_car_seater', 0),
                         num_kids_carried=step2.get('num_kids_carried', 0),
                         luggage_count=step2.get('luggage_count', 0),
@@ -797,7 +800,6 @@ class DistanceFareCalcView(APIView):
         "dropoff_latitude": 17.8300,
         "dropoff_longitude": 31.0400,
         "num_adults": 1,
-        "num_kids_seated": 0,
         "num_kids_carried": 0,
         "luggage_count": 0
     }
@@ -819,8 +821,7 @@ class DistanceFareCalcView(APIView):
             dropoff_lat = float(data.get('dropoff_latitude'))
             dropoff_lng = float(data.get('dropoff_longitude'))
 
-            num_adults = int(data.get('num_adults', 1))
-            num_kids_seated = int(data.get('num_kids_seated', 0))
+            num_adults = merged_adult_count(data.get('num_adults', 1), data.get('num_kids_seated', 0))
             num_kids_carried = int(data.get('num_kids_carried', 0))
             luggage_count = int(data.get('luggage_count', 0))
 
@@ -834,7 +835,7 @@ class DistanceFareCalcView(APIView):
             fare_breakdown = PricingService.calculate(
                 distance_km=distance_km,
                 num_adults=num_adults,
-                num_kids_seated=num_kids_seated,
+                num_kids_seated=0,
                 baby_car_seater=request.POST.get('baby_car_seater', 0),
                 num_kids_carried=num_kids_carried,
                 luggage_count=luggage_count,
@@ -945,8 +946,8 @@ class CreateBookingView(APIView):
 
             breakdown = PricingService.calculate(
                 distance_km=distance,
-                num_adults=data.get('num_adults', 1),
-                num_kids_seated=data.get('num_kids_seated', 0),
+                num_adults=merged_adult_count(data.get('num_adults', 1), data.get('num_kids_seated', 0)),
+                num_kids_seated=0,
                 baby_car_seater=data.get('baby_car_seater', 0),
                 num_kids_carried=data.get('num_kids_carried', 0),
                 luggage_count=data.get('luggage_count', 0),
@@ -972,8 +973,8 @@ class CreateBookingView(APIView):
                 dropoff_lat=data.get('dropoff_lat'),
                 dropoff_lng=data.get('dropoff_lng'),
                 distance_km=distance,
-                num_adults=data.get('num_adults', 1),
-                num_kids_seated=data.get('num_kids_seated', 0),
+                num_adults=merged_adult_count(data.get('num_adults', 1), data.get('num_kids_seated', 0)),
+                num_kids_seated=0,
                 num_kids_carried=data.get('num_kids_carried', 0),
                 luggage_count=data.get('luggage_count', 0),
                 phone=data['phone'],
@@ -1079,8 +1080,8 @@ class PriceEstimateView(APIView):
 
             breakdown = PricingService.calculate(
                 distance_km=distance,
-                num_adults=data.get('num_adults', 1),
-                num_kids_seated=data.get('num_kids_seated', 0),
+                num_adults=merged_adult_count(data.get('num_adults', 1), data.get('num_kids_seated', 0)),
+                num_kids_seated=0,
                 baby_car_seater=data.get('baby_car_seater', 0),
                 num_kids_carried=data.get('num_kids_carried', 0),
                 luggage_count=data.get('luggage_count', 0),

@@ -6,8 +6,7 @@ def test_price_estimate_by_distance():
     client = APIClient()
     payload = {
         "distance_km": 15.0,
-        "num_adults": 2,
-        "num_kids_seated": 1,
+        "num_adults": 3,
         "luggage_count": 1
     }
     resp = client.post('/rides/api/price/', payload, format='json')

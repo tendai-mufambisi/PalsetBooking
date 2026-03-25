@@ -4,7 +4,7 @@ Pickup: {{ booking.pickup_address }}
 Dropoff: {{ booking.dropoff_address }}
 Distance (km): {{ booking.distance_km }}
 
-Passengers: {{ booking.num_adults }} adults, {{ booking.num_kids_seated }} kids seated, {{ booking.num_kids_carried }} kids carried
+Passengers: {{ booking.num_adults }} adults{% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kids carried{% endif %}
 Luggage: {{ booking.luggage_count }} bags
 
 Total: ${{ booking.total_amount }}

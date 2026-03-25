@@ -19,7 +19,6 @@ class BookingPlatform {
      * @param {number} dropoffLat
      * @param {number} dropoffLng
      * @param {number} numAdults
-     * @param {number} numKidsSeated
      * @param {number} numKidsCarried
      * @param {number} luggageCount
      * @returns {Promise}
@@ -30,7 +29,6 @@ class BookingPlatform {
         dropoffLat,
         dropoffLng,
         numAdults = 1,
-        numKidsSeated = 0,
         numKidsCarried = 0,
         luggageCount = 0
     ) {
@@ -47,7 +45,6 @@ class BookingPlatform {
                     dropoff_latitude: dropoffLat,
                     dropoff_longitude: dropoffLng,
                     num_adults: numAdults,
-                    num_kids_seated: numKidsSeated,
                     num_kids_carried: numKidsCarried,
                     luggage_count: luggageCount,
                 }),

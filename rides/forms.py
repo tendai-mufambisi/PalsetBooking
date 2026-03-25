@@ -76,31 +76,36 @@ class Step1PickupDropoffForm(forms.Form):
         pickup_lng = cleaned.get('pickup_longitude')
         dropoff_lat = cleaned.get('dropoff_latitude')
         dropoff_lng = cleaned.get('dropoff_longitude')
+        pickup_is_airport = cleaned.get('pickup_is_airport')
         
         # Validate that coordinates are present after Places Autocomplete
         if not all([pickup_lat, pickup_lng, dropoff_lat, dropoff_lng]):
             raise ValidationError('Please select valid pickup and dropoff locations from the suggestions.')
 
-        # If user indicated airport pickup, require flight details
-        if cleaned.get('pickup_is_airport'):
+        # If user indicated airport pickup, require flight details and use arrival date/time as pickup schedule.
+        if pickup_is_airport:
             if not cleaned.get('arrival_airline') or not cleaned.get('arrival_flight_number'):
                 raise ValidationError('For airport pickups please provide arrival airline and flight number.')
+            if not cleaned.get('arrival_date') or not cleaned.get('arrival_time'):
+                raise ValidationError('For airport pickups please provide arrival date and arrival time.')
+
+            cleaned['pickup_date'] = cleaned.get('arrival_date')
+            cleaned['pickup_time'] = cleaned.get('arrival_time')
+        else:
+            # Non-airport pickups must provide pickup date/time directly.
+            if not cleaned.get('pickup_date') or not cleaned.get('pickup_time'):
+                raise ValidationError('Please provide pickup date and pickup time.')
         
         return cleaned
 
 
 class Step2PassengersLuggageForm(forms.Form):
-    """Step 2: Number of adults, kids (seated/carried), and luggage."""
+    """Step 2: Number of seated passengers, kids carried, and luggage."""
     
     num_adults = forms.IntegerField(
         min_value=1,
         initial=1,
         widget=forms.HiddenInput()  # Controlled via JS increment/decrement
-    )
-    num_kids_seated = forms.IntegerField(
-        min_value=0,
-        initial=0,
-        widget=forms.HiddenInput()
     )
     baby_car_seater = forms.IntegerField(
         min_value=0,
@@ -255,7 +260,6 @@ class BookingForm(forms.Form):
     distance_km = forms.FloatField(required=False)
 
     num_adults = forms.IntegerField(min_value=1, initial=1)
-    num_kids_seated = forms.IntegerField(min_value=0, initial=0)
     num_kids_carried = forms.IntegerField(min_value=0, initial=0)
     luggage_count = forms.IntegerField(min_value=0, initial=0)
 

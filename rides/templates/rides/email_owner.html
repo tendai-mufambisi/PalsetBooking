@@ -18,7 +18,7 @@
       {% endif %}
         <div><dt>Dropoff</dt><dd>{{ booking.dropoff_address }}</dd></div>
         <div><dt>Distance</dt><dd>{{ booking.distance_km }} km</dd></div>
-        <div><dt>Passengers</dt><dd>{{ booking.num_adults }} adults, {{ booking.num_kids_seated }} kids seated, {{ booking.num_kids_carried }} kids carried</dd></div>
+        <div><dt>Passengers</dt><dd>{{ booking.num_adults }} adults{% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kids carried{% endif %}</dd></div>
         <div><dt>Luggage</dt><dd>{{ booking.luggage_count }}</dd></div>
         <div><dt>Phone</dt><dd>{{ booking.phone }} / {{ booking.email }}</dd></div>
         <div><dt>Passenger</dt><dd>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</dd></div>

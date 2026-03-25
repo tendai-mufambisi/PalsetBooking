@@ -7,7 +7,7 @@ class RideBookingSerializer(serializers.ModelSerializer):
         model = RideBooking
         fields = [
             'id', 'reference', 'pickup_address', 'pickup_lat', 'pickup_lng', 'dropoff_address', 'dropoff_lat', 'dropoff_lng',
-            'distance_km', 'num_adults', 'num_kids_seated', 'num_kids_carried', 'luggage_count', 'phone', 'email', 'payment_option', 'status', 'price_breakdown', 'total_amount', 'created_at',
+            'distance_km', 'num_adults', 'num_kids_carried', 'luggage_count', 'phone', 'email', 'payment_option', 'status', 'price_breakdown', 'total_amount', 'created_at',
             'pickup_date', 'pickup_time', 'pickup_is_airport', 'arrival_airline', 'arrival_flight_number', 'arrival_date', 'arrival_time', 'salutation', 'passenger_full_name'
         ]
         read_only_fields = ('id', 'status', 'price_breakdown', 'total_amount', 'created_at')
@@ -24,7 +24,8 @@ class CreateBookingSerializer(serializers.Serializer):
     distance_km = serializers.FloatField(required=False, allow_null=True)
 
     num_adults = serializers.IntegerField(min_value=1, default=1)
-    num_kids_seated = serializers.IntegerField(min_value=0, default=0)
+    num_kids_seated = serializers.IntegerField(min_value=0, default=0, write_only=True, required=False)
+    baby_car_seater = serializers.IntegerField(min_value=0, default=0, required=False)
     num_kids_carried = serializers.IntegerField(min_value=0, default=0)
     luggage_count = serializers.IntegerField(min_value=0, default=0)
 
@@ -81,7 +82,8 @@ class PriceEstimateSerializer(serializers.Serializer):
     dropoff_lng = serializers.FloatField(required=False, allow_null=True)
 
     num_adults = serializers.IntegerField(min_value=1, default=1)
-    num_kids_seated = serializers.IntegerField(min_value=0, default=0)
+    num_kids_seated = serializers.IntegerField(min_value=0, default=0, write_only=True, required=False)
+    baby_car_seater = serializers.IntegerField(min_value=0, default=0, required=False)
     num_kids_carried = serializers.IntegerField(min_value=0, default=0)
     luggage_count = serializers.IntegerField(min_value=0, default=0)
 

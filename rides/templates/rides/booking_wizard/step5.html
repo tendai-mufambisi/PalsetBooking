@@ -80,7 +80,6 @@
                 <span>Passengers:</span>
                 <strong>
                     {{ booking.num_adults }} adult(s)
-                    {% if booking.num_kids_seated > 0 %}, {{ booking.num_kids_seated }} kid(s) seated{% endif %}
                     {% if booking.num_kids_carried > 0 %}, {{ booking.num_kids_carried }} carried{% endif %}
                 </strong>
             </div>

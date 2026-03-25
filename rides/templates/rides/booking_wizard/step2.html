@@ -27,7 +27,6 @@
 
     <!-- Hidden fields for passenger counts -->
     <input type="hidden" id="num_adults" name="num_adults" value="1">
-    <input type="hidden" id="num_kids_seated" name="num_kids_seated" value="0">
     <input type="hidden" id="num_kids_carried" name="num_kids_carried" value="0">
     <input type="hidden" id="luggage_count" name="luggage_count" value="0">
     <input type="hidden" id="baby_car_seater" name="baby_car_seater" value="0">
@@ -38,31 +37,20 @@
 
         <!-- Adults -->
         <div class="form-group">
-            <label class="form-label"><i class="bi bi-person"></i> Adults Count</label>
+            <label class="form-label"><i class="bi bi-person"></i> Adults Count (includes seated kids)</label>
             <div class="field-counter">
                 <button type="button" class="btn-decrement" data-field="num_adults">−</button>
                 <input type="text" id="display_num_adults" readonly value="1">
                 <button type="button" class="btn-increment" data-field="num_adults">+</button>
             </div>
-            <!-- <small class="form-text">At least 1 adult required</small> -->
+            <small class="form-text">Count everyone taking a seat in the vehicle.</small>
         </div>
 
         <!-- Children & Luggage (Always Visible) -->
         <div id="optional_details" style="display: block;">
-            <!-- Kids Seated -->
-            <div class="form-group">
-                <label class="form-label"><i class="bi bi-chair"></i> Kids (Seated) - upto 10yrs <span style="color: #28a745; font-weight: 600;">$5 flat fare each</span></label>
-                <div class="field-counter">
-                    <button type="button" class="btn-decrement" data-field="num_kids_seated">−</button>
-                    <input type="text" id="display_num_kids_seated" readonly value="0">
-                    <button type="button" class="btn-increment" data-field="num_kids_seated">+</button>
-                </div>
-                <small class="form-text">Children aged up to 10 years with seat requirement</small>
-            </div>
-
             <!-- Baby Car Seater -->
             <div class="form-group">
-                <label class="form-label"><i class="bi bi-shield-baby"></i> Baby Car Seater <span style="color: #28a745; font-weight: 600;">$10 flat fare</span></label>
+                <label class="form-label"><i class="bi bi-shield-baby"></i> Baby Car Seat <span style="color: #28a745; font-weight: 600;">$10 flat fare</span></label>
                 <div class="field-counter">
                     <button type="button" class="btn-decrement" data-field="baby_car_seater">−</button>
                     <input type="text" id="display_baby_car_seater" readonly value="0">
@@ -98,7 +86,7 @@
     <!-- Info Box -->
     <div class="info-box">
         <i class="bi bi-info-circle"></i>
-        <strong>Pricing includes:</strong> Base fare for up to 3 adults, kids seated at 50% fare
+        <strong>Pricing includes:</strong> Base fare for up to 3 passangers.
     </div>
 
     <!-- Action Buttons -->
@@ -282,7 +270,6 @@
     // Field counter logic
     const fields = {
         num_adults: { min: 1, max: 10, initial: 1 },
-        num_kids_seated: { min: 0, max: 10, initial: 0 },
         baby_car_seater: { min: 0, max: 5, initial: 0 },
         num_kids_carried: { min: 0, max: 5, initial: 0 },
         luggage_count: { min: 0, max: 10, initial: 0 },

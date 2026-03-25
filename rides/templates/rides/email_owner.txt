@@ -10,7 +10,7 @@ Arrival date/time: {% if booking.arrival_date %}{{ booking.arrival_date }}{% end
 {% endif %}
 Dropoff: {{ booking.dropoff_address }}
 Distance: {{ booking.distance_km }} km
-Passengers: {{ booking.num_adults }} adults, {{ booking.num_kids_seated }} kids seated, {{ booking.num_kids_carried }} kids carried
+Passengers: {{ booking.num_adults }} adults{% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kids carried{% endif %}
 Luggage: {{ booking.luggage_count }}
 Phone: {{ booking.phone }}
 Email: {{ booking.email }}

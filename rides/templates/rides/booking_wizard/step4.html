@@ -37,13 +37,6 @@
                 </div>
             {% endif %}
 
-            {% if fare_breakdown.kids_seated > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-chair"></i> Kids Seated ({{ fare_breakdown.kids_seated }} @ 50% of base fare):</span>
-                    <strong>-${{ fare_breakdown.kids_seated_fee|floatformat:2 }}</strong>
-                </div>
-            {% endif %}
-
             {% if fare_breakdown.baby_car_seater > 0 %}
                 <div class="fare-row">
                     <span><i class="bi bi-shield-baby"></i> Baby Car Seater ({{ fare_breakdown.baby_car_seater }} @ $10 each):</span>
@@ -53,7 +46,7 @@
 
             {% if fare_breakdown.luggage_count > 0 %}
                 <div class="fare-row">
-                    <span><i class="bi bi-suitcase-lg"></i> Luggage ({{ fare_breakdown.luggage_count }} bags @ $5 each after 5 free):</span>
+                    <span><i class="bi bi-suitcase-lg"></i> Luggage ({{ fare_breakdown.luggage_count }} bags @ $3 each after 5 free):</span>
                     <strong>${{ fare_breakdown.luggage_fee|floatformat:2 }}</strong>
                 </div>
                 {% if fare_breakdown.luggage_free > 0 %}

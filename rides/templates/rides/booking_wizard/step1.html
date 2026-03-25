@@ -42,46 +42,6 @@
     <!-- Hidden pickup coordinates -->
     <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="{{ step1_data.pickup_latitude|default:'' }}">
     <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="{{ step1_data.pickup_longitude|default:'' }}">
-    <input type="hidden" id="pickup_date" name="pickup_date" value="{{ step1_data.pickup_date|default:'' }}">
-    <input type="hidden" id="pickup_time" name="pickup_time" value="{{ step1_data.pickup_time|default:'' }}">
-
-    <div style="margin-top:14px;">
-        <label for="pickup_is_airport" class="form-label" style="display:block;">
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; border:2px solid #e6f0ff; background:#f0f8ff; border-radius:8px;">
-                <div style="display:flex; gap:12px; align-items:center;">
-                    <div style="width:42px; height:42px; background:#e9f5ff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#0366d6;">
-                        <i class="bi bi-airplane-fill"></i>
-                    </div>
-                    <div>
-                        <div style="font-weight:700; color:#03396c;">Pickup is from an airport</div>
-                        <div style="font-size:13px; color:#375a7f;">Check this if you're arriving by flight — we'll ask for airline & flight number.</div>
-                    </div>
-                </div>
-                <div style="flex:0 0 auto; margin-left:16px;">
-                    <span style="font-size:18px;">
-                        {{ form.pickup_is_airport }}
-                    </span>
-                </div>
-            </div>
-        </label>
-    </div>
-
-    <div id="airport_fields" style="display: none; margin-top:12px;">
-        <div class="form-group">
-            <label for="id_arrival_airline">Airline</label>
-            {{ form.arrival_airline }}
-            <!-- <small class="form-text text-muted">Example: Airlink, Emirates</small> -->
-        </div>
-        <div class="form-group">
-            <label for="id_arrival_flight_number">Flight Number</label>
-            {{ form.arrival_flight_number }}
-            <!-- <small class="form-text text-muted">Example: 40Z10, EK405</small> -->
-        </div>
-        <div class="form-row" style="display:flex; gap:12px;">
-            <div style="flex:1">{{ form.arrival_date }}<small class="form-text text-muted">Arrival date</small></div>
-            <div style="flex:1">{{ form.arrival_time }}<small class="form-text text-muted">Arrival time</small></div>
-        </div>
-    </div>
 
     <!-- Dropoff Location -->
     <div class="form-group">
@@ -99,6 +59,66 @@
     <!-- Hidden dropoff coordinates -->
     <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="{{ step1_data.dropoff_latitude|default:'' }}">
     <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="{{ step1_data.dropoff_longitude|default:'' }}">
+
+    <div style="margin-top:14px;">
+        <label for="pickup_is_airport" class="form-label" style="display:block;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; border:2px solid #e6f0ff; background:#f0f8ff; border-radius:8px;">
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <div style="width:42px; height:42px; background:#e9f5ff; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; color:#0366d6;">
+                        <i class="bi bi-airplane-fill"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:700; color:#03396c;">Pickup is from an airport</div>
+                        <div style="font-size:13px; color:#375a7f;">Check this if you're arriving by flight - we'll ask for airline & flight number. Arrival date/time will be used as your pickup schedule.</div>
+                    </div>
+                </div>
+                <div style="flex:0 0 auto; margin-left:16px;">
+                    <span style="font-size:18px;">
+                        {{ form.pickup_is_airport }}
+                    </span>
+                </div>
+            </div>
+        </label>
+    </div>
+
+    <div id="pickup_schedule_fields" style="margin-top:12px;">
+        <div class="form-group" style="margin-bottom:8px;">
+            <label for="pickup_date" class="form-label">Pickup Date</label>
+            {{ form.pickup_date }}
+            {% if form.pickup_date.errors %}
+                <div class="error-message" style="margin-top: 8px;">
+                    {% for error in form.pickup_date.errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label for="pickup_time" class="form-label">Pickup Time</label>
+            {{ form.pickup_time }}
+            {% if form.pickup_time.errors %}
+                <div class="error-message" style="margin-top: 8px;">
+                    {% for error in form.pickup_time.errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <div id="airport_fields" style="display: none; margin-top:12px;">
+        <div class="form-group">
+            <label for="id_arrival_airline">Airline</label>
+            {{ form.arrival_airline }}
+            <!-- <small class="form-text text-muted">Example: Airlink, Emirates</small> -->
+        </div>
+        <div class="form-group">
+            <label for="id_arrival_flight_number">Flight Number</label>
+            {{ form.arrival_flight_number }}
+            <!-- <small class="form-text text-muted">Example: 40Z10, EK405</small> -->
+        </div>
+        <div class="form-row" style="display:flex; gap:12px;">
+            <div style="flex:1">{{ form.arrival_date }}<small class="form-text text-muted">Arrival date</small>{% if form.arrival_date.errors %}<div class="error-message" style="margin-top: 8px;">{% for error in form.arrival_date.errors %}{{ error }}{% endfor %}</div>{% endif %}</div>
+            <div style="flex:1">{{ form.arrival_time }}<small class="form-text text-muted">Arrival time</small>{% if form.arrival_time.errors %}<div class="error-message" style="margin-top: 8px;">{% for error in form.arrival_time.errors %}{{ error }}{% endfor %}</div>{% endif %}</div>
+        </div>
+    </div>
 
     <!-- Map Preview -->
     <div class="map-container" id="map"></div>
@@ -273,16 +293,24 @@
         const dropoffLng = document.getElementById('dropoff_longitude').value;
         const baseValid = pickupLat && pickupLng && dropoffLat && dropoffLng;
 
-        // If airport pickup selected, require airline and flight number
+        // If airport pickup selected, require flight details and arrival schedule.
         let airportValid = true;
+        let scheduleValid = true;
         const airportCheckbox = document.getElementById('pickup_is_airport');
         if (airportCheckbox && airportCheckbox.checked) {
             const airline = document.getElementById('id_arrival_airline') ? document.getElementById('id_arrival_airline').value : '';
             const flight = document.getElementById('id_arrival_flight_number') ? document.getElementById('id_arrival_flight_number').value : '';
+            const arrivalDate = document.getElementById('id_arrival_date') ? document.getElementById('id_arrival_date').value : '';
+            const arrivalTime = document.getElementById('id_arrival_time') ? document.getElementById('id_arrival_time').value : '';
             airportValid = airline.trim().length > 0 && flight.trim().length > 0;
+            scheduleValid = arrivalDate.trim().length > 0 && arrivalTime.trim().length > 0;
+        } else {
+            const pickupDate = document.getElementById('pickup_date') ? document.getElementById('pickup_date').value : '';
+            const pickupTime = document.getElementById('pickup_time') ? document.getElementById('pickup_time').value : '';
+            scheduleValid = pickupDate.trim().length > 0 && pickupTime.trim().length > 0;
         }
 
-        const isValid = baseValid && airportValid;
+        const isValid = baseValid && airportValid && scheduleValid;
         document.getElementById('next_btn').disabled = !isValid;
 
         if (isValid) {
@@ -351,11 +379,14 @@
         // Airport checkbox toggle
         const airportCheckbox = document.getElementById('pickup_is_airport');
         const airportFields = document.getElementById('airport_fields');
+        const pickupScheduleFields = document.getElementById('pickup_schedule_fields');
         function toggleAirportFields() {
             if (airportCheckbox && airportCheckbox.checked) {
                 airportFields.style.display = 'block';
+                if (pickupScheduleFields) pickupScheduleFields.style.display = 'none';
             } else {
                 airportFields.style.display = 'none';
+                if (pickupScheduleFields) pickupScheduleFields.style.display = 'block';
             }
             validateStep1();
         }
@@ -379,6 +410,14 @@
                 // If form fields for addresses are empty, try to leave them as-is; map can use coords
                 updateMap();
             }
+
+            ['pickup_date', 'pickup_time', 'id_arrival_airline', 'id_arrival_flight_number', 'id_arrival_date', 'id_arrival_time'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', validateStep1);
+                    el.addEventListener('input', validateStep1);
+                }
+            });
             validateStep1();
         } catch (err) {
             console.warn('Init prefill handling failed', err);
@@ -402,7 +441,7 @@
                     const res = await fetch(window.location.pathname + '?reset=1', { method: 'GET', credentials: 'same-origin' });
                     if (res.ok) {
                         // Clear visible inputs and hidden fields
-                        const inputsToClear = ['pickup_address','dropoff_address','pickup_latitude','pickup_longitude','dropoff_latitude','dropoff_longitude','id_arrival_airline','id_arrival_flight_number'];
+                        const inputsToClear = ['pickup_address','dropoff_address','pickup_latitude','pickup_longitude','dropoff_latitude','dropoff_longitude','pickup_date','pickup_time','id_arrival_airline','id_arrival_flight_number','id_arrival_date','id_arrival_time'];
                         inputsToClear.forEach(id => {
                             const el = document.getElementById(id);
                             if (el) el.value = '';

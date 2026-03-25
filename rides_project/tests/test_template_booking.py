@@ -28,7 +28,6 @@ def test_post_booking_form_poa(monkeypatch, client):
         'dropoff_lat': '-17.9',
         'dropoff_lng': '31.1',
         'num_adults': '1',
-        'num_kids_seated': '0',
         'num_kids_carried': '0',
         'luggage_count': '0',
         'phone': '+263789000000',
