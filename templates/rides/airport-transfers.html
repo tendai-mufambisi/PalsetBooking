@@ -1,0 +1,979 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Transit | Reliable Airport Transfers & Chauffeur Services</title>
+    <meta name="description"
+        content="Professional and punctual airport transfers. Book your reliable airport chauffeur service for arrivals, departures, and connections. Enjoy comfort, safety, and a seamless journey to or from the airport.">
+    <meta name="keywords"
+        content="airport transfers, airport taxi, airport chauffeur, meet and greet, airport shuttle, flight pickup, airport drop off, corporate airport transfer, Easy Transit">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1BL0Y56R1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-B1BL0Y56R1');
+    </script>
+
+    <!-- Favicons -->
+    <link href="{% static 'img/favicon.png' %}" rel="icon">
+    <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+        rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+    <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+    <!-- Main CSS File -->
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+
+    <!-- =======================================================
+  * Template Name: Easy Transit
+  * Template URL: easytransit.co.zw
+  * Updated: Jul 01 2025 with Bootstrap v5.3.7
+  * Author: PalsetDigital.com
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div
+            class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+            <!-- Logo -->
+            <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+                <img src="{% static 'img/easy transit logo.png' %}" alt="Easy Transit">
+            </a>
+
+            <!-- Navigation Menu -->
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <li><a href="{% url 'rides:index' %}">Home</a></li>
+                    <li><a href="{% url 'rides:about' %}">About</a></li>
+
+                    <!-- Services Dropdown -->
+                    <li class="dropdown">
+                        <a href="#" class="active">
+                            <span>Services</span>
+                            <i class="bi bi-chevron-down toggle-dropdown"></i>
+                        </a>
+                        <ul>
+                            <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+                            <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+                            <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+                            <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sight Seeing</a></li>
+                            <li><a href="{% url 'rides:group_transfers' %}">Group Transfers</a></li>
+                            <li><a href="{% url 'rides:point_transfers' %}">Point Transfers</a></li>
+                            <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+                            <li><a href="{% url 'rides:special_events' %}">Special Event Solutions</a></li>
+                            <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+                            <li><a href="{% url 'rides:dinner_transfers' %}">Dinner Transfers</a></li>
+                        </ul>
+                    </li>
+
+                    <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+                    <li><a href="{% url 'rides:tours' %}">Tours</a></li>
+                    <li><a href="{% url 'rides:gallery' %}">Gallery</a></li>
+                    <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+
+                    <!-- More Pages Dropdown -->
+                    <li class="dropdown">
+                        <a href="#">
+                            <span>More Pages</span>
+                            <i class="bi bi-chevron-down toggle-dropdown"></i>
+                        </a>
+                        <ul>
+                            <li><a href="{% url 'rides:booking_wizard_start' %}">Booking</a></li>
+                            <li><a href="{% url 'rides:testimonials' %}">Testimonials</a></li>
+                            <li><a href="{% url 'rides:faq' %}">Frequently Asked Questions</a></li>
+                            <li><a href="{% url 'rides:terms' %}">Terms</a></li>
+                            <li><a href="{% url 'rides:privacy' %}">Privacy</a></li>
+                        </ul>
+                    </li>
+
+                    <li><a href="{% url 'rides:contact' %}">Contact</a></li>
+                </ul>
+            </nav>
+
+            <!-- WhatsApp Button -->
+            <a href="https://wa.me/263789423154?text=Hello%20Easy%20Transit!%20I%20am%20interested%20in%20your%20services."
+                class="whatsapp-chat-btn pulse">
+                <i class="bi bi-whatsapp"></i>
+                <span>Live Chat</span>
+                <span class="whatsapp-badge">Live</span>
+            </a>
+        </div>
+    </header>
+
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="mobile-bottom-nav d-xl-none">
+        <a href="{% url 'rides:index' %}" class="mobile-nav-item">
+            <i class="bi bi-house-door"></i>
+            <span>Home</span>
+        </a>
+        <a href="{% url 'rides:tours' %}" class="mobile-nav-item">
+            <i class="bi bi-map"></i>
+            <span>Tours</span>
+        </a>
+        <a href="{% url 'rides:booking_wizard_start' %}" class="mobile-nav-item book-now-mobile">
+            <i class="bi bi-calendar-check"></i>
+            <span>Book</span>
+        </a>
+        <a href="{% url 'rides:fleet' %}" class="mobile-nav-item">
+            <i class="bi bi-truck"></i>
+            <span>Fleet</span>
+        </a>
+        <div class="mobile-nav-item" id="popup-menu-trigger">
+            <i class="bi bi-list"></i>
+            <span>Menu</span>
+        </div>
+    </div>
+
+    <!-- Classic Pop-up Menu -->
+    <div class="popup-menu" id="popup-menu">
+        <div class="popup-header">
+            <h3>Easy Transit Menu</h3>
+            <button class="close-btn" id="close-btn">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+
+        <div class="popup-content">
+            <!-- Main Navigation Section -->
+            <div class="menu-section">
+                <ul class="menu-links">
+                    <li>
+                        <a href="{% url 'rides:index' %}">
+                            <span class="icon"><i class="bi bi-house-door"></i></span>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:about' %}">
+                            <span class="icon"><i class="bi bi-building"></i></span>
+                            <span>About Us</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:fleet' %}">
+                            <span class="icon"><i class="bi bi-truck"></i></span>
+                            <span>Our Fleet</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:about' %}#drivers">
+                            <span class="icon"><i class="bi bi-truck"></i></span>
+                            <span>Our Drivers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:tours' %}">
+                            <span class="icon"><i class="bi bi-map"></i></span>
+                            <span>Tours</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:gallery' %}">
+                            <span class="icon"><i class="bi bi-images"></i></span>
+                            <span>Gallery</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:blog' %}">
+                            <span class="icon"><i class="bi bi-journal-text"></i></span>
+                            <span>Blog</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:contact' %}">
+                            <span class="icon"><i class="bi bi-telephone"></i></span>
+                            <span>Contact</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Services Section -->
+            <div class="menu-section">
+                <h4 class="section-title">Our Services</h4>
+                <ul class="menu-links">
+                    <li>
+                        <a href="{% url 'rides:airport_transfers' %}">
+                            <span class="icon"><i class="bi bi-airplane"></i></span>
+                            <span>Airport Transfers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:corporate_transfers' %}">
+                            <span class="icon"><i class="bi bi-briefcase"></i></span>
+                            <span>Corporate Transfers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:chauffeur_drive' %}">
+                            <span class="icon"><i class="bi bi-person-badge"></i></span>
+                            <span>Chauffeur Drive</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:private_tours' %}">
+                            <span class="icon"><i class="bi bi-binoculars"></i></span>
+                            <span>Private Tours & Sight Seeing</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:group_transfers' %}">
+                            <span class="icon"><i class="bi bi-people"></i></span>
+                            <span>Group Transfers</span>
+                        </a>
+                    </li>
+                       <li>
+                        <a href="{% url 'rides:special_events' %}">
+                            <span class="icon"><i class="bi bi-signpost-split"></i></span>
+                            <span>Special Events Transfers</span>
+                        </a>
+                    </li>
+                      <li>
+                        <a href="{% url 'rides:point_transfers' %}">
+                            <span class="icon"><i class="bi bi-signpost-split"></i></span>
+                            <span>Point Transfers</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:car_rental' %}">
+                            <span class="icon"><i class="bi bi-car-front"></i></span>
+                            <span>Car Rental</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:long_distance' %}">
+                            <span class="icon"><i class="bi bi-signpost-split"></i></span>
+                            <span>Long Distance Travel</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:dinner_transfers' %}">
+                            <span class="icon"><i class="bi bi-utensils"></i></span>
+                            <span>Dinner Transfers</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Additional Pages Section -->
+            <div class="menu-section">
+                <h4 class="section-title">More Pages</h4>
+                <ul class="menu-links">
+                    <li>
+                        <a href="{% url 'rides:booking_wizard_start' %}">
+                            <span class="icon"><i class="bi bi-calendar-check"></i></span>
+                            <span>Booking</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:testimonials' %}">
+                            <span class="icon"><i class="bi bi-chat-quote"></i></span>
+                            <span>Testimonials</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:faq' %}">
+                            <span class="icon"><i class="bi bi-question-circle"></i></span>
+                            <span>Frequently Asked Questions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:terms' %}">
+                            <span class="icon"><i class="bi bi-file-text"></i></span>
+                            <span>Terms & Conditions</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'rides:privacy' %}">
+                            <span class="icon"><i class="bi bi-shield-check"></i></span>
+                            <span>Privacy Policy</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <main class="main">
+
+        <!-- Page Title -->
+        <div class="page-title dark-background" data-aos="fade"
+            style="background-image: url(assets/img/services/airport\ transfers.jpg);">
+            <div class="container position-relative">
+                <h1>Airport Transfers</h1>
+                <p>Reliable, punctual, and comfortable chauffeur service to and from the airport. Start and end your
+                    journey with ease and style.</p>
+                <nav class="breadcrumbs">
+                    <ol>
+                        <li class="current">Airport Transfers</li>
+                    </ol>
+                </nav>
+            </div>
+        </div><!-- End Page Title -->
+
+        <!-- Service Details Section -->
+        <section id="service-details" class="service-details section">
+
+            <div class="container">
+
+                <div class="row gy-5">
+
+                    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+
+                        <div class="service-box">
+                            <h4>Our Airport Services</h4>
+                            <div class="services-list">
+                                <a class="active"><i class="bi bi-airplane-engines"></i><span>Arrival Pickups</span></a>
+                                <a><i class="bi bi-airplane"></i><span>Departure Drop-offs</span></a>
+                                <a><i class="bi bi-clock-history"></i><span>Flight Monitoring</span></a>
+                                <a><i class="bi bi-person-arms-up"></i><span>Meet & Greet</span></a>
+                                <a><i class="bi bi-briefcase"></i><span>Corporate Airport Transfers</span></a>
+                            </div>
+                        </div><!-- End Services List -->
+
+                        <div class="help-box d-flex flex-column justify-content-center align-items-center rounded-3">
+                            <i class="bi bi-headset"></i>
+                            <h4>Need Assistance?</h4>
+                            <p class="d-flex align-items-center mt-1 mb-0">We track your flight for delays. Contact us
+                                24/7 for any changes to your airport transfer booking.</p>
+                        </div>
+
+                    </div>
+
+                    <div class="col-lg-8 ps-lg-5" data-aos="fade-up" data-aos-delay="200">
+                        <!-- Hero Image Carousel -->
+                        <div id="servicesCarousel" class="carousel slide services-hero-carousel rounded-3"
+                            data-bs-ride="carousel">
+                            <!-- Indicators/Dots -->
+                            <div class="carousel-indicators">
+                                <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="0"
+                                    class="active"></button>
+                                <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="1"></button>
+                                <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="2"></button>
+                                <button type="button" data-bs-target="#servicesCarousel" data-bs-slide-to="3"></button>
+                            </div>
+
+                            <!-- The slideshow/carousel -->
+                            <div class="carousel-inner">
+                                <!-- Slide 1 (Active) - Airport Transfers -->
+                                <div class="carousel-item active">
+                                    <img src="{% static 'img/services/airport_transfers.jpg' %}"
+                                        alt="Professional chauffeur handling luggage for airport transfer"
+                                        class="d-block w-100">
+                                    <div class="carousel-caption d-none d-md-block">
+                                        <h5>Airport Transfers</h5>
+                                        <p>Punctual, comfortable arrivals and departures with meet & greet service</p>
+                                    </div>
+                                </div>
+
+                                <!-- Slide 2 - Corporate Transfers -->
+                                <div class="carousel-item">
+                                    <img src="{% static 'img/services/airport 0.jpg' %}"
+                                        alt="Executive business transfer with professional chauffeur"
+                                        class="d-block w-100">
+
+                                </div>
+
+                                <!-- Slide 3 - Private Tours -->
+                                <div class="carousel-item">
+                                    <img src="{% static 'img/services/airport 1.jpg' %}"
+                                        alt="Scenic private tour with luxury vehicle" class="d-block w-100">
+                                </div>
+
+                                <!-- Slide 4 - Luxury Fleet -->
+                                <div class="carousel-item">
+                                    <img src="{% static 'img/services/airport transfers.jpeg' %}"
+                                        alt="Premium fleet of luxury vehicles" class="d-block w-100">
+
+                                </div>
+                            </div>
+
+                            <!-- Left and right controls/icons -->
+                            <button class="carousel-control-prev" type="button" data-bs-target="#servicesCarousel"
+                                data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#servicesCarousel"
+                                data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                        <h3>Airport Transfers</h3>
+                        <p>
+                            Pre-book your pick up or drop off at Robert Gabriel Mugabe (Harare) international airport or
+                            Charles Prince airport.
+                        </p>
+                        <p>
+                            <strong>Booking process</strong><br>
+                            Enter the following details as requested on the booking form for a proper quote.<br>
+                            *Pick up address & time<br>
+                            *Drop off address<br>
+                            *Number of passengers<br>
+                            -Adults<br>
+                            -Children<br>
+                            -on lap<br>
+                            -above 5yrs<br>
+                            *Number of bags<br>
+                            -Small<br>
+                            -Medium<br>
+                            -Large
+                        </p>
+                        <p>
+                            <strong>Method of payment</strong><br>
+                            -Cash<br>
+                            -card payment<br>
+                            -Money Transfer Agency<br>
+                            -Paylink/Bank
+                        </p>
+                        <p>
+                            <strong>Booking confirmation</strong><br>
+                            Once your booking request have been received your booking confirmation will be send to you
+                            via email or whatsapp. A vehicle suitable for the number of passengers and luggage specified
+                            will be provided for your transfer
+                        </p>
+                        <p>
+                            <strong>Payment for your airport transfer</strong><br>
+                            You will get an online quote first via the website, whatsapp or email. Cash and card
+                            payments can be done at pick up or drop off point. In the event the card payment fails due
+                            to other reasons beyond our control, the client will be required to pay cash. Payments via
+                            money transfer agencies like mukuru, western union, World remit etc should be done before
+                            pick up. Also payments via bank or payment via paylink should be done before pick up.
+                        </p>
+                        <p>
+                            <strong>Waiting charge at the airport</strong><br>
+                            For a pick up at the airport we offer free waiting time up to 90mins from the time you land
+                            at the airport. Waiting charge after 90mins will be $15 first 30mins, $25 up to 60mins.
+                        </p>
+                        <p>
+                            <strong>Waiting charge from other places other than the airport</strong><br>
+                            We offer free 10mins waiting time at your pick up point after your scheduled pick up time.
+                            Waiting charge at your pick up point will be $10 up to 15mins, $15 up to 30mins, $25 up to
+                            60mins
+                        </p>
+                        <p>
+                            <strong>How to identify the driver at the airport</strong><br>
+                            Our driver will be waiting in the arrivals hall holding a name board with your name for
+                            easier identification. Our drivers will be putting on branded shirts with name of the
+                            driver.
+                        </p>
+                        <p>
+                            <strong>How to identify the driver or your vehicle at other places other than the
+                                airport.</strong><br>
+                            The office will advise the vehicle registration number and sometimes the driver's contact
+                            number will be shared to you as well. The vehicle will also have sticker with the company
+                            logo.
+                        </p>
+                        <p>
+
+        </section><!-- /Service Details Section -->
+
+        
+        <!-- Call to Action Section -->
+<section id="cta-section" class="cta-section py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="cta-banner" data-aos="zoom-in" data-aos-delay="300">
+          <div class="cta-overlay">
+            <div class="cta-content">
+              <h3>Ready for Your Next Journey?</h3>
+              <p>Experience the difference with Easy Transit's professional transportation services.</p>
+              <div class="cta-buttons">
+                 <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-secondary">Book Your Ride</a>
+                <a href="{% url 'rides:services' %}" class="btn btn-primary">View All Services</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section><!-- /Call to Action Section -->
+
+<style>
+.cta-section {
+  background-color: #f8f9fa;
+}
+
+.cta-banner {
+  background: linear-gradient(rgba(0, 51, 102, 0.9), rgba(0, 30, 60, 0.9)), 
+              url('assets/img/cta-banner-bg.jpg') center/cover no-repeat;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cta-banner:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.cta-overlay {
+  padding: 80px 40px;
+  position: relative;
+  z-index: 2;
+}
+
+.cta-content {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+  color: white;
+}
+
+.cta-content h3 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.cta-content p {
+  font-size: 1.2rem;
+  margin-bottom: 35px;
+  opacity: 0.95;
+  line-height: 1.6;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cta-buttons .btn {
+  padding: 16px 40px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  border: none;
+  min-width: 200px;
+  text-align: center;
+  display: inline-block;
+}
+
+.cta-buttons .btn-primary {
+  background: linear-gradient(135deg, #2ecc71, #3498db);
+  color: white;
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+.cta-buttons .btn-primary:hover {
+  background: linear-gradient(135deg, #27ae60, #2980b9);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+}
+
+.cta-buttons .btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(10px);
+}
+
+.cta-buttons .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: white;
+  transform: translateY(-3px);
+}
+
+/* Decorative elements */
+.cta-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 70%);
+  z-index: 1;
+}
+
+.cta-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -30%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(52, 152, 219, 0.08) 0%, transparent 70%);
+  z-index: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cta-overlay {
+    padding: 60px 25px;
+  }
+
+  .cta-content h3 {
+    font-size: 2rem;
+  }
+
+  .cta-content p {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+  }
+
+  .cta-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .cta-buttons .btn {
+    width: 100%;
+    max-width: 280px;
+    padding: 15px 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cta-content h3 {
+    font-size: 1.8rem;
+  }
+
+  .cta-content p {
+    font-size: 1rem;
+  }
+}
+</style>
+        
+
+        <style>
+            /* Airport Transfers Content Styling */
+
+
+            #service-details h3 {
+                color: #2c3e50;
+                font-size: 1.8rem;
+                margin-bottom: 1.5rem;
+                border-bottom: 3px solid #3498db;
+                padding-bottom: 0.5rem;
+            }
+
+            #service-details p {
+                color: #34495e;
+                line-height: 1.8;
+                margin-bottom: 1.5rem;
+                font-size: 1rem;
+            }
+
+            /* Style for section titles */
+            #service-details p strong {
+                color: #2c3e50;
+                font-weight: 600;
+                display: block;
+                margin-bottom: 0.8rem;
+                font-size: 1.1rem;
+                padding-left: 0.5rem;
+                border-left: 3px solid #3498db;
+            }
+
+            /* Style for bullet points and dashes */
+            #service-details p br+*:not(strong) {
+                display: block;
+                margin-left: 1.5rem;
+                position: relative;
+                padding: 0.2rem 0;
+            }
+
+            #service-details p br+*:not(strong):before {
+                content: "•";
+                color: #3498db;
+                font-weight: bold;
+                position: absolute;
+                left: -1.2rem;
+                top: 0.2rem;
+            }
+
+            /* Special styling for contact section */
+            #service-details p:last-child {
+                background-color: #f8f9fa;
+                padding: 1.5rem;
+                border-radius: 8px;
+                border-left: 4px solid #2ecc71;
+                margin-top: 2rem;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            }
+
+            #service-details p:last-child strong {
+                color: #27ae60;
+                font-size: 1.2rem;
+                margin-bottom: 1rem;
+                display: block;
+                border-left: none;
+                padding-left: 0;
+            }
+
+            /* Email and contact info styling */
+            #service-details p:last-child br {
+                display: block;
+                margin: 0.3rem 0;
+            }
+
+            #service-details p:last-child br+br {
+                margin-top: 0.8rem;
+            }
+
+            /* Responsive adjustments */
+            @media (max-width: 768px) {
+                #service-details h3 {
+                    font-size: 1.6rem;
+                }
+
+                #service-details p {
+                    font-size: 0.95rem;
+                    margin-bottom: 1.2rem;
+                }
+
+                #service-details p:last-child {
+                    padding: 1.2rem;
+                }
+
+                #service-details p br+*:not(strong):before {
+                    left: -1rem;
+                }
+            }
+
+            /* Optional hover effects */
+            #service-details p:not(:last-child):hover {
+                background-color: #f8fafc;
+                transition: background-color 0.3s ease;
+                padding: 0.8rem;
+                border-radius: 6px;
+                margin-left: -0.5rem;
+                margin-right: -0.5rem;
+            }
+
+            /* Improve spacing for better readability */
+            #service-details .col-lg-8 p {
+                padding: 0.3rem 0;
+            }
+
+            /* Style for asterisk items */
+            #service-details p br+*:contains("*") {
+                font-weight: 500;
+                color: #2c3e50;
+            }
+
+            /* Style for dash items */
+            #service-details p br+*:contains("-") {
+                color: #34495e;
+                margin-left: 2rem;
+            }
+
+            #service-details p br+*:contains("-"):before {
+                content: "-";
+                color: #7f8c8d;
+                left: -1.5rem;
+            }
+        </style>
+
+    </main>
+
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-modal-content">
+            <div class="search-header">
+                <h3>Find Tours</h3>
+                <button class="close-search">&times;</button>
+            </div>
+
+            <div class="search-input-group">
+                <i class="bi bi-search"></i>
+                <input type="text" id="mobileSearch" placeholder="Search destinations, activities..."
+                    autocomplete="off">
+                <button class="clear-search">&times;</button>
+            </div>
+
+            <div class="search-suggestions" id="searchSuggestions">
+                <!-- Suggestions will appear here -->
+            </div>
+
+            <div class="search-results" id="searchResults">
+                <!-- Results will appear here -->
+            </div>
+        </div>
+    </div>
+
+
+    <footer id="footer" class="footer">
+
+        <div class="footer-top">
+            <div class="container">
+                <div class="row gy-4">
+                    <div class="col-lg-5 col-md-12 footer-about">
+                        <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center">
+                            <span class="sitename">
+                                <marquee behavior="" direction="left">Easy Transit. Your Perfect Transfers Partner!
+                                </marquee>
+                            </span>
+                        </a>
+                        <p>Experience reliable, luxurious, and professional transfers tailored to your needs. From
+                            airport pick-ups to private sightseeing, we make every journey comfortable and memorable.
+                        </p>
+                        <div class="social-links d-flex mt-4">
+                            <a href=""><i class="bi bi-whatsapp"></i></a>
+                            <a href=""><i class="bi bi-facebook"></i></a>
+                            <a href=""><i class="bi bi-tiktok"></i></a>
+                            <a href=""><i class="bi bi-linkedin"></i></a>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-6 footer-links">
+                        <h4>Useful Links</h4>
+                        <ul>
+                            <li><a href="{% url 'rides:index' %}">Home</a></li>
+                            <li><a href="{% url 'rides:about' %}">About us</a></li>
+                            <li><a href="{% url 'rides:services' %}">Services</a></li>
+                            <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+                            <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+                            <li><a href="{% url 'rides:contact' %}">Contacts</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-2 col-6 footer-links">
+                        <h4>Our Services</h4>
+                        <ul>
+                            <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+                            <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+                            <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+                            <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+                            <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+                            <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sightseeing</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
+                        <h4>Contact Us</h4>
+                        <p>2372 A2</p>
+                        <p>Harare, Zimbabwe</p>
+                        <p class="mt-4"><strong>Phone:</strong> <span><a href="tel:+263 789 423 154">+263 789 423
+                                    154</a></span></p>
+                        <p><strong>Email:</strong> <span><a
+                                    href="mailto:enquiries@easytransit.co.zw">enquiries@easytransit.co.zw</a></span></p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="container copyright text-center mt-4">
+            <a href="https://www.palsetdigital.com">
+                <p style="font-size: large;"><span><b>Powered by Palset Digital</b></span> </strong>
+                </p>
+            </a>
+            <div class="credits">
+                © <span>Copyright</span> <b style="font-size: xx-large;">Easy Transit</b> All rights reserved
+            </div>
+        </div>
+    </footer>
+
+    <!-- Preloader -->
+    <div id="preloader"></div>
+
+    <!-- Vendor JS Files -->
+    <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/php-email-form/validate.js' %}"></script>
+    <script src="{% static 'vendor/aos/aos.js' %}"></script>
+    <script src="{% static 'vendor/purecounter/purecounter_vanilla.js' %}"></script>
+    <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+    <script src="{% static 'vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+    <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+    <!-- Main JS File -->
+    <script src="{% static 'js/main.js' %}"></script>
+    <script src="{% static 'js/tours.js' %}"></script>
+
+    <!-- Pop-up Menu JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Pop-up menu functionality
+            const popupMenuTrigger = document.getElementById('popup-menu-trigger');
+            const closeBtn = document.getElementById('close-btn');
+            const popupMenu = document.getElementById('popup-menu');
+            const overlay = document.getElementById('overlay');
+
+            function openPopup() {
+                if (popupMenu && overlay) {
+                    popupMenu.classList.add('active');
+                    overlay.classList.add('active');
+                }
+            }
+
+            function closePopup() {
+                if (popupMenu && overlay) {
+                    popupMenu.classList.remove('active');
+                    overlay.classList.remove('active');
+                }
+            }
+
+            // Event listeners
+            if (popupMenuTrigger) {
+                popupMenuTrigger.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openPopup();
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closePopup);
+            }
+
+            if (overlay) {
+                overlay.addEventListener('click', closePopup);
+            }
+
+            // Close with Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+                    closePopup();
+                }
+            });
+
+            // Remove duplicate Swiper initialization
+            // Your main.js should handle Swiper initialization
+        });
+    </script>
+
+</body>
+
+</html>

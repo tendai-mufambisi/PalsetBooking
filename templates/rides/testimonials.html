@@ -1,0 +1,2029 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Transit | Customer Testimonials & Reviews</title>
+  <meta name="description"
+    content="Read what our clients say about Easy Transit's reliable airport transfers, professional chauffeur services, comfortable car rentals, and exceptional customer care.">
+  <meta name="keywords"
+    content="customer reviews, testimonials, client feedback, service ratings, Easy Transit reviews, passenger testimonials, corporate client feedback, travel service reviews">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1BL0Y56R1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-B1BL0Y56R1');
+  </script>
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+
+  <!-- =======================================================
+  * Template Name: Easy Transit
+  * Template URL: easytransit.co.zw
+  * Updated: Jul 01 2025 with Bootstrap v5.3.7
+  * Author: PalsetDigital.com
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div
+      class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <!-- Logo -->
+      <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+        <img src="{% static 'img/easy transit logo.png' %}" alt="Easy Transit">
+      </a>
+
+      <!-- Navigation Menu -->
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'rides:index' %}">Home</a></li>
+          <li><a href="{% url 'rides:about' %}">About</a></li>
+
+          <!-- Services Dropdown -->
+          <li class="dropdown">
+            <a href="#">
+              <span>Services</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+              <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+              <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+              <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sight Seeing</a></li>
+              <li><a href="{% url 'rides:group_transfers' %}">Group Transfers</a></li>
+              <li><a href="{% url 'rides:point_transfers' %}">Point Transfers</a></li>
+              <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+              <li><a href="{% url 'rides:special_events' %}">Special Event Solutions</a></li>
+              <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+              <li><a href="{% url 'rides:dinner_transfers' %}">Dinner Transfers</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+          <li><a href="{% url 'rides:tours' %}">Tours</a></li>
+          <li><a href="{% url 'rides:gallery' %}">Gallery</a></li>
+          <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+
+          <!-- More Pages Dropdown -->
+          <li class="dropdown">
+            <a href="#" class="active">
+              <span>More Pages</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:booking_wizard_start' %}">Booking</a></li>
+              <li><a href="{% url 'rides:testimonials' %}">Testimonials</a></li>
+              <li><a href="{% url 'rides:faq' %}">Frequently Asked Questions</a></li>
+              <li><a href="{% url 'rides:terms' %}">Terms</a></li>
+              <li><a href="{% url 'rides:privacy' %}">Privacy</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:contact' %}">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- WhatsApp Button -->
+      <a href="https://wa.me/263789423154?text=Hello%20Easy%20Transit!%20I%20am%20interested%20in%20your%20services."
+        class="whatsapp-chat-btn pulse">
+        <i class="bi bi-whatsapp"></i>
+        <span>Live Chat</span>
+        <span class="whatsapp-badge">Live</span>
+      </a>
+    </div>
+  </header>
+
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav d-xl-none">
+    <a href="{% url 'rides:index' %}" class="mobile-nav-item">
+      <i class="bi bi-house-door"></i>
+      <span>Home</span>
+    </a>
+    <a href="{% url 'rides:tours' %}" class="mobile-nav-item">
+      <i class="bi bi-map"></i>
+      <span>Tours</span>
+    </a>
+    <a href="{% url 'rides:booking_wizard_start' %}" class="mobile-nav-item book-now-mobile">
+      <i class="bi bi-calendar-check"></i>
+      <span>Book</span>
+    </a>
+    <a href="{% url 'rides:fleet' %}" class="mobile-nav-item">
+      <i class="bi bi-truck"></i>
+      <span>Fleet</span>
+    </a>
+    <div class="mobile-nav-item" id="popup-menu-trigger">
+      <i class="bi bi-list"></i>
+      <span>Menu</span>
+    </div>
+  </div>
+
+  <!-- Classic Pop-up Menu -->
+  <div class="popup-menu" id="popup-menu">
+    <div class="popup-header">
+      <h3>Easy Transit Menu</h3>
+      <button class="close-btn" id="close-btn">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <div class="popup-content">
+      <!-- Main Navigation Section -->
+      <div class="menu-section">
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:index' %}">
+              <span class="icon"><i class="bi bi-house-door"></i></span>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:about' %}">
+              <span class="icon"><i class="bi bi-building"></i></span>
+              <span>About Us</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:fleet' %}">
+              <span class="icon"><i class="bi bi-truck"></i></span>
+              <span>Our Fleet</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:about' %}#drivers">
+              <span class="icon"><i class="bi bi-truck"></i></span>
+              <span>Our Drivers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:tours' %}">
+              <span class="icon"><i class="bi bi-map"></i></span>
+              <span>Tours</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:gallery' %}">
+              <span class="icon"><i class="bi bi-images"></i></span>
+              <span>Gallery</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:blog' %}">
+              <span class="icon"><i class="bi bi-journal-text"></i></span>
+              <span>Blog</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:contact' %}">
+              <span class="icon"><i class="bi bi-telephone"></i></span>
+              <span>Contact</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Services Section -->
+      <div class="menu-section">
+        <h4 class="section-title">Our Services</h4>
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:airport_transfers' %}">
+              <span class="icon"><i class="bi bi-airplane"></i></span>
+              <span>Airport Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:corporate_transfers' %}">
+              <span class="icon"><i class="bi bi-briefcase"></i></span>
+              <span>Corporate Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:chauffeur_drive' %}">
+              <span class="icon"><i class="bi bi-person-badge"></i></span>
+              <span>Chauffeur Drive</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:private_tours' %}">
+              <span class="icon"><i class="bi bi-binoculars"></i></span>
+              <span>Private Tours & Sight Seeing</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:group_transfers' %}">
+              <span class="icon"><i class="bi bi-people"></i></span>
+              <span>Group Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:special_events' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Special Events Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:point_transfers' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Point Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:car_rental' %}">
+              <span class="icon"><i class="bi bi-car-front"></i></span>
+              <span>Car Rental</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:long_distance' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Long Distance Travel</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:dinner_transfers' %}">
+              <span class="icon"><i class="bi bi-utensils"></i></span>
+              <span>Dinner Transfers</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Additional Pages Section -->
+      <div class="menu-section">
+        <h4 class="section-title">More Pages</h4>
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:booking_wizard_start' %}">
+              <span class="icon"><i class="bi bi-calendar-check"></i></span>
+              <span>Booking</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:testimonials' %}">
+              <span class="icon"><i class="bi bi-chat-quote"></i></span>
+              <span>Testimonials</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:faq' %}">
+              <span class="icon"><i class="bi bi-question-circle"></i></span>
+              <span>Frequently Asked Questions</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:terms' %}">
+              <span class="icon"><i class="bi bi-file-text"></i></span>
+              <span>Terms & Conditions</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:privacy' %}">
+              <span class="icon"><i class="bi bi-shield-check"></i></span>
+              <span>Privacy Policy</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title dark-background" data-aos="fade"
+      style="background-image: url(assets/img/services/chauffeur\ drives.jpeg);">
+      <div class="container position-relative">
+        <h1>What Our Clients Say</h1>
+        <p>Real feedback from passengers who have experienced the Easy Transit difference. Read about their journeys
+          with our airport transfers, chauffeur services, and more.</p>
+        <nav class="breadcrumbs">
+          <ol>
+            <li class="current">Testimonials</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+
+    <section class="testimonials-section">
+      <div class="bg-shape shape-1"></div>
+      <div class="bg-shape shape-2"></div>
+
+      <div class="container">
+        <!-- Section Title -->
+        <div class="section-title" data-aos="fade-up">
+          <h2>Customer Reviews</h2>
+          <div class="title-main">What Our Clients Say About Easy Transit</div>
+        </div>
+
+        <div class="testimonials-swiper">
+          <div class="swiper init-swiper">
+            <div class="swiper-wrapper">
+              <!-- Testimonial 1 -->
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I had an excellent experience with this shuttle service. Professional from start to finish,
+                      always on time for both arrival and departure. The rides were smooth and stress free. Leonard in
+                      particular stands out. He goes above and beyond, keeps good conversation, and is one of those rare
+                      people who make you feel safe on the road. A genuinely fantastic human being. Highly recommend..
+                    </p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/nandipa.png' %}" alt="Nandipa Ndlovu">
+                    </div>
+                    <div class="author-info">
+                      <h4>Nandipa Ndlovu</h4>
+
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Testimonial 2 -->
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I had an amazing experience with Easy Transit! They are super professional and overall it was a
+                      great service.
+                      I booked them to pick me and my family up and it was so easy to book, I simply sent them a
+                      WhatsApp message less
+                      than 24 hours before I needed the transport and it was booked. Nice and simple. They were on time
+                      and dropped us off with no issues.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/tanaka.png' %}" alt="Tanaka">
+                    </div>
+                    <div class="author-info">
+                      <h4>Tanaka</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Testimonial 3 -->
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Very professional and excellent driver</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/sunlight.png' %}" alt="Sunlight">
+                    </div>
+                    <div class="author-info">
+                      <h4>Sunlight</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Testimonial 4 -->
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great Airport Shuttle Service. Driver kept his time on both pickups(home & airport). Clean car ✅,
+                      Bags were packed for us in the car (that’s a plus for me) And the big one , was being checked on
+                      to confirm date and time for my next flight back home. I had actually planned to call them and
+                      they got to me first .Welldone 👏🏽👏🏽</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Lorieta Makwarimba.png' %}" alt="Lorieta Makwarimba">
+                    </div>
+                    <div class="author-info">
+                      <h4>Lorieta Makwarimba</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great service.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Ngoni Edziwa">
+                    </div>
+                    <div class="author-info">
+                      <h4>Ngoni Edziwa</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great operator, great vehicles, always on time. Thanks a lot Leonard!</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Mik snell.png' %}" alt="Mick Snell">
+                    </div>
+                    <div class="author-info">
+                      <h4>Mick Snell</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>On time. Very good service. Would highly recommend</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Renata Casciati">
+                    </div>
+                    <div class="author-info">
+                      <h4>Renata Casciati</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I've used Easy Transit a few times, both for pick-up from the airport, and for a very early
+                      pick-up from home. Always punctual, reliable and professional, especially Leonard. Happy to
+                      recommend this company.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Liam Brickhill">
+                    </div>
+                    <div class="author-info">
+                      <h4>Liam Brickhill</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great service..</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Taona.png' %}" alt="Taona Carissa">
+                    </div>
+                    <div class="author-info">
+                      <h4>Taona Carissa</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I received the best service from Easy Transit. Booked them the day before and the driver was on
+                      time. Thank you Sir Leonard for the most comfortable ride. I was connected to WiFi and managed to
+                      update relatives and friends along the way. Oh and the so much refreshing bottle of water. Thank
+                      you Easy Transit, keep up the good work.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/sheila.jpeg' %}" alt="Sheila Kamangira">
+                    </div>
+                    <div class="author-info">
+                      <h4>Sheila Kamangira</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Excellent service. Quick responses.Allways on time. Professional and attentive drivers. Very
+                      clean and comfortable cars and fair price</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/ed.png' %}" alt="Edmundo Vasconcelos">
+                    </div>
+                    <div class="author-info">
+                      <h4>Edmundo Vasconcelos</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Highly recommend Leonard for any transport requirements in Harare and tours around Zimbabwe, I
+                      have just come back from a 4 day trip and he looked after me the whole time, always on time,
+                      reasonably priced and knowledgable on the area. I’m going back on business in November and will
+                      definitely contacting Leonard again with all my transport needs.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Rob Leonard">
+                    </div>
+                    <div class="author-info">
+                      <h4>Rob Leonard</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I am super happy l found Easy Transit. The response was very quick and Leonard is such an amazing
+                      driver, l found him waiting for me at the airport and the ride to my home was just smooth. Thank
+                      you and l will definitely use them again.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/princess.png' %}" alt="Princess Lunga">
+                    </div>
+                    <div class="author-info">
+                      <h4>Princess Lunga</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Reliable, friendly, communicates his arrival and scheduled times. Lovely spacious and quiet
+                      vehicle.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/three.png' %}" alt="Three Bees">
+                    </div>
+                    <div class="author-info">
+                      <h4>Three Bees</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>We had an excellent round trip ride with Leonard from the airport to Harare. I can't recommend
+                      this company enough. They provide on-time service friendly and courteous drivers and comfortable
+                      vehicles. If you're looking for transportation in Harare Zimbabwe, this is definitely the company
+                      to go with!</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/12.webp' %}" alt="Ashley Salvador">
+                    </div>
+                    <div class="author-info">
+                      <h4>Ashley Salvador</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Our family used easy transit on multiple occasions for our trip to Harare for a family wedding.
+                      The drivers were professional, always on time and very polite. The service they offered was always
+                      at a fair price and so we felt it only right to tip them for how good they had been during our
+                      trip. Would definitely recommend them and would use again next time in Harare!
+                      Thank You! (Baxter family)</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/sam ellen.png' %}" alt="Sam Ellen">
+                    </div>
+                    <div class="author-info">
+                      <h4>Sam Ellen</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Friendly and reliable service. Always on time and are efficient with communication. Leonard is
+                      our go to guy for airport transfers as well as a driver for business associates who need a driver
+                      around Harare. Would definitely recommend them</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Cherise">
+                    </div>
+                    <div class="author-info">
+                      <h4>Cherise</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Always on time and respond in time professional drivers also Alvin Chanakira</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/11.png' %}" alt="Alvin The Guide">
+                    </div>
+                    <div class="author-info">
+                      <h4>Alvin The Guide</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>The service provided by Easy Transit was really top class. I contacted them the day before l was
+                      due to leave Harare & l spoke to Leonard who was very kind in his messaging & answered every
+                      question that l asked in a very kind & professional way. I decided to go ahead with the booking &
+                      everything went smoothly on the day. He arrived on time, they even had bottles of water for us
+                      which was very handy as it was a very hot day. The taxi used was really nice & it was very clean
+                      which was great.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Douglas Manga">
+                    </div>
+                    <div class="author-info">
+                      <h4>Douglas Manga</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Would not fault them in anywhere, reliable, honest, accommodating, you name it, used them a few
+                      weeks back and they were excellent</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Rejoice Gurure.png' %}" alt="Sarah Chen">
+                    </div>
+                    <div class="author-info">
+                      <h4>Rejoice Gurure</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Very reliable and convenient airport shuttle service with great customer service, especially for
+                      family travel with lots of bags. They have been punctual and efficient in their communication when
+                      planning travel, and their shuttles are very clean and comfortable. I highly recommend their
+                      service.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Deirdre Prickisie.png' %}" alt="Deirdre Prickisie">
+                    </div>
+                    <div class="author-info">
+                      <h4>Deirdre Prickisie</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Leonard is very pleasant, provides a good service and is always reliable. Needs to make sure his
+                      vehicle is in good repair</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Sean Kelly.png' %}" alt="Sean Kelly">
+                    </div>
+                    <div class="author-info">
+                      <h4>Sean Kelly</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great service, friendly staff.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Bridgette Bowley">
+                    </div>
+                    <div class="author-info">
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I was impressed with the service provided by Easy Transit. The booking process was very easy,
+                      great and timely communication from the company. My driver Leonard arrived on time and managed to
+                      find my place in the darkness of early morning. The car was super clean and comfortable. I already
+                      booked my return trip and I would highly recommend Easy Transit to everyone looking for a
+                      reliable, safe and timely taxi service, be it to or from the airport or anywhere else.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Irena B' %}" alt="Irena B">
+                    </div>
+                    <div class="author-info">
+                      <h4>Irena B</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>This service was top notch, the drivers were extremely nice and welcoming, and most importantly
+                      on time. I totally recommend this service</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Chaima Hill.png' %}" alt="Sarah Chen">
+                    </div>
+                    <div class="author-info">
+                      <h4>Chaima Hil</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I can't rate this service highly enough. Leonard is ALWAYS on time, communicates with you and
+                      sends professional booking confirmations. My brother-in-law recommended him, to collect son from
+                      the airport one morning. I was so impressed that I have used him 3 times for airport transfers.
+                      His vehicle is clean, smells like new and even offers a cold, complimentary bottle of water.
+                      Superb.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="D P">
+                    </div>
+                    <div class="author-info">
+                      <h4>D P</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Would recommend Lenard to anyone travelling to Harare Zimbabwe. Lenard and Jealous both extremely
+                      courteous and helpful persons. They were on time, assisted with luggage , the car was clean and
+                      excellent drivers. We chatted while being transported to the various destinations. Their pricing
+                      was reasonable .</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="JOCELYNE ANNE Sturgeon">
+                    </div>
+                    <div class="author-info">
+                      <h4>JOCELYNE ANNE Sturgeon</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Leonard was most helpful. I am new to the city and he went above and beyond to make sure that I
+                      reached my destination. Will definitely be using them again.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt=" Cody Rich">
+                    </div>
+                    <div class="author-info">
+                      <h4> Cody Rich</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Amazing service! I had a great experience with Leonard as my taxi driver. He was punctual,
+                      polite, and ensured smooth and safe rides. I would highly recommend their services!</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Lordena Kwakye">
+                    </div>
+                    <div class="author-info">
+                      <h4>Lordena Kwakye</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great service, on time for pick with clean car. Driver friendly will use service again</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Harsad Patel">
+                    </div>
+                    <div class="author-info">
+                      <h4>Harsad Patel</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Our Pick up & drop off at Harare airport was fantastic. From Reservation to keeping in touch with
+                      great communication all the way. Leonard was an absolute gentleman, helpful & timeous.
+                      I highly recommend him</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Nigel Richards">
+                    </div>
+                    <div class="author-info">
+                      <h4>Nigel Richards</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I received great customer services from Easy Transit with clear communication. I want to
+                      specificity thank the driver Leonard who helped me with my bags and gave me great advice in
+                      Harare. I would definitely recommend Easy Transit to my family and friends.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static "img/Ten'Daii Simango.png" %}" alt="Ten'Daii Simango">
+                    </div>
+                    <div class="author-info">
+                      <h4>Ten'Daii Simango</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Very efficient professional service.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Candy Hanhart">
+                    </div>
+                    <div class="author-info">
+                      <h4>Candy Hanhart</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>On time all the time. Affordable. Leonard is very polite and helpful. I recommend his service.
+                    </p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Michael Gilmour">
+                    </div>
+                    <div class="author-info">
+                      <h4>Michael Gilmour</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Professional and on time.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Bille.png' %}" alt="ille">
+                    </div>
+                    <div class="author-info">
+                      <h4>ille</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Leonard is very professional and prompt. Loved both legs of our transit, felt very safe. Car was
+                      very clean, we were offered complimentary bottled water. Would highly recommend and use this
+                      service again. Thank you.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Tino B M.png' %}" alt="Tino B M">
+                    </div>
+                    <div class="author-info">
+                      <h4>Tino B M</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Thank you so much Tariro for leaving us a 5 star rating. We are so excited we managed to meet
+                      your expectations. We are always ready to take you places whenever you want.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="tariro dzimbanhete">
+                    </div>
+                    <div class="author-info">
+                      <h4>Tariro Dzimbanhete</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Efficient and friendly service. From booking right through to collection, everything was
+                      seamless. We will definitely continue to use this service.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/Bertha Chalila' %}" alt="Bertha Chalila">
+                    </div>
+                    <div class="author-info">
+                      <h4>Bertha Chalila</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>I can't rate this service highly enough. Leonard is ALWAYS on time, communicates with you and
+                      sends professional booking confirmations. My brother-in-law recommended him, to collect son from
+                      the airport one morning. I was so impressed that I have used him 3 times for airport transfers.
+                      His vehicle is clean, smells like new and even offers a cold, complimentary bottle of water.
+                      Superb.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="D P">
+                    </div>
+                    <div class="author-info">
+                      <h4>D P</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>A great experience from start to finish. I was able to book the taxi at a scheduled time
+                      approximately 1.5 hours prior to my trip. The taxi was on time and very clean and spacious. The
+                      gentleman who drove me, Leonard was very friendly and drove with caution which is essential on
+                      Zimbabwean roads. One other great thing for international traveler's is that this business accepts
+                      card payments at a one dollar surcharge. Complimentary water is included. Highly recommended!</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/james.png' %}" alt="James willis">
+                    </div>
+                    <div class="author-info">
+                      <h4>James willis</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Excellent Service!I recently used Easy Transit to pick me up to and from the airport and i was
+                      thoroughly impressed. I have since used them several times again.The driver Leonard was on time as
+                      promised. Leonard was friendly, courteous and helped me with my luggage. The service was efficient
+                      and i appreciated the updates on my pickup times.
+                      Overall i'd highly recommend the shuttle service they offer. Great job and i will definitely use
+                      them again.Kind Regards
+                      Michelle.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="Michelle">
+                    </div>
+                    <div class="author-info">
+                      <h4>Michelle</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Testimonial 5 -->
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <i class="bi bi-quote quote-icon"></i>
+                  <div class="testimonial-content">
+                    <p>Great service from Easy transit, our driver Tunga arrived on time and drove cautiously ensuring
+                      we arrived at our destination safely. You will not go wrong with Easy transit I highly recommend
+                      their services.</p>
+                  </div>
+                  <div class="testimonial-author">
+                    <div class="author-image">
+                      <img src="{% static 'img/easy transit logo.png' %}" alt="TendayiRuth Mangwarara">
+                    </div>
+                    <div class="author-info">
+                      <h4>TendayiRuth Mangwarara</h4>
+                      <div class="rating">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-pagination"></div>
+          </div>
+        </div>
+      </div>
+      
+    </section>
+
+<section>
+
+  <section>
+     <button class="share-btn" 
+          onclick="window.open('https://g.page/r/CYIXxgk1_WVuEBE/review', '_blank')"  
+          style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color : #ffffff;
+            color: #1a73e8;
+            padding: 12px 24px;
+            border: 2px solid #08b21f;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+          "
+          onmouseover="this.style.backgroundColor='#08b21f'; this.style.color='white';"
+          onmouseout="this.style.backgroundColor='#ffffff'; this.style.color='#08b21f';">
+    Share Review
+  </button>
+</section>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const swiperConfig = {
+          loop: true,
+          speed: 600,
+          autoplay: {
+            delay: 5000,
+          },
+          slidesPerView: 'auto',
+          spaceBetween: 30,
+          centeredSlides: true,
+          pagination: {
+            el: '.swiper-pagination',
+            type: 'bullets',
+            clickable: true
+          },
+          breakpoints: {
+            320: {
+              slidesPerView: 1,
+              spaceBetween: 20
+            },
+            768: {
+              slidesPerView: 2,
+              spaceBetween: 30
+            },
+            1200: {
+              slidesPerView: 3,
+              spaceBetween: 30
+            }
+          }
+        };
+
+        const swiper = new Swiper('.init-swiper', swiperConfig);
+      });
+    </script>
+
+    <!-- Why Choose Us Section -->
+    <section id="why-choose-us" class="why-choose-us section light-background">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="hero-content" data-aos="zoom-in" data-aos-delay="200">
+          <div class="content-wrapper">
+            <div class="badge-wrapper">
+              <span class="promo-badge">Premium Service</span>
+            </div>
+            <h2>Why Choose Easy Transit</h2>
+            <p>Experience the difference with our professional transportation services. From airport transfers to
+              corporate travel, we deliver comfort, safety, and reliability every time.</p>
+
+            <div class="action-section">
+              <div class="main-actions">
+                <a href="{% url 'rides:services' %}" class="btn btn-explore">
+                  <i class="bi bi-car-front"></i>
+                  View Services
+                </a>
+                <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-deals">
+                  <i class="bi bi-calendar-check"></i>
+                  Book Now
+                </a>
+              </div>
+
+              <div class="quick-contact">
+                <span class="contact-label">Need immediate assistance?</span>
+                <a href="tel:+1234567890" class="contact-link">
+                  <i class="bi bi-telephone"></i>
+                  Call +263 789 423 154
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="visual-element">
+            <img src="{% static 'img/services/airport transfers.jpg' %}" alt="Professional Transportation" class="hero-image"
+              loading="lazy">
+            <div class="image-overlay">
+              <div class="stat-item">
+                <span class="stat-number">30+</span>
+                <span class="stat-label">Vehicles</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-number">1K+</span>
+                <span class="stat-label">Happy Clients</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="benefits-showcase" data-aos="fade-up" data-aos-delay="400">
+          <div class="benefits-header">
+            <h3>Our Key Advantages</h3>
+            <p>What sets Easy Transit apart from the competition</p>
+          </div>
+
+          <div class="benefits-grid">
+            <div class="benefit-card" data-aos="flip-left" data-aos-delay="450">
+              <div class="benefit-visual">
+                <div class="benefit-icon-wrap">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="benefit-pattern"></div>
+              </div>
+              <div class="benefit-content">
+                <h4>Safety First</h4>
+                <p>Certified professional drivers and well-maintained vehicles with comprehensive insurance coverage</p>
+              </div>
+            </div>
+
+            <div class="benefit-card" data-aos="flip-left" data-aos-delay="500">
+              <div class="benefit-visual">
+                <div class="benefit-icon-wrap">
+                  <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="benefit-pattern"></div>
+              </div>
+              <div class="benefit-content">
+                <h4>Punctuality Guaranteed</h4>
+                <p>Real-time tracking and professional drivers ensure you arrive on time, every time</p>
+              </div>
+            </div>
+
+            <div class="benefit-card" data-aos="flip-left" data-aos-delay="550">
+              <div class="benefit-visual">
+                <div class="benefit-icon-wrap">
+                  <i class="bi bi-star"></i>
+                </div>
+                <div class="benefit-pattern"></div>
+              </div>
+              <div class="benefit-content">
+                <h4>Premium Comfort</h4>
+                <p>Modern fleet with luxury amenities for a comfortable and relaxing journey</p>
+              </div>
+            </div>
+
+            <div class="benefit-card" data-aos="flip-left" data-aos-delay="450">
+              <div class="benefit-visual">
+                <div class="benefit-icon-wrap">
+                  <i class="bi bi-phone"></i>
+                </div>
+                <div class="benefit-pattern"></div>
+              </div>
+              <div class="benefit-content">
+                <h4>Easy Booking</h4>
+                <p>Simple online reservation system with instant confirmation and 24/7 customer support</p>
+              </div>
+            </div>
+
+            <div class="benefit-card" data-aos="flip-left" data-aos-delay="500">
+              <div class="benefit-visual">
+                <div class="benefit-icon-wrap">
+                  <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div class="benefit-pattern"></div>
+              </div>
+              <div class="benefit-content">
+                <h4>Transparent Pricing</h4>
+                <p>No hidden fees or surprises - upfront pricing with multiple payment options available</p>
+              </div>
+            </div>
+
+            <div class="benefit-card" data-aos="flip-left" data-aos-delay="550">
+              <div class="benefit-visual">
+                <div class="benefit-icon-wrap">
+                  <i class="bi bi-gear"></i>
+                </div>
+                <div class="benefit-pattern"></div>
+              </div>
+              <div class="benefit-content">
+                <h4>Versatile Solutions</h4>
+                <p>From airport transfers to corporate events - we handle all your transportation needs</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="additional-features" data-aos="fade-up" data-aos-delay="600">
+          <div class="features-grid">
+            <div class="feature-item">
+              <i class="bi bi-check-circle"></i>
+              <span>24/7 Availability</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-check-circle"></i>
+              <span>Professional Drivers</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-check-circle"></i>
+              <span>GPS Tracking</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-check-circle"></i>
+              <span>Flight Monitoring</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-check-circle"></i>
+              <span>Meet & Greet Service</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-check-circle"></i>
+              <span>Corporate Accounts</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Why Choose Us Section -->
+
+    <!-- Call to Action Section -->
+    <section id="cta-section" class="cta-section py-5">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="cta-banner" data-aos="zoom-in" data-aos-delay="300">
+              <div class="cta-overlay">
+                <div class="cta-content">
+                  <h3>Ready for Your Next Journey?</h3>
+                  <p>Experience the difference with Easy Transit's professional transportation services.</p>
+                  <div class="cta-buttons">
+                    <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-secondary">Book Your Ride</a>
+                    <a href="{% url 'rides:services' %}" class="btn btn-primary">View All Services</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- /Call to Action Section -->
+
+    <style>
+      .cta-section {
+        background-color: #f8f9fa;
+      }
+
+      .cta-banner {
+        background: linear-gradient(rgba(0, 51, 102, 0.9), rgba(0, 30, 60, 0.9)),
+          url('assets/img/cta-banner-bg.jpg') center/cover no-repeat;
+        border-radius: 20px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .cta-banner:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      }
+
+      .cta-overlay {
+        padding: 80px 40px;
+        position: relative;
+        z-index: 2;
+      }
+
+      .cta-content {
+        max-width: 700px;
+        margin: 0 auto;
+        text-align: center;
+        color: white;
+      }
+
+      .cta-content h3 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: white;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+      }
+
+      .cta-content p {
+        font-size: 1.2rem;
+        margin-bottom: 35px;
+        opacity: 0.95;
+        line-height: 1.6;
+      }
+
+      .cta-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .cta-buttons .btn {
+        padding: 16px 40px;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        border: none;
+        min-width: 200px;
+        text-align: center;
+        display: inline-block;
+      }
+
+      .cta-buttons .btn-primary {
+        background: linear-gradient(135deg, #2ecc71, #3498db);
+        color: white;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+      }
+
+      .cta-buttons .btn-primary:hover {
+        background: linear-gradient(135deg, #27ae60, #2980b9);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+      }
+
+      .cta-buttons .btn-secondary {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(10px);
+      }
+
+      .cta-buttons .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: white;
+        transform: translateY(-3px);
+      }
+
+      /* Decorative elements */
+      .cta-banner::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(46, 204, 113, 0.1) 0%, transparent 70%);
+        z-index: 1;
+      }
+
+      .cta-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -30%;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(52, 152, 219, 0.08) 0%, transparent 70%);
+        z-index: 1;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .cta-overlay {
+          padding: 60px 25px;
+        }
+
+        .cta-content h3 {
+          font-size: 2rem;
+        }
+
+        .cta-content p {
+          font-size: 1.1rem;
+          margin-bottom: 30px;
+        }
+
+        .cta-buttons {
+          flex-direction: column;
+          align-items: center;
+          gap: 15px;
+        }
+
+        .cta-buttons .btn {
+          width: 100%;
+          max-width: 280px;
+          padding: 15px 30px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .cta-content h3 {
+          font-size: 1.8rem;
+        }
+
+        .cta-content p {
+          font-size: 1rem;
+        }
+      }
+    </style>
+
+  </main>
+
+  <footer id="footer" class="footer">
+
+    <div class="footer-top">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-5 col-md-12 footer-about">
+            <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center">
+              <span class="sitename">
+                <marquee behavior="" direction="left">Easy Transit. Your Perfect Transfers Partner!
+                </marquee>
+              </span>
+            </a>
+            <p>Experience reliable, luxurious, and professional transfers tailored to your needs. From
+              airport pick-ups to private sightseeing, we make every journey comfortable and memorable.
+            </p>
+            <div class="social-links d-flex mt-4">
+              <a href=""><i class="bi bi-whatsapp"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-tiktok"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><a href="{% url 'rides:index' %}">Home</a></li>
+              <li><a href="{% url 'rides:about' %}">About us</a></li>
+              <li><a href="{% url 'rides:services' %}">Services</a></li>
+              <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+              <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+              <li><a href="{% url 'rides:contact' %}">Contacts</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+              <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+              <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+              <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+              <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+              <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sightseeing</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
+            <h4>Contact Us</h4>
+            <p>2372 A2</p>
+            <p>Harare, Zimbabwe</p>
+            <p class="mt-4"><strong>Phone:</strong> <span><a href="tel:+263 789 423 154">+263 789 423
+                  154</a></span></p>
+            <p><strong>Email:</strong> <span><a
+                  href="mailto:enquiries@easytransit.co.zw">enquiries@easytransit.co.zw</a></span></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="container copyright text-center mt-4">
+      <a href="https://www.palsetdigital.com">
+        <p style="font-size: large;"><span><b>Powered by Palset Digital</b></span> </strong>
+        </p>
+      </a>
+      <div class="credits">
+        © <span>Copyright</span> <b style="font-size: xx-large;">Easy Transit</b> All rights reserved
+      </div>
+    </div>
+  </footer>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/purecounter/purecounter_vanilla.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/tours.js' %}"></script>
+
+  <!-- Pop-up Menu JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Pop-up menu functionality
+      const popupMenuTrigger = document.getElementById('popup-menu-trigger');
+      const closeBtn = document.getElementById('close-btn');
+      const popupMenu = document.getElementById('popup-menu');
+      const overlay = document.getElementById('overlay');
+
+      function openPopup() {
+        if (popupMenu && overlay) {
+          popupMenu.classList.add('active');
+          overlay.classList.add('active');
+        }
+      }
+
+      function closePopup() {
+        if (popupMenu && overlay) {
+          popupMenu.classList.remove('active');
+          overlay.classList.remove('active');
+        }
+      }
+
+      // Event listeners
+      if (popupMenuTrigger) {
+        popupMenuTrigger.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openPopup();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closePopup);
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', closePopup);
+      }
+
+      // Close with Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+          closePopup();
+        }
+      });
+
+      // Remove duplicate Swiper initialization
+      // Your main.js should handle Swiper initialization
+    });
+  </script>
+
+</body>
+
+</html>

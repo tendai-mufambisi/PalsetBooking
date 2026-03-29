@@ -30,7 +30,7 @@ concat = f"{payload['reference']}{payload['paynowreference']}{payload['amount']}
 sign = hashlib.sha512(concat.encode('utf-8')).hexdigest()
 payload['hash'] = sign
 
-url = 'http://127.0.0.1:8000/rides/paynow/result/'
+url = 'http://127.0.0.1:8000/paynow/result/'
 print('Posting to', url)
 try:
     resp = requests.post(url, data=payload, timeout=10)

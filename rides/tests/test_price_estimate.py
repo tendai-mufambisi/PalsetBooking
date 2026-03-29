@@ -9,7 +9,7 @@ def test_price_estimate_by_distance():
         "num_adults": 3,
         "luggage_count": 1
     }
-    resp = client.post('/rides/api/price/', payload, format='json')
+    resp = client.post('/api/price/', payload, format='json')
     assert resp.status_code == 200
     data = resp.json()
     assert 'total' in data
@@ -35,7 +35,7 @@ def test_price_estimate_by_coords(monkeypatch):
         "dropoff_lng": 31.1,
         "num_adults": 1
     }
-    resp = client.post('/rides/api/price/', payload, format='json')
+    resp = client.post('/api/price/', payload, format='json')
     assert resp.status_code == 200
     data = resp.json()
     assert data['distance_km'] == 10.5
@@ -45,5 +45,5 @@ def test_price_estimate_by_coords(monkeypatch):
 def test_price_estimate_missing_params():
     client = APIClient()
     payload = {"num_adults": 1}
-    resp = client.post('/rides/api/price/', payload, format='json')
+    resp = client.post('/api/price/', payload, format='json')
     assert resp.status_code == 400

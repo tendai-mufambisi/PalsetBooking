@@ -33,7 +33,7 @@ class BookingPlatform {
         luggageCount = 0
     ) {
         try {
-            const response = await fetch('/rides/api/distance-fare/', {
+            const response = await fetch('/api/distance-fare/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

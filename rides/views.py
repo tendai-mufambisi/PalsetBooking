@@ -1096,6 +1096,9 @@ class PriceEstimateView(APIView):
             )
 
 
+
+
+
 # ============================================================================
 # Paynow Integration Views (Payment Handling)
 # ============================================================================
@@ -1119,6 +1122,7 @@ class PaynowResultView(APIView):
 
         data = request.POST.dict()
         status_text = (data.get('status') or '').strip()
+        print("............................ ", status_text, "...status text")
         logger.info('Paynow webhook data: %s', data)
 
         reference_candidates = [
@@ -1216,6 +1220,8 @@ class PaynowReturnView(APIView):
     """User redirected back from Paynow."""
 
     def get(self, request):
+        from urllib.parse import urlencode, quote
+        
         logger.info('=== PAYNOW_RETURN_VIEW HIT ===')
         logger.info('GET parameters: %s', dict(request.GET))
         logger.info('Session keys: %s', list(request.session.keys()))
@@ -1256,7 +1262,6 @@ class PaynowReturnView(APIView):
                         if booking.pickup_lat and booking.pickup_lng and booking.dropoff_lat and booking.dropoff_lng:
                             maps_url = f"https://www.google.com/maps/dir/?api=1&origin={booking.pickup_lat},{booking.pickup_lng}&destination={booking.dropoff_lat},{booking.dropoff_lng}&travelmode=driving"
                         else:
-                            from urllib.parse import urlencode, quote
                             params = {
                                 'api': 1,
                                 'origin': booking.pickup_address,
@@ -1337,7 +1342,6 @@ class PaynowReturnView(APIView):
         if booking.pickup_lat and booking.pickup_lng and booking.dropoff_lat and booking.dropoff_lng:
             maps_url = f"https://www.google.com/maps/dir/?api=1&origin={booking.pickup_lat},{booking.pickup_lng}&destination={booking.dropoff_lat},{booking.dropoff_lng}&travelmode=driving"
         else:
-            from urllib.parse import urlencode
             params = {
                 'api': 1,
                 'origin': booking.pickup_address,

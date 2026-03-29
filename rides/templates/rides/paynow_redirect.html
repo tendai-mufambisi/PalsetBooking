@@ -39,14 +39,14 @@
       <script>
         (function(){
           const statusEl = document.getElementById('status-text');
-          const checkUrl = `/rides/paynow/poll/{{ payment_id }}/`;
+          const checkUrl = `/paynow/poll/{{ payment_id }}/`;
 
           async function checkStatus(){
             try{
               const res = await fetch(checkUrl, {cache:'no-cache'});
               if(!res.ok){ statusEl.textContent = 'Check failed: ' + res.status; return; }
               const json = await res.json();
-              if(json.paid){ statusEl.textContent = 'Payment confirmed — redirecting...'; window.location.href = `/rides/bookings/success/{{ booking_id }}/`; }
+              if(json.paid){ statusEl.textContent = 'Payment confirmed — redirecting...'; window.location.href = `/bookings/success/{{ booking_id }}/`; }
               else{ statusEl.textContent = 'Pending: ' + (json.status || 'pending'); }
             }catch(e){ statusEl.textContent = 'Error checking status'; }
           }

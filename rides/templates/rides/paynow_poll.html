@@ -33,11 +33,11 @@
     <script>
       (function(){
         const statusEl = document.getElementById('status-text');
-        const checkUrl = `/rides/paynow/poll/{{ payment_id }}/`;
+        const checkUrl = `/paynow/poll/{{ payment_id }}/`;
         let attempts = 0, timer = null, maxAttempts = 20;
 
         function setStatus(t){ if(statusEl) statusEl.textContent = t; }
-        function handleResult(json){ if(!json) return; if(json.error){ setStatus('Error: ' + (json.message||json.error)); return; } if(json.paid){ setStatus('Payment received — redirecting to confirmation...'); window.location.href = `/rides/bookings/success/{{ booking_id }}/`; } else { setStatus('Payment still pending (' + (json.status || 'pending') + '). Checking again...'); } }
+        function handleResult(json){ if(!json) return; if(json.error){ setStatus('Error: ' + (json.message||json.error)); return; } if(json.paid){ setStatus('Payment received — redirecting to confirmation...'); window.location.href = `/bookings/success/{{ booking_id }}/`; } else { setStatus('Payment still pending (' + (json.status || 'pending') + '). Checking again...'); } }
 
         async function checkStatus(){ attempts++; try{ const res = await fetch(checkUrl, {cache:'no-cache'}); if(!res.ok){ const text = await res.text(); setStatus('Check failed: ' + res.status + ' ' + text); if(attempts>=maxAttempts) clearInterval(timer); return; } const json = await res.json(); handleResult(json); if(json.paid && timer) clearInterval(timer); if(!json.paid && attempts>=maxAttempts){ clearInterval(timer); setStatus('Payment still pending — please check Paynow or contact support.'); } }catch(e){ setStatus('Error checking status: ' + e.message); clearInterval(timer); } }
 

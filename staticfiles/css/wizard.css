@@ -300,6 +300,55 @@ small {
 }
 
 /* ============================================================================
+   Booking Wizard - New Field Styles
+   ============================================================================ */
+
+.form-row { display:flex; gap:12px; align-items:center; }
+.form-row > div { min-width:0; }
+
+.form-label { display:block; margin-bottom:6px; font-weight:600; color:var(--text-primary); }
+.form-group { margin-bottom:14px; }
+
+/* Date/time inputs
+   Use consistent sizing and primary focus ring */
+input[type="date"], input[type="time"], input[type="tel"], input[type="email"], input[type="text"], textarea {
+    width:100%;
+    padding:8px 12px;
+    border:1px solid var(--border-light);
+    border-radius:6px;
+    font-size:14px;
+    color:var(--text-primary);
+    box-sizing:border-box;
+}
+
+input[type="date"]:focus, input[type="time"]:focus, input[type="tel"]:focus, input[type="email"]:focus, input[type="text"]:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+    border-color: var(--primary-color);
+}
+
+/* Airport fields block */
+#airport_fields { background: #fbfcff; border: 1px solid var(--border-light); padding:12px; border-radius:8px; }
+
+/* Small salutation select */
+select, .form-row select, input#id_salutation {
+    max-width:180px;
+}
+
+/* Passenger full name field should stand out */
+input[name="passenger_full_name"], input#id_passenger_full_name {
+    font-weight:600;
+}
+
+/* Checkbox label alignment */
+input[type="checkbox"] { margin-right:8px; transform: translateY(2px); }
+
+@media (max-width: 576px) {
+    .form-row { flex-direction: column; }
+    select, .form-row select { max-width:100%; }
+}
+
+/* ============================================================================
    Helper Classes
    ============================================================================ */
 

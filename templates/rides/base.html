@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Easy Transit | Harare Airport Transfers, Chauffeur & Private Transport{% endblock %}</title>
+  <meta name="description"
+    content="{% block description %}Easy Transit provides professional airport transfers, corporate chauffeur services, private tours, group transport, car rentals, and long-distance travel. Ride in comfort, safety, and style.{% endblock %}">
+  <meta name="keywords"
+    content="{% block keywords %}Easy Transit, airport transfers, corporate transfers, chauffeur drive, private tours, group transfers, car rental, long distance travel, dinner transfers{% endblock %}">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1BL0Y56R1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-B1BL0Y56R1');
+  </script>
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}index-page{% endblock %}">
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div
+      class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <!-- Logo -->
+      <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+        <img src="{% static 'img/easy transit logo.png' %}" alt="Easy Transit">
+      </a>
+
+      <!-- Navigation Menu -->
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'rides:index' %}" class="{% block nav_home_active %}{% endblock %}">Home</a></li>
+          <li><a href="{% url 'rides:about' %}">About</a></li>
+
+          <!-- Services Dropdown -->
+          <li class="dropdown">
+            <a href="#">
+              <span>Services</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+              <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+              <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+              <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sight Seeing</a></li>
+              <li><a href="{% url 'rides:group_transfers' %}">Group Transfers</a></li>
+              <li><a href="{% url 'rides:point_transfers' %}">Point Transfers</a></li>
+              <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+              <li><a href="{% url 'rides:special_events' %}">Special Event Solutions</a></li>
+              <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+              <li><a href="{% url 'rides:dinner_transfers' %}">Dinner Transfers</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+          <li><a href="{% url 'rides:tours' %}">Tours</a></li>
+          <li><a href="{% url 'rides:gallery' %}">Gallery</a></li>
+          <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+
+          <!-- More Pages Dropdown -->
+          <li class="dropdown">
+            <a href="#">
+              <span>More Pages</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:booking_wizard_start' %}">Booking</a></li>
+              <li><a href="{% url 'rides:testimonials' %}">Testimonials</a></li>
+              <li><a href="{% url 'rides:faq' %}">Frequently Asked Questions</a></li>
+              <li><a href="{% url 'rides:terms' %}">Terms</a></li>
+              <li><a href="{% url 'rides:privacy' %}">Privacy</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:contact' %}">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- WhatsApp Button -->
+      <a href="https://wa.me/263789423154?text=Hello%20Easy%20Transit!%20I%20am%20interested%20in%20your%20services."
+        class="whatsapp-chat-btn pulse">
+        <i class="bi bi-whatsapp"></i>
+        <span>Live Chat</span>
+        <span class="whatsapp-badge">Live</span>
+      </a>
+    </div>
+  </header>
+
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav d-xl-none">
+    <a href="{% url 'rides:index' %}" class="mobile-nav-item {% block mobile_nav_home_active %}{% endblock %}">
+      <i class="bi bi-house-door"></i>
+      <span>Home</span>
+    </a>
+    <a href="{% url 'rides:tours' %}" class="mobile-nav-item">
+      <i class="bi bi-map"></i>
+      <span>Tours</span>
+    </a>
+    <a class="mobile-nav-item book-now-mobile search-trigger">
+      <i class="bi bi-search"></i>
+      <span>Search</span>
+    </a>
+    <a href="{% url 'rides:fleet' %}" class="mobile-nav-item">
+      <i class="bi bi-truck"></i>
+      <span>Fleet</span>
+    </a>
+    <div class="mobile-nav-item" id="popup-menu-trigger">
+      <i class="bi bi-list"></i>
+      <span>Menu</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  {% block content %}{% endblock %}
+
+  <!-- Footer (Optional - can be customized per page) -->
+  <footer id="footer" class="footer">
+    <div class="container">
+      <div class="row gy-3">
+        <div class="col-lg-3 col-md-12 footer-info">
+          <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center">
+            <img src="{% static 'img/easy transit logo.png' %}" alt="Easy Transit">
+          </a>
+          <p>Easy Transit provides professional transportation services with a focus on safety, comfort, and reliability.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer-legal text-center">
+      <p>&copy; <span id="year"></span> <strong>Easy Transit</strong>. All Rights Reserved. | <a href="{% url 'rides:privacy' %}">Privacy Policy</a> | <a href="{% url 'rides:terms' %}">Terms & Conditions</a></p>
+    </div>
+  </footer>
+
+  <!-- Scroll Top Button -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'js/main.js' %}"></script>
+
+  <!-- Google Maps (if needed for booking) -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_CLIENT_KEY }}&libraries=places"></script>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+
+</html>

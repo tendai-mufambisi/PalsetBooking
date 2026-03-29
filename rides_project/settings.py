@@ -146,8 +146,8 @@ PAYNOW_INTEGRATION_ID='22865'
 PAYNOW_INTEGRATION_KEY='1aa3dd1c-5b72-4205-a3bc-f7a54906f3e5'
 
 
-PAYNOW_RETURN_URL = os.getenv("PAYNOW_RETURN_URL", f"{BASE_URL}/rides/paynow/return/")
-PAYNOW_RESULT_URL = os.getenv("PAYNOW_RESULT_URL", f"{BASE_URL}/rides/paynow/result/")
+PAYNOW_RETURN_URL = os.getenv("PAYNOW_RETURN_URL", f"{BASE_URL}/paynow/return/")
+PAYNOW_RESULT_URL = os.getenv("PAYNOW_RESULT_URL", f"{BASE_URL}/paynow/result/")
 PAYNOW_MERCHANT_EMAIL='mufambisitendaiblessed@gmail.com'
 # Set to False to disable TLS certificate verification for Paynow (use only for local testing)
 PAYNOW_VERIFY_SSL=False

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="text-align: center; padding: 20px;;">
-    <div style="font-size: 48px; color: #28a745; margin-bottom: 16px;">
+    <div style="font-size: 48px; color: #10b981; margin-bottom: 16px;">
         <i class="bi bi-check-circle-fill"></i>
     </div>
     <h2 style="font-size: 24px; color: #333; margin-bottom: 8px;">Booking Confirmed!</h2>
@@ -24,13 +24,13 @@
             <!-- Booking ID -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Booking ID:</span>
-                <strong style="color: #007bff; font-family: monospace;">{{ booking.reference|default:booking.id }}</strong>
+                <strong style="color: #10b981; font-family: monospace;">{{ booking.reference|default:booking.id }}</strong>
             </div>
 
             <!-- Status -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Status:</span>
-                <strong style="color: #28a745;">
+                <strong style="color: #10b981;">
                     {% if booking.status == "CONFIRMED" %}
                         ✓ Confirmed
                     {% elif booking.status == "PENDING" %}
@@ -66,13 +66,13 @@
                 <span style="display: flex; align-items: center; gap: 8px;">
                     <i class="bi bi-clock"></i> Estimated Time:
                 </span>
-                <strong style="color: #ff9800;">{{ eta_minutes }} minutes</strong>
+                <strong style="color: #f97316;">{{ eta_minutes }} minutes</strong>
             </div>
             {% endif %}
 
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Estimated Fare:</span>
-                <strong style="color: #007bff; font-size: 18px;">${{ booking.total_amount|floatformat:2 }}</strong>
+                <strong style="color: #10b981; font-size: 18px;">${{ booking.total_amount|floatformat:2 }}</strong>
             </div>
 
             <!-- Passengers -->
@@ -162,10 +162,10 @@
     </div>
 
     <!-- Driver Contact -->
-    <div style="background: white; border: 2px solid #007bff; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+    <div style="background: white; border: 2px solid #10b981; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Need help or update your booking?</p>
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <a href="tel:{{ TAXI_OWNER_PHONE }}" style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 700; color: white; background: #007bff; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <a href="tel:{{ TAXI_OWNER_PHONE }}" style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 700; color: white; background: #10b981; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <i class="bi bi-telephone"></i> Call Driver
             </a>
             {% if whatsapp_message %}

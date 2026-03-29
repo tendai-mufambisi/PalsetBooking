@@ -1,0 +1,833 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Transit | Our Transportation Services</title>
+  <meta name="description"
+    content="Explore Easy Transit's full range of premium transport services: airport transfers, chauffeur drives, corporate travel, private tours, group transport, car rentals, and long-distance journeys.">
+  <meta name="keywords"
+    content="transportation services, airport transfers, chauffeur service, corporate transfers, private tours, group travel, car rental, long distance travel, dinner transfers, Easy Transit services">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1BL0Y56R1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-B1BL0Y56R1');
+  </script>
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+
+  <!-- =======================================================
+  * Template Name: Easy Transit
+  * Template URL: easytransit.co.zw
+  * Updated: Jul 01 2025 with Bootstrap v5.3.7
+  * Author: PalsetDigital.com
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div
+      class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <!-- Logo -->
+      <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+        <img src="{% static 'img/easy transit logo.png' %}" alt="Easy Transit">
+      </a>
+
+      <!-- Navigation Menu -->
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'rides:index' %}">Home</a></li>
+          <li><a href="{% url 'rides:about' %}">About</a></li>
+
+          <!-- Services Dropdown -->
+          <li class="dropdown">
+            <a href="#" class="active">
+              <span>Services</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+                            <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+                            <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+                            <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+                            <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sight Seeing</a></li>
+                            <li><a href="{% url 'rides:group_transfers' %}">Group Transfers</a></li>
+                            <li><a href="{% url 'rides:point_transfers' %}">Point Transfers</a></li>
+                            <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+                            <li><a href="{% url 'rides:special_events' %}">Special Event Solutions</a></li>
+                            <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+                            <li><a href="{% url 'rides:dinner_transfers' %}">Dinner Transfers</a></li>
+                        </ul>
+          </li>
+
+          <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+          <li><a href="{% url 'rides:tours' %}">Tours</a></li>
+          <li><a href="{% url 'rides:gallery' %}">Gallery</a></li>
+          <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+
+          <!-- More Pages Dropdown -->
+          <li class="dropdown">
+            <a href="#">
+              <span>More Pages</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:booking_wizard_start' %}">Booking</a></li>
+              <li><a href="{% url 'rides:testimonials' %}">Testimonials</a></li>
+              <li><a href="{% url 'rides:faq' %}">Frequently Asked Questions</a></li>
+              <li><a href="{% url 'rides:terms' %}">Terms</a></li>
+              <li><a href="{% url 'rides:privacy' %}">Privacy</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:contact' %}">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- WhatsApp Button -->
+      <a href="https://wa.me/263789423154?text=Hello%20Easy%20Transit!%20I%20am%20interested%20in%20your%20services."
+        class="whatsapp-chat-btn pulse">
+        <i class="bi bi-whatsapp"></i>
+        <span>Live Chat</span>
+        <span class="whatsapp-badge">Live</span>
+      </a>
+    </div>
+  </header>
+
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav d-xl-none">
+    <a href="{% url 'rides:index' %}" class="mobile-nav-item">
+      <i class="bi bi-house-door"></i>
+      <span>Home</span>
+    </a>
+    <a href="{% url 'rides:tours' %}" class="mobile-nav-item">
+      <i class="bi bi-map"></i>
+      <span>Tours</span>
+    </a>
+    <a href="{% url 'rides:booking_wizard_start' %}" class="mobile-nav-item book-now-mobile">
+      <i class="bi bi-calendar-check"></i>
+      <span>Booking</span>
+    </a>
+    <a href="{% url 'rides:fleet' %}" class="mobile-nav-item">
+      <i class="bi bi-truck"></i>
+      <span>Fleet</span>
+    </a>
+    <div class="mobile-nav-item" id="popup-menu-trigger">
+      <i class="bi bi-list"></i>
+      <span>Menu</span>
+    </div>
+  </div>
+
+  <!-- Classic Pop-up Menu -->
+  <div class="popup-menu" id="popup-menu">
+    <div class="popup-header">
+      <h3>Easy Transit Menu</h3>
+      <button class="close-btn" id="close-btn">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <div class="popup-content">
+      <!-- Main Navigation Section -->
+      <div class="menu-section">
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:index' %}">
+              <span class="icon"><i class="bi bi-house-door"></i></span>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:about' %}">
+              <span class="icon"><i class="bi bi-building"></i></span>
+              <span>About Us</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:fleet' %}">
+              <span class="icon"><i class="bi bi-truck"></i></span>
+              <span>Our Fleet</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:about' %}#drivers">
+              <span class="icon"><i class="bi bi-truck"></i></span>
+              <span>Our Drivers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:tours' %}">
+              <span class="icon"><i class="bi bi-map"></i></span>
+              <span>Tours</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:gallery' %}">
+              <span class="icon"><i class="bi bi-images"></i></span>
+              <span>Gallery</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:blog' %}">
+              <span class="icon"><i class="bi bi-journal-text"></i></span>
+              <span>Blog</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:contact' %}">
+              <span class="icon"><i class="bi bi-telephone"></i></span>
+              <span>Contact</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Services Section -->
+      <div class="menu-section">
+        <h4 class="section-title">Our Services</h4>
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:airport_transfers' %}">
+              <span class="icon"><i class="bi bi-airplane"></i></span>
+              <span>Airport Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:corporate_transfers' %}">
+              <span class="icon"><i class="bi bi-briefcase"></i></span>
+              <span>Corporate Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:chauffeur_drive' %}">
+              <span class="icon"><i class="bi bi-person-badge"></i></span>
+              <span>Chauffeur Drive</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:private_tours' %}">
+              <span class="icon"><i class="bi bi-binoculars"></i></span>
+              <span>Private Tours & Sight Seeing</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:group_transfers' %}">
+              <span class="icon"><i class="bi bi-people"></i></span>
+              <span>Group Transfers</span>
+            </a>
+          </li>
+             <li>
+                        <a href="{% url 'rides:special_events' %}">
+                            <span class="icon"><i class="bi bi-signpost-split"></i></span>
+                            <span>Special Events Transfers</span>
+                        </a>
+                    </li>
+                      <li>
+                        <a href="{% url 'rides:point_transfers' %}">
+                            <span class="icon"><i class="bi bi-signpost-split"></i></span>
+                            <span>Point Transfers</span>
+                        </a>
+                    </li>
+          <li>
+            <a href="{% url 'rides:car_rental' %}">
+              <span class="icon"><i class="bi bi-car-front"></i></span>
+              <span>Car Rental</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:long_distance' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Long Distance Travel</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:dinner_transfers' %}">
+              <span class="icon"><i class="bi bi-utensils"></i></span>
+              <span>Dinner Transfers</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Additional Pages Section -->
+      <div class="menu-section">
+        <h4 class="section-title">More Pages</h4>
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:booking_wizard_start' %}">
+              <span class="icon"><i class="bi bi-calendar-check"></i></span>
+              <span>Booking</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:testimonials' %}">
+              <span class="icon"><i class="bi bi-chat-quote"></i></span>
+              <span>Testimonials</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:faq' %}">
+              <span class="icon"><i class="bi bi-question-circle"></i></span>
+              <span>Frequently Asked Questions</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:terms' %}">
+              <span class="icon"><i class="bi bi-file-text"></i></span>
+              <span>Terms & Conditions</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:privacy' %}">
+              <span class="icon"><i class="bi bi-shield-check"></i></span>
+              <span>Privacy Policy</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title dark-background" data-aos="fade"
+      style="background-image: url(assets/img/services/airport\ transfers.jpg);">
+      <div class="container position-relative">
+        <h1>Our Services</h1>
+        <p>Easy Transit provides professional transportation solutions for every need. Ride in comfort, safety, and
+          style.</p>
+        <nav class="breadcrumbs">
+          <ol>
+            <li class="current">Services</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Travel Tours Section -->
+    <section id="travel-tours" class="travel-tours section p-4">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row animated-services">
+          <div class="col-lg-8 mx-auto text-center mb-5">
+            <h2 class="fade-slide-up"><span class="promo-badge">Our Featured Services</span></h2>
+          </div>
+        </div>
+
+        <!-- Featured Services Slider -->
+        <div class="row mb-5">
+          <div class="col-12">
+            <div class="featured-tours-slider swiper init-swiper">
+              <script type="application/json" class="swiper-config">
+            {
+              "loop": true,
+              "speed": 600,
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": 1,
+              "spaceBetween": 30,
+              "pagination": {
+                "el": ".swiper-pagination",
+                "type": "bullets",
+                "clickable": true
+              },
+              "breakpoints": {
+                "768": {
+                  "slidesPerView": 2
+                },
+                "1200": {
+                  "slidesPerView": 3
+                }
+              }
+            }
+          </script>
+              <div class="swiper-wrapper">
+
+                <!-- Airport Transfers -->
+                <div class="swiper-slide">
+                  <div class="featured-tour-card">
+                    <div class="tour-image">
+                      <img src="{% static 'img/services/airport transfers.jpg' %}" alt="Airport Transfers" class="img-fluid">
+                      <div class="tour-badge"><i class="bi bi-airplane-engines"></i> Airport</div>
+                    </div>
+                    <div class="tour-content">
+                      <h4>Airport Transfers</h4>
+                      <p>Reliable pick-up and drop-off with a smooth, stress-free journey.</p>
+                      <div class="tour-meta mb-3">
+                        <span class="duration"><i class="bi bi-clock"></i> 24/7 Service</span>
+                        <span class="price"><i class="bi bi-airplane-engines"></i></span>
+                      </div>
+                      <div class="tour-buttons d-flex gap-2">
+                        <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-primary">Book Now</a>
+                        <a href="{% url 'rides:airport_transfers' %}" class="btn btn-learn-more">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+
+                <!-- Corporate Transfers -->
+                <div class="swiper-slide">
+                  <div class="featured-tour-card">
+                    <div class="tour-image">
+                      <img src="{% static 'img/services/corporate transfers.jpeg' %}" alt="Corporate Transfers"
+                        class="img-fluid">
+                      <div class="tour-badge"><i class="bi bi-briefcase"></i> Business</div>
+                    </div>
+                    <div class="tour-content">
+                      <h4>Corporate Transfers</h4>
+                      <p>Discreet, punctual, and professional rides tailored for businesses & individuals.</p>
+                      <div class="tour-meta">
+                        <span class="duration"><i class="bi bi-clock"></i> On-Time Guarantee</span>
+                        <span class="price"><i class="bi bi-briefcase"></i></span>
+                      </div>
+                      <div class="tour-buttons d-flex gap-2">
+                        <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-primary">Book Now</a>
+                        <a href="{% url 'rides:corporate_transfers' %}" class="btn btn-learn-more">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chauffeur Drive -->
+                <div class="swiper-slide">
+                  <div class="featured-tour-card">
+                    <div class="tour-image">
+                      <img src="{% static 'img/services/chauffeur drives.jpeg' %}" alt="Chauffeur Drive" class="img-fluid">
+                      <div class="tour-badge"><i class="bi bi-car-front"></i> Luxury</div>
+                    </div>
+                    <div class="tour-content">
+                      <h4>Chauffeur Drive</h4>
+                      <p>Luxury cars with professional chauffeurs, available for hourly or daily bookings.</p>
+                      <div class="tour-meta">
+                        <span class="duration"><i class="bi bi-clock"></i> Flexible</span>
+                        <span class="price"><i class="bi bi-car-front"></i></span>
+                      </div>
+                      <div class="tour-buttons d-flex gap-2">
+                        <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-primary">Book Now</a>
+                        <a href="{% url 'rides:chauffeur_drive' %}" class="btn btn-learn-more">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Private Tours -->
+                <div class="swiper-slide">
+                  <div class="featured-tour-card">
+                    <div class="tour-image">
+                      <img src="{% static 'img/services/private tours.jpeg' %}" alt="Private Tours" class="img-fluid">
+                      <div class="tour-badge"><i class="bi bi-map"></i> Tours</div>
+                    </div>
+                    <div class="tour-content">
+                      <h4>Private Tours</h4>
+                      <p>Personalized sightseeing tours with expert drivers and comfortable vehicles.</p>
+                      <div class="tour-meta">
+                        <span class="duration"><i class="bi bi-clock"></i> Half / Full Day</span>
+                        <span class="price"><i class="bi bi-map"></i></span>
+                      </div>
+                      <div class="tour-buttons d-flex gap-2">
+                        <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-primary">Book Now</a>
+                        <a href="{% url 'rides:private_tours' %}" class="btn btn-learn-more">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Group Transfers -->
+                <div class="swiper-slide">
+                  <div class="featured-tour-card">
+                    <div class="tour-image">
+                      <img src="{% static 'img/services/group transfers.jpeg' %}" alt="Group Transfers" class="img-fluid">
+                      <div class="tour-badge"><i class="bi bi-people"></i> Groups</div>
+                    </div>
+                    <div class="tour-content">
+                      <h4>Group Transfers</h4>
+                      <p>Spacious rides designed for families, events, and large groups at great value.</p>
+                      <div class="tour-meta">
+                        <span class="duration"><i class="bi bi-clock"></i> Anytime</span>
+                        <span class="price"><i class="bi bi-people"></i></span>
+                      </div>
+                      <div class="tour-buttons d-flex gap-2">
+                        <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-primary">Book Now</a>
+                        <a href="{% url 'rides:group_transfers' %}" class="btn btn-learn-more">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Long Distance Travel -->
+                <div class="swiper-slide">
+                  <div class="featured-tour-card">
+                    <div class="tour-image">
+                      <img src="{% static 'img/services/long distance.jpeg' %}" alt="Long Distance Travel" class="img-fluid">
+                      <div class="tour-badge"><i class="bi bi-signpost-split"></i> Travel</div>
+                    </div>
+                    <div class="tour-content">
+                      <h4>Long Distance Travel</h4>
+                      <p>Comfortable city-to-city transfers with expert chauffeurs and modern vehicles.</p>
+                      <div class="tour-meta">
+                        <span class="duration"><i class="bi bi-clock"></i> By Request</span>
+                        <span class="price"><i class="bi bi-signpost-split"></i></span>
+                      </div>
+                      <div class="tour-buttons d-flex gap-2">
+                        <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-primary">Book Now</a>
+                        <a href="{% url 'rides:long_distance' %}" class="btn btn-learn-more">Learn More</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+              <div class="swiper-pagination"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Travel About Section -->
+    <section id="travel-about" class="travel-about section p-0">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="features-grid" data-aos="fade-up" data-aos-delay="200">
+              <div class="section-header text-center mb-5">
+                <h3>Our Core Services</h3>
+                <p>Comprehensive transportation solutions for every need</p>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-airplane"></i>
+                      </div>
+                      <h4>Airport Transfers</h4>
+                      <p>Professional meet-and-greet service</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Timely pickups and drop-offs with flight tracking. Professional drivers assist with luggage for
+                        a smooth airport experience.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-briefcase"></i>
+                      </div>
+                      <h4>Corporate Chauffeur</h4>
+                      <p>Executive transportation solutions</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Discreet, professional service for business travel, client meetings, and corporate events with
+                        premium vehicles.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-geo-alt"></i>
+                      </div>
+                      <h4>Private Tours</h4>
+                      <p>Customized sightseeing experiences</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Explore destinations at your own pace with knowledgeable drivers and flexible itineraries
+                        tailored to your interests.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-people"></i>
+                      </div>
+                      <h4>Group Transport</h4>
+                      <p>Comfortable multi-passenger vehicles</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Spacious vans and coaches for family trips, corporate groups, weddings, and special events with
+                        capacity planning.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-car-front"></i>
+                      </div>
+                      <h4>Car Rentals</h4>
+                      <p>Flexible vehicle rental options</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Well-maintained vehicles for short-term or extended rentals with comprehensive insurance and
+                        24/7 roadside assistance.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-signpost-split"></i>
+                      </div>
+                      <h4>Long-Distance Travel</h4>
+                      <p>Intercity and cross-country journeys</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Comfortable long-haul transportation with rest breaks, onboard amenities, and experienced
+                        drivers for extended trips.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div class="row mt-5">
+          <div class="col-lg-12">
+            <div class="cta-banner" data-aos="zoom-in" data-aos-delay="300">
+              <div class="cta-overlay">
+                <div class="cta-content">
+                  <h3>Ready for Your Next Journey?</h3>
+                  <p>Experience the difference with Easy Transit's professional transportation services.</p>
+                  <div class="cta-buttons">
+                    <a href="https://wa.me/263789423154?text=Hello%20Easy%20Transit!%20I%20am%20interested%20in%20your%20services."
+                      class="btn btn-primary me-3">Chat With Us</a>
+                    <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-outline">Book Your Ride</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Travel About Section -->
+
+  </main>
+
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="searchModal">
+    <div class="search-modal-content">
+      <div class="search-header">
+        <h3>Find Tours</h3>
+        <button class="close-search">&times;</button>
+      </div>
+
+      <div class="search-input-group">
+        <i class="bi bi-search"></i>
+        <input type="text" id="mobileSearch" placeholder="Search destinations, activities..." autocomplete="off">
+        <button class="clear-search">&times;</button>
+      </div>
+
+      <div class="search-suggestions" id="searchSuggestions">
+        <!-- Suggestions will appear here -->
+      </div>
+
+      <div class="search-results" id="searchResults">
+        <!-- Results will appear here -->
+      </div>
+    </div>
+  </div>
+
+
+  <footer id="footer" class="footer">
+
+    <div class="footer-top">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-5 col-md-12 footer-about">
+            <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center">
+              <span class="sitename">
+                <marquee behavior="" direction="left">Easy Transit. Your Perfect Transfers Partner!
+                </marquee>
+              </span>
+            </a>
+            <p>Experience reliable, luxurious, and professional transfers tailored to your needs. From
+              airport pick-ups to private sightseeing, we make every journey comfortable and memorable.
+            </p>
+            <div class="social-links d-flex mt-4">
+              <a href=""><i class="bi bi-whatsapp"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-tiktok"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><a href="{% url 'rides:index' %}">Home</a></li>
+              <li><a href="{% url 'rides:about' %}">About us</a></li>
+              <li><a href="{% url 'rides:services' %}">Services</a></li>
+              <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+              <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+              <li><a href="{% url 'rides:contact' %}">Contacts</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+              <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+              <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+              <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+              <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+              <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sightseeing</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
+            <h4>Contact Us</h4>
+            <p>2372 A2</p>
+            <p>Harare, Zimbabwe</p>
+            <p class="mt-4"><strong>Phone:</strong> <span><a href="tel:+263 789 423 154">+263 789 423
+                  154</a></span></p>
+            <p><strong>Email:</strong> <span><a
+                  href="mailto:enquiries@easytransit.co.zw">enquiries@easytransit.co.zw</a></span></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="container copyright text-center mt-4">
+      <a href="https://www.palsetdigital.com">
+        <p style="font-size: large;"><span><b>Powered by Palset Digital</b></span> </strong>
+        </p>
+      </a>
+      <div class="credits">
+        © <span>Copyright</span> <b style="font-size: xx-large;">Easy Transit</b> All rights reserved
+      </div>
+    </div>
+  </footer>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/purecounter/purecounter_vanilla.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/tours.js' %}"></script>
+
+  <!-- Pop-up Menu JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Pop-up menu functionality
+      const popupMenuTrigger = document.getElementById('popup-menu-trigger');
+      const closeBtn = document.getElementById('close-btn');
+      const popupMenu = document.getElementById('popup-menu');
+      const overlay = document.getElementById('overlay');
+
+      function openPopup() {
+        if (popupMenu && overlay) {
+          popupMenu.classList.add('active');
+          overlay.classList.add('active');
+        }
+      }
+
+      function closePopup() {
+        if (popupMenu && overlay) {
+          popupMenu.classList.remove('active');
+          overlay.classList.remove('active');
+        }
+      }
+
+      // Event listeners
+      if (popupMenuTrigger) {
+        popupMenuTrigger.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openPopup();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closePopup);
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', closePopup);
+      }
+
+      // Close with Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+          closePopup();
+        }
+      });
+
+      // Remove duplicate Swiper initialization
+      // Your main.js should handle Swiper initialization
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,1422 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Transit | About</title>
+  <meta name="description"
+    content="Easy Transit provides professional airport transfers, corporate chauffeur services, private tours, group transport, car rentals, and long-distance travel. Ride in comfort, safety, and style.">
+  <meta name="keywords"
+    content="Easy Transit, airport transfers, corporate transfers, chauffeur drive, private tours, group transfers, car rental, long distance travel, dinner transfers">
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-B1BL0Y56R1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-B1BL0Y56R1');
+  </script>
+
+  <!-- Favicons -->
+  <link href="{% static 'img/favicon.png' %}" rel="icon">
+  <link href="{% static 'img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'css/main.css' %}" rel="stylesheet">
+
+
+  <!-- =======================================================
+  * Template Name: Easy Transit
+  * Template URL: easytransit.co.zw
+  * Updated: Jul 01 2025 with Bootstrap v5.3.7
+  * Author: PalsetDigital.com
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div
+      class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <!-- Logo -->
+      <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center me-auto me-xl-0">
+        <img src="{% static 'img/easy transit logo.png' %}" alt="Easy Transit">
+      </a>
+
+      <!-- Navigation Menu -->
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'rides:index' %}">Home</a></li>
+          <li><a href="{% url 'rides:about' %}" class="active">About</a></li>
+
+          <!-- Services Dropdown -->
+          <li class="dropdown">
+            <a href="#">
+              <span>Services</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+              <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+              <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+              <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sight Seeing</a></li>
+              <li><a href="{% url 'rides:group_transfers' %}">Group Transfers</a></li>
+              <li><a href="{% url 'rides:point_transfers' %}">Point Transfers</a></li>
+              <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+              <li><a href="{% url 'rides:special_events' %}">Special Event Solutions</a></li>
+              <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+              <li><a href="{% url 'rides:dinner_transfers' %}">Dinner Transfers</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+          <li><a href="{% url 'rides:tours' %}">Tours</a></li>
+          <li><a href="{% url 'rides:gallery' %}">Gallery</a></li>
+          <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+
+          <!-- More Pages Dropdown -->
+          <li class="dropdown">
+            <a href="#">
+              <span>More Pages</span>
+              <i class="bi bi-chevron-down toggle-dropdown"></i>
+            </a>
+            <ul>
+              <li><a href="{% url 'rides:booking_wizard_start' %}">Booking</a></li>
+              <li><a href="{% url 'rides:testimonials' %}">Testimonials</a></li>
+              <li><a href="{% url 'rides:faq' %}">Frequently Asked Questions</a></li>
+              <li><a href="{% url 'rides:terms' %}">Terms</a></li>
+              <li><a href="{% url 'rides:privacy' %}">Privacy</a></li>
+            </ul>
+          </li>
+
+          <li><a href="{% url 'rides:contact' %}">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- WhatsApp Button -->
+      <a href="https://wa.me/263789423154?text=Hello%20Easy%20Transit!%20I%20am%20interested%20in%20your%20services."
+        class="whatsapp-chat-btn pulse">
+        <i class="bi bi-whatsapp"></i>
+        <span>Live Chat</span>
+        <span class="whatsapp-badge">Live</span>
+      </a>
+    </div>
+  </header>
+
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav d-xl-none">
+    <a href="{% url 'rides:index' %}" class="mobile-nav-item">
+      <i class="bi bi-house-door"></i>
+      <span>Home</span>
+    </a>
+    <a href="{% url 'rides:tours' %}" class="mobile-nav-item">
+      <i class="bi bi-map"></i>
+      <span>Tours</span>
+    </a>
+    <a href="{% url 'rides:booking_wizard_start' %}" class="mobile-nav-item book-now-mobile">
+      <i class="bi bi-geo-alt"></i>
+      <span>Services</span>
+    </a>
+    <a href="{% url 'rides:fleet' %}" class="mobile-nav-item">
+      <i class="bi bi-truck"></i>
+      <span>Fleet</span>
+    </a>
+    <div class="mobile-nav-item" id="popup-menu-trigger">
+      <i class="bi bi-list"></i>
+      <span>Menu</span>
+    </div>
+  </div>
+
+  <!-- Classic Pop-up Menu -->
+  <div class="popup-menu" id="popup-menu">
+    <div class="popup-header">
+      <h3>Easy Transit Menu</h3>
+      <button class="close-btn" id="close-btn">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <div class="popup-content">
+      <!-- Main Navigation Section -->
+      <div class="menu-section">
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:index' %}">
+              <span class="icon"><i class="bi bi-house-door"></i></span>
+              <span>Home</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:about' %}">
+              <span class="icon"><i class="bi bi-building"></i></span>
+              <span>About Us</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:fleet' %}">
+              <span class="icon"><i class="bi bi-truck"></i></span>
+              <span>Our Fleet</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:about' %}#drivers">
+              <span class="icon"><i class="bi bi-truck"></i></span>
+              <span>Our Drivers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:tours' %}">
+              <span class="icon"><i class="bi bi-map"></i></span>
+              <span>Tours</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:gallery' %}">
+              <span class="icon"><i class="bi bi-images"></i></span>
+              <span>Gallery</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:blog' %}">
+              <span class="icon"><i class="bi bi-journal-text"></i></span>
+              <span>Blog</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:contact' %}">
+              <span class="icon"><i class="bi bi-telephone"></i></span>
+              <span>Contact</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Services Section -->
+      <div class="menu-section">
+        <h4 class="section-title">Our Services</h4>
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:airport_transfers' %}">
+              <span class="icon"><i class="bi bi-airplane"></i></span>
+              <span>Airport Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:corporate_transfers' %}">
+              <span class="icon"><i class="bi bi-briefcase"></i></span>
+              <span>Corporate Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:chauffeur_drive' %}">
+              <span class="icon"><i class="bi bi-person-badge"></i></span>
+              <span>Chauffeur Drive</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:private_tours' %}">
+              <span class="icon"><i class="bi bi-binoculars"></i></span>
+              <span>Private Tours & Sight Seeing</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:group_transfers' %}">
+              <span class="icon"><i class="bi bi-people"></i></span>
+              <span>Group Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:special_events' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Special Events Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:point_transfers' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Point Transfers</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:car_rental' %}">
+              <span class="icon"><i class="bi bi-car-front"></i></span>
+              <span>Car Rental</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:long_distance' %}">
+              <span class="icon"><i class="bi bi-signpost-split"></i></span>
+              <span>Long Distance Travel</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:dinner_transfers' %}">
+              <span class="icon"><i class="bi bi-utensils"></i></span>
+              <span>Dinner Transfers</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Additional Pages Section -->
+      <div class="menu-section">
+        <h4 class="section-title">More Pages</h4>
+        <ul class="menu-links">
+          <li>
+            <a href="{% url 'rides:booking_wizard_start' %}">
+              <span class="icon"><i class="bi bi-calendar-check"></i></span>
+              <span>Booking</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:testimonials' %}">
+              <span class="icon"><i class="bi bi-chat-quote"></i></span>
+              <span>Testimonials</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:faq' %}">
+              <span class="icon"><i class="bi bi-question-circle"></i></span>
+              <span>Frequently Asked Questions</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:terms' %}">
+              <span class="icon"><i class="bi bi-file-text"></i></span>
+              <span>Terms & Conditions</span>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'rides:privacy' %}">
+              <span class="icon"><i class="bi bi-shield-check"></i></span>
+              <span>Privacy Policy</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title dark-background" data-aos="fade"
+      style="background-image: url(assets/img/services/airport\ transfers.jpg);">
+      <div class="container position-relative">
+        <h1>About Us</h1>
+        <p>Easy Transit provides professional transportation solutions for every need. Ride in comfort, safety, and
+          style.</p>
+        <nav class="breadcrumbs">
+          <ol>
+            <li class="current">About</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Travel About Section -->
+    <section id="travel-about" class="travel-about section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row">
+          <div class="col-lg-8 mx-auto text-center mb-5">
+            <div class="intro-content" data-aos="fade-up" data-aos-delay="200">
+              <h2>Premium Transportation,<br>Unmatched Reliability</h2>
+              <p class="lead">Easy Transit specializes in professional ground transportation services, delivering
+                comfort, safety, and style for all your travel needs across the region.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row align-items-center mb-5">
+          <div class="col-lg-5" data-aos="zoom-in" data-aos-delay="300">
+            <div class="hero-image">
+              <img src="{% static 'img/fleet/nv350.jpg' %}" class="img-fluid" alt="Travel Adventure">
+              <div class="floating-stats">
+                <div class="stat-item">
+                  <span class="number">30</span>
+                  <span class="label">Vehicles</span>
+                </div>
+                <div class="stat-item">
+                  <span class="number">1K</span>
+                  <span class="label">Happy Clients</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6 offset-lg-1" data-aos="slide-left" data-aos-delay="400">
+            <div class="story-content">
+              <div class="story-badge">
+                <i class="bi bi-car-front"></i>
+                <span>Our Commitment</span>
+              </div>
+              <h3>Where Excellence Meets the Road</h3>
+              <p>Easy Transit was founded on the principle that every journey matters. Whether you're catching a flight,
+                heading to an important meeting, or exploring new destinations, we believe your transportation should be
+                seamless, reliable, and comfortable.</p>
+              <p>Our team of professional drivers and transportation specialists are dedicated to providing service that
+                exceeds expectations. We maintain a modern fleet, implement rigorous safety standards, and prioritize
+                punctuality to ensure you arrive at your destination stress-free.</p>
+
+              <div class="mission-box">
+                <div class="mission-icon">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <div class="mission-text">
+                  <h4>Our Promise</h4>
+                  <p>"To deliver safe, comfortable, and reliable transportation services that make every journey
+                    exceptional."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="drivers" class="drivers-section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">Our Team</span>
+          <h2>Meet Our Professional Drivers</h2>
+          <p class="section-subtitle">Experienced, certified, and dedicated to your safety and comfort</p>
+        </div>
+
+        <div class="drivers-grid">
+          <!-- Driver 1 -->
+          <article class="driver-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="driver-image">
+              <img src="{% static 'img/about/leonard zwambi.jpg' %}" alt="Leonard Zwambi" loading="lazy">
+              <div class="driver-badge">
+                <span class="badge-icon">⭐</span>
+                <span>Top Rated</span>
+              </div>
+            </div>
+            <div class="driver-info">
+              <h3 class="driver-name">Leonard Zwambi</h3>
+              <div class="driver-meta">
+                <span class="driver-language">
+                  <span class="language-icon">🌐</span>
+                  English
+                </span>
+                <span class="driver-experience">10+ Years</span>
+              </div>
+              <div class="driver-rating">
+                <div class="stars">
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                </div>
+                <span class="rating-text">5.0</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Driver 2 -->
+          <article class="driver-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="driver-image">
+              <img src="{% static 'img/about/tungamirirai vambe.jpg' %}" alt="Tungamirai Vambe" loading="lazy">
+              <div class="driver-badge">
+                <span class="badge-icon">⭐</span>
+                <span>Top Rated</span>
+              </div>
+            </div>
+            <div class="driver-info">
+              <h3 class="driver-name">Tungamirai Vambe</h3>
+              <div class="driver-meta">
+                <span class="driver-language">
+                  <span class="language-icon">🌐</span>
+                  English
+                </span>
+                <span class="driver-experience">8+ Years</span>
+              </div>
+              <div class="driver-rating">
+                <div class="stars">
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                </div>
+                <span class="rating-text">5.0</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Driver 3 -->
+          <article class="driver-card" data-aos="fade-up" data-aos-delay="300">
+            <div class="driver-image">
+              <img src="{% static 'img/about/tapiwa.jpg' %}" alt="Tapiwa" loading="lazy">
+              <div class="driver-badge">
+                <span class="badge-icon">⭐</span>
+                <span>Top Rated</span>
+              </div>
+            </div>
+            <div class="driver-info">
+              <h3 class="driver-name">Tapiwa</h3>
+              <div class="driver-meta">
+                <span class="driver-language">
+                  <span class="language-icon">🌐</span>
+                  English
+                </span>
+                <span class="driver-experience">7+ Years</span>
+              </div>
+              <div class="driver-rating">
+                <div class="stars">
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                </div>
+                <span class="rating-text">5.0</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Driver 4 -->
+          <article class="driver-card" data-aos="fade-up" data-aos-delay="400">
+            <div class="driver-image">
+              <img src="{% static 'img/about/Sunsly.jpg' %}" alt="Sunsly" loading="lazy">
+              <div class="driver-badge">
+                <span class="badge-icon">⭐</span>
+                <span>Top Rated</span>
+              </div>
+            </div>
+            <div class="driver-info">
+              <h3 class="driver-name">Sunsly</h3>
+              <div class="driver-meta">
+                <span class="driver-language">
+                  <span class="language-icon">🌐</span>
+                  English
+                </span>
+                <span class="driver-experience">9+ Years</span>
+              </div>
+              <div class="driver-rating">
+                <div class="stars">
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                </div>
+                <span class="rating-text">5.0</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Driver 5 -->
+          <article class="driver-card" data-aos="fade-up" data-aos-delay="500">
+            <div class="driver-image">
+              <img src="{% static 'img/about/cardinal.jpg' %}" alt="Cardinal" loading="lazy">
+              <div class="driver-badge">
+                <span class="badge-icon">⭐</span>
+                <span>Top Rated</span>
+              </div>
+            </div>
+            <div class="driver-info">
+              <h3 class="driver-name">Cardinal</h3>
+              <div class="driver-meta">
+                <span class="driver-language">
+                  <span class="language-icon">🌐</span>
+                  English
+                </span>
+                <span class="driver-experience">6+ Years</span>
+              </div>
+              <div class="driver-rating">
+                <div class="stars">
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                </div>
+                <span class="rating-text">5.0</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Driver 6 -->
+          <article class="driver-card" data-aos="fade-up" data-aos-delay="600">
+            <div class="driver-image">
+              <img src="{% static 'img/about/billy jenje.jpg' %}" alt="Billy Jenje" loading="lazy">
+              <div class="driver-badge">
+                <span class="badge-icon">⭐</span>
+                <span>Top Rated</span>
+              </div>
+            </div>
+            <div class="driver-info">
+              <h3 class="driver-name">Billy Jenje</h3>
+              <div class="driver-meta">
+                <span class="driver-language">
+                  <span class="language-icon">🌐</span>
+                  English
+                </span>
+                <span class="driver-experience">12+ Years</span>
+              </div>
+              <div class="driver-rating">
+                <div class="stars">
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                  <span class="star">★</span>
+                </div>
+                <span class="rating-text">5.0</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <style>
+      .drivers-section {
+        padding: clamp(4rem, 8vw, 8rem) clamp(1rem, 4vw, 2rem);
+        background: linear-gradient(135deg,
+            rgba(248, 250, 252, 0.95) 0%,
+            rgba(241, 245, 249, 0.95) 100%),
+          radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .drivers-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+        animation: shimmer 8s infinite linear;
+        pointer-events: none;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .container {
+        max-width: min(1200px, 95vw);
+        margin: 0 auto;
+        position: relative;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: clamp(3rem, 6vw, 5rem);
+      }
+
+      .section-label {
+        display: inline-block;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+      }
+
+      .section-header h2 {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        color: #1e293b;
+        margin-bottom: 1rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        line-height: 1.2;
+      }
+
+      .section-subtitle {
+        color: #64748b;
+        font-size: clamp(1rem, 2vw, 1.25rem);
+        max-width: 48rem;
+        margin: 0 auto;
+        line-height: 1.6;
+        font-weight: 400;
+      }
+
+      .drivers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+        gap: clamp(1.5rem, 3vw, 2.5rem);
+        align-items: stretch;
+      }
+
+      .driver-card {
+        background: linear-gradient(145deg, #ffffff, #f8fafc);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow:
+          0 4px 20px rgba(0, 0, 0, 0.08),
+          0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        position: relative;
+        isolation: isolate;
+      }
+
+      .driver-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+        border-radius: inherit;
+      }
+
+      .driver-card:hover {
+        transform: translateY(-0.75rem) scale(1.02);
+        box-shadow:
+          0 25px 50px -12px rgba(59, 130, 246, 0.25),
+          0 8px 24px rgba(0, 0, 0, 0.15);
+        border-color: transparent;
+      }
+
+      .driver-card:hover::before {
+        opacity: 0.05;
+      }
+
+      .driver-image {
+        position: relative;
+        height: clamp(250px, 25vw, 320px);
+        overflow: hidden;
+        background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+      }
+
+      .driver-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        filter: grayscale(20%);
+        border-radius: 0.75rem;
+        border-radius: 15%;
+      }
+
+      .driver-card:hover .driver-image img {
+        transform: scale(1.08);
+        filter: grayscale(0%);
+      }
+
+      .driver-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, #2488fb, #700bf5);
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.375rem;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 12px rgba(50, 245, 11, 0.3);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+
+        0%,
+        100% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .badge-icon {
+        font-size: 0.875rem;
+      }
+
+      .driver-info {
+        padding: clamp(1.5rem, 3vw, 2rem);
+        text-align: center;
+        background: white;
+      }
+
+      .driver-name {
+        font-size: clamp(1.25rem, 2vw, 1.5rem);
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        line-height: 1.3;
+      }
+
+      .driver-meta {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+      }
+
+      .driver-language {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        color: #2563eb;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .driver-card:hover .driver-language {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .driver-experience {
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        color: #065f46;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
+
+      .language-icon {
+        font-size: 0.875rem;
+      }
+
+      .driver-rating {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        padding: 0.75rem 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(11, 171, 245, 0.2);
+      }
+
+      .stars {
+        display: flex;
+        gap: 0.25rem;
+      }
+
+      .star {
+        color: red;
+        font-size: 1.25rem;
+        transition: transform 0.3s ease;
+        display: inline-block;
+      }
+
+      .driver-card:hover .star {
+        animation: starPop 0.3s ease forwards;
+      }
+
+      .driver-card:hover .star:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+
+      .driver-card:hover .star:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .driver-card:hover .star:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      .driver-card:hover .star:nth-child(4) {
+        animation-delay: 0.4s;
+      }
+
+      .driver-card:hover .star:nth-child(5) {
+        animation-delay: 0.5s;
+      }
+
+      @keyframes starPop {
+        0% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.3);
+        }
+
+        100% {
+          transform: scale(1.1);
+        }
+      }
+
+      .rating-text {
+        color: #41e917;
+        font-size: 1.125rem;
+        font-weight: 700;
+        font-feature-settings: "tnum";
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 1024px) {
+        .drivers-grid {
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        .drivers-section {
+          padding: 3rem 1.5rem;
+        }
+
+        .drivers-grid {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1.5rem;
+        }
+
+        .driver-image {
+          height: 220px;
+        }
+
+        .driver-meta {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .drivers-grid {
+          grid-template-columns: 1fr;
+          max-width: 400px;
+          margin: 0 auto;
+        }
+
+        .driver-card {
+          max-width: 100%;
+        }
+
+        .driver-image {
+          height: 280px;
+        }
+
+        .section-label {
+          font-size: 0.75rem;
+          padding: 0.375rem 1.25rem;
+        }
+      }
+
+      /* Reduced Motion */
+      @media (prefers-reduced-motion: reduce) {
+
+        .drivers-section::before,
+        .driver-card,
+        .driver-card::before,
+        .driver-image img,
+        .driver-badge,
+        .driver-language,
+        .star {
+          animation: none;
+          transition: none;
+        }
+
+        .driver-card:hover {
+          transform: none;
+        }
+      }
+    </style>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const driverCards = document.querySelectorAll('.driver-card');
+
+        // Initialize AOS if available
+        if (typeof AOS !== 'undefined') {
+          AOS.init({
+            duration: 600,
+            once: true,
+            offset: 100
+          });
+        }
+
+        // Enhanced hover effects
+        driverCards.forEach((card, index) => {
+          // Add stagger delay for initial load
+          card.style.animationDelay = `${index * 0.1}s`;
+
+          // Mouse enter effect
+          card.addEventListener('mouseenter', function (e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            this.style.setProperty('--mouse-x', `${x}px`);
+            this.style.setProperty('--mouse-y', `${y}px`);
+
+            this.style.transform = 'translateY(-0.75rem) scale(1.02)';
+            this.style.boxShadow =
+              '0 25px 50px -12px rgba(59, 130, 246, 0.25), 0 8px 24px rgba(0, 0, 0, 0.15)';
+          });
+
+          // Mouse leave effect
+          card.addEventListener('mouseleave', function () {
+            this.style.transform = 'translateY(0) scale(1)';
+            this.style.boxShadow =
+              '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.1)';
+          });
+
+          // Touch device optimization
+          card.addEventListener('touchstart', function () {
+            this.classList.add('touched');
+          }, { passive: true });
+
+          card.addEventListener('touchend', function () {
+            setTimeout(() => {
+              this.classList.remove('touched');
+            }, 150);
+          }, { passive: true });
+        });
+
+        // Lazy loading for images
+        if ('IntersectionObserver' in window) {
+          const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.dataset.src) {
+                  img.src = img.dataset.src;
+                  img.removeAttribute('data-src');
+                }
+                observer.unobserve(img);
+              }
+            });
+          }, {
+            rootMargin: '50px 0px',
+            threshold: 0.1
+          });
+
+          document.querySelectorAll('.driver-image img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+          });
+        }
+
+        // Add parallax effect to section
+        window.addEventListener('scroll', function () {
+          const scrolled = window.pageYOffset;
+          const rate = scrolled * -0.5;
+          document.querySelector('.drivers-section').style.backgroundPosition = `50% ${rate}px`;
+        });
+      });
+    </script>
+
+    <!-- Travel About Section -->
+    <section id="travel-about" class="travel-about section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="features-grid" data-aos="fade-up" data-aos-delay="200">
+              <div class="section-header text-center mb-5">
+                <h3>Our Core Services</h3>
+                <p>Comprehensive transportation solutions for every need</p>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-airplane"></i>
+                      </div>
+                      <h4>Airport Transfers</h4>
+                      <p>Professional meet-and-greet service</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Timely pickups and drop-offs with flight tracking. Professional drivers assist with luggage for
+                        a smooth airport experience.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-briefcase"></i>
+                      </div>
+                      <h4>Corporate Chauffeur</h4>
+                      <p>Executive transportation solutions</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Discreet, professional service for business travel, client meetings, and corporate events with
+                        premium vehicles.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-geo-alt"></i>
+                      </div>
+                      <h4>Private Tours</h4>
+                      <p>Customized sightseeing experiences</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Explore destinations at your own pace with knowledgeable drivers and flexible itineraries
+                        tailored to your interests.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-people"></i>
+                      </div>
+                      <h4>Group Transport</h4>
+                      <p>Comfortable multi-passenger vehicles</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Spacious vans and coaches for family trips, corporate groups, weddings, and special events with
+                        capacity planning.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="400">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-car-front"></i>
+                      </div>
+                      <h4>Car Rentals</h4>
+                      <p>Flexible vehicle rental options</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Well-maintained vehicles for short-term or extended rentals with comprehensive insurance and
+                        24/7 roadside assistance.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="500">
+                  <div class="feature-card">
+                    <div class="feature-front">
+                      <div class="feature-icon">
+                        <i class="bi bi-signpost-split"></i>
+                      </div>
+                      <h4>Long-Distance Travel</h4>
+                      <p>Intercity and cross-country journeys</p>
+                    </div>
+                    <div class="feature-back">
+                      <p>Comfortable long-haul transportation with rest breaks, onboard amenities, and experienced
+                        drivers for extended trips.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-5">
+          <div class="col-lg-12">
+            <div class="journey-timeline" data-aos="fade-up" data-aos-delay="200">
+              <div class="timeline-header text-center mb-5">
+                <h3>Our Journey of Service</h3>
+                <p>Key milestones in our commitment to transportation excellence</p>
+              </div>
+
+              <div class="timeline-container">
+                <div class="timeline-track"></div>
+
+                <div class="timeline-milestone" data-aos="slide-right" data-aos-delay="300">
+                  <div class="milestone-marker">
+                    <span class="year">2014</span>
+                  </div>
+                  <div class="milestone-content">
+                    <h4>Company Foundation</h4>
+                    <p>Easy Transit began with a small fleet, dedicated to providing reliable airport transfers and
+                      local transportation services.</p>
+                  </div>
+                </div>
+
+                <div class="timeline-milestone" data-aos="slide-left" data-aos-delay="400">
+                  <div class="milestone-marker">
+                    <span class="year">2017</span>
+                  </div>
+                  <div class="milestone-content">
+                    <h4>Service Expansion</h4>
+                    <p>Added corporate chauffeur services and private tours, expanding our fleet to include luxury
+                      vehicles and trained tour drivers.</p>
+                  </div>
+                </div>
+
+                <div class="timeline-milestone" data-aos="slide-right" data-aos-delay="500">
+                  <div class="milestone-marker">
+                    <span class="year">2020</span>
+                  </div>
+                  <div class="milestone-content">
+                    <h4>Fleet Modernization</h4>
+                    <p>Invested in hybrid and luxury vehicles while implementing enhanced safety protocols and digital
+                      booking systems.</p>
+                  </div>
+                </div>
+
+                <div class="timeline-milestone" data-aos="slide-left" data-aos-delay="600">
+                  <div class="milestone-marker">
+                    <span class="year">2024</span>
+                  </div>
+                  <div class="milestone-content">
+                    <h4>Regional Growth</h4>
+                    <p>Expanded operations to include long-distance travel and group transport, serving major airports
+                      and cities across the region.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-5">
+          <div class="col-lg-12">
+            <div class="cta-banner" data-aos="zoom-in" data-aos-delay="300">
+              <div class="cta-overlay">
+                <div class="cta-content">
+                  <h3>Ready for Your Next Journey?</h3>
+                  <p>Experience the difference with Easy Transit's professional transportation services.</p>
+                  <div class="cta-buttons">
+                    <a href="{% url 'rides:services' %}" class="btn btn-primary me-3">View All Services</a>
+                    <a href="{% url 'rides:booking_wizard_start' %}" class="btn btn-outline">Book Your Ride</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Travel About Section -->
+
+  </main>
+
+
+  <!-- Search Modal -->
+  <div class="search-modal" id="searchModal">
+    <div class="search-modal-content">
+      <div class="search-header">
+        <h3>Find Tours</h3>
+        <button class="close-search">&times;</button>
+      </div>
+
+      <div class="search-input-group">
+        <i class="bi bi-search"></i>
+        <input type="text" id="mobileSearch" placeholder="Search destinations, activities..." autocomplete="off">
+        <button class="clear-search">&times;</button>
+      </div>
+
+      <div class="search-suggestions" id="searchSuggestions">
+        <!-- Suggestions will appear here -->
+      </div>
+
+      <div class="search-results" id="searchResults">
+        <!-- Results will appear here -->
+      </div>
+    </div>
+  </div>
+
+
+  <footer id="footer" class="footer">
+
+    <div class="footer-top">
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-5 col-md-12 footer-about">
+            <a href="{% url 'rides:index' %}" class="logo d-flex align-items-center">
+              <span class="sitename">
+                <marquee behavior="" direction="left">Easy Transit. Your Perfect Transfers Partner!
+                </marquee>
+              </span>
+            </a>
+            <p>Experience reliable, luxurious, and professional transfers tailored to your needs. From
+              airport pick-ups to private sightseeing, we make every journey comfortable and memorable.
+            </p>
+            <div class="social-links d-flex mt-4">
+              <a href=""><i class="bi bi-whatsapp"></i></a>
+              <a href=""><i class="bi bi-facebook"></i></a>
+              <a href=""><i class="bi bi-tiktok"></i></a>
+              <a href=""><i class="bi bi-linkedin"></i></a>
+            </div>
+          </div>
+
+          <div class="col-lg-2 col-6 footer-links">
+            <h4>Useful Links</h4>
+            <ul>
+              <li><a href="{% url 'rides:index' %}">Home</a></li>
+              <li><a href="{% url 'rides:about' %}">About us</a></li>
+              <li><a href="{% url 'rides:services' %}">Services</a></li>
+              <li><a href="{% url 'rides:fleet' %}">Our Fleet</a></li>
+              <li><a href="{% url 'rides:blog' %}">Blog</a></li>
+              <li><a href="{% url 'rides:contact' %}">Contacts</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-2 col-6 footer-links">
+            <h4>Our Services</h4>
+            <ul>
+              <li><a href="{% url 'rides:airport_transfers' %}">Airport Transfers</a></li>
+              <li><a href="{% url 'rides:car_rental' %}">Car Rental</a></li>
+              <li><a href="{% url 'rides:corporate_transfers' %}">Corporate Transfers</a></li>
+              <li><a href="{% url 'rides:chauffeur_drive' %}">Chauffeur Drive</a></li>
+              <li><a href="{% url 'rides:long_distance' %}">Long Distance Travel</a></li>
+              <li><a href="{% url 'rides:private_tours' %}">Private Tours & Sightseeing</a></li>
+            </ul>
+          </div>
+
+          <div class="col-lg-3 col-md-12 footer-contact text-center text-md-start">
+            <h4>Contact Us</h4>
+            <p>2372 A2</p>
+            <p>Harare, Zimbabwe</p>
+            <p class="mt-4"><strong>Phone:</strong> <span><a href="tel:+263 789 423 154">+263 789 423
+                  154</a></span></p>
+            <p><strong>Email:</strong> <span><a
+                  href="mailto:enquiries@easytransit.co.zw">enquiries@easytransit.co.zw</a></span></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="container copyright text-center mt-4">
+      <a href="https://www.palsetdigital.com">
+        <p style="font-size: large;"><span><b>Powered by Palset Digital</b></span> </strong>
+        </p>
+      </a>
+      <div class="credits">
+        © <span>Copyright</span> <b style="font-size: x-large;">Easy Transit</b> All rights reserved
+      </div>
+    </div>
+  </footer>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'vendor/purecounter/purecounter_vanilla.js' %}"></script>
+  <script src="{% static 'vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/tours.js' %}"></script>
+
+  <!-- Pop-up Menu JavaScript -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Pop-up menu functionality
+      const popupMenuTrigger = document.getElementById('popup-menu-trigger');
+      const closeBtn = document.getElementById('close-btn');
+      const popupMenu = document.getElementById('popup-menu');
+      const overlay = document.getElementById('overlay');
+
+      function openPopup() {
+        if (popupMenu && overlay) {
+          popupMenu.classList.add('active');
+          overlay.classList.add('active');
+        }
+      }
+
+      function closePopup() {
+        if (popupMenu && overlay) {
+          popupMenu.classList.remove('active');
+          overlay.classList.remove('active');
+        }
+      }
+
+      // Event listeners
+      if (popupMenuTrigger) {
+        popupMenuTrigger.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openPopup();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', closePopup);
+      }
+
+      if (overlay) {
+        overlay.addEventListener('click', closePopup);
+      }
+
+      // Close with Escape key
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+          closePopup();
+        }
+      });
+
+      // Remove duplicate Swiper initialization
+      // Your main.js should handle Swiper initialization
+    });
+  </script>
+
+</body>
+
+</html>
