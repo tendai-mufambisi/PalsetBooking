@@ -1,0 +1,122 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Users — Easy Transit Dashboard{% endblock %}
+{% block page_title %}User Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <p style="color:#6b7280;font-size:13px;margin:0">Manage who has access to this dashboard.</p>
+  <a href="{% url 'dashboard:add_user' %}" class="btn-green"><i class="bi bi-person-plus-fill me-2"></i>Add User</a>
+</div>
+
+<div class="dash-card">
+  <div style="overflow-x:auto">
+    <table class="dash-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Last Login</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div style="font-weight:700;color:#111827">{{ u.get_full_name|default:u.username }}</div>
+            <div style="font-size:11px;color:#9ca3af">{{ u.username }}</div>
+          </td>
+          <td style="font-size:13px;color:#374151">{{ u.email }}</td>
+          <td>
+            {% if u.role_label == 'owner' %}
+              <span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase">Owner</span>
+            {% elif u.role_label == 'viewer' %}
+              <span style="background:#dbeafe;color:#1e40af;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase">Viewer</span>
+            {% else %}
+              <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase">Manager</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.is_active %}
+              <span style="color:#10b981;font-size:12px;font-weight:700"><i class="bi bi-circle-fill me-1" style="font-size:8px"></i>Active</span>
+            {% else %}
+              <span style="color:#ef4444;font-size:12px;font-weight:700"><i class="bi bi-circle-fill me-1" style="font-size:8px"></i>Inactive</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;color:#6b7280">{{ u.last_login|date:"d M Y"|default:"Never" }}</td>
+          <td style="font-size:12px;color:#6b7280">{{ u.date_joined|date:"d M Y" }}</td>
+          <td>
+            {% if not u.is_superuser or u == request.user %}
+              <div class="d-flex gap-2">
+                {% if u != request.user %}
+                  <a href="{% url 'dashboard:edit_user' u.pk %}" class="btn-outline-green" style="padding:5px 12px;font-size:12px">
+                    <i class="bi bi-pencil-fill me-1"></i>Edit
+                  </a>
+                  <form method="post" action="{% url 'dashboard:delete_user' u.pk %}" onsubmit="return confirm('Remove {{ u.get_full_name|default:u.username }}? This cannot be undone.')">
+                    {% csrf_token %}
+                    <button type="submit" style="background:#fee2e2;color:#991b1b;border:none;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">
+                      <i class="bi bi-trash3-fill me-1"></i>Remove
+                    </button>
+                  </form>
+                {% else %}
+                  <span style="font-size:12px;color:#9ca3af">You</span>
+                {% endif %}
+              </div>
+            {% else %}
+              <span style="font-size:12px;color:#9ca3af">Owner — protected</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af">No users found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Role reference -->
+<div class="dash-card mt-3">
+  <div class="dash-card-header"><i class="bi bi-info-circle me-2" style="color:#1565c0"></i>Role Permissions</div>
+  <div class="dash-card-body">
+    <div class="row g-3">
+      <div class="col-sm-4">
+        <div style="background:#ede9fe;border-radius:8px;padding:16px">
+          <div style="font-weight:700;color:#5b21b6;margin-bottom:6px">Owner</div>
+          <ul style="font-size:13px;color:#374151;padding-left:16px;margin:0">
+            <li>Full dashboard access</li>
+            <li>Manage users &amp; roles</li>
+            <li>Edit site settings</li>
+            <li>All booking actions</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div style="background:#fef3c7;border-radius:8px;padding:16px">
+          <div style="font-weight:700;color:#92400e;margin-bottom:6px">Manager</div>
+          <ul style="font-size:13px;color:#374151;padding-left:16px;margin:0">
+            <li>View all bookings</li>
+            <li>Update booking status</li>
+            <li>View payments</li>
+            <li>Cannot manage users</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div style="background:#dbeafe;border-radius:8px;padding:16px">
+          <div style="font-weight:700;color:#1e40af;margin-bottom:6px">Viewer</div>
+          <ul style="font-size:13px;color:#374151;padding-left:16px;margin:0">
+            <li>Read-only access</li>
+            <li>View bookings</li>
+            <li>View payments</li>
+            <li>Cannot edit anything</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

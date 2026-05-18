@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Easy Transit Dashboard{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --green:       #10b981;
+      --green-dark:  #059669;
+      --blue:        #1565c0;
+      --blue-dark:   #0d47a1;
+      --sidebar-bg:  #0d2137;
+      --sidebar-w:   260px;
+    }
+
+    body { background: #f4f6f9; font-family: "Segoe UI", system-ui, sans-serif; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      background: var(--sidebar-bg);
+      display: flex; flex-direction: column;
+      z-index: 1000; overflow-y: auto;
+    }
+    .sidebar-brand {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-brand .brand-name {
+      color: #fff; font-size: 18px; font-weight: 700; letter-spacing: .3px;
+    }
+    .sidebar-brand .brand-sub {
+      color: rgba(255,255,255,.45); font-size: 11px; margin-top: 2px;
+    }
+    .sidebar-brand .brand-dot {
+      display: inline-block; width: 8px; height: 8px;
+      background: var(--green); border-radius: 50%; margin-right: 8px;
+    }
+
+    .sidebar-nav { flex: 1; padding: 12px 0; list-style: none; margin: 0; }
+    .sidebar-nav li a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 22px; color: rgba(255,255,255,.6);
+      text-decoration: none; font-size: 14px; font-weight: 500;
+      transition: all .2s; border-left: 3px solid transparent;
+    }
+    .sidebar-nav li a:hover {
+      color: #fff; background: rgba(255,255,255,.06);
+    }
+    .sidebar-nav li a.active {
+      color: #fff; background: rgba(16,185,129,.12);
+      border-left-color: var(--green);
+    }
+    .sidebar-nav li a i { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-nav .nav-section {
+      padding: 16px 22px 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      color: rgba(255,255,255,.3); text-transform: uppercase;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .sidebar-footer .user-name { color: #fff; font-size: 13px; font-weight: 600; }
+    .sidebar-footer .user-role { color: rgba(255,255,255,.4); font-size: 11px; }
+    .sidebar-footer .btn-logout {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: rgba(255,255,255,.5); font-size: 12px;
+      background: none; border: none; padding: 0;
+      cursor: pointer; margin-top: 8px; transition: color .2s;
+    }
+    .sidebar-footer .btn-logout:hover { color: #ff6b6b; }
+
+    /* ── Main ── */
+    .main-wrapper {
+      margin-left: var(--sidebar-w);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .topbar {
+      background: #fff; padding: 0 28px;
+      height: 60px; display: flex; align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e9ecef;
+      position: sticky; top: 0; z-index: 500;
+    }
+    .topbar-title { font-size: 18px; font-weight: 700; color: #1a1a2e; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-badge {
+      background: var(--green); color: #fff;
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px; border-radius: 20px;
+    }
+
+    .content-area { flex: 1; padding: 28px; }
+
+    /* ── Stat cards ── */
+    .stat-card {
+      background: #fff; border-radius: 12px;
+      padding: 22px 24px;
+      border-top: 4px solid var(--green);
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .stat-card.blue  { border-top-color: var(--blue); }
+    .stat-card.amber { border-top-color: #f59e0b; }
+    .stat-card.red   { border-top-color: #ef4444; }
+    .stat-label { font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .stat-value { font-size: 32px; font-weight: 800; color: #111827; margin: 4px 0 0; }
+    .stat-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .stat-icon.green { background: rgba(16,185,129,.12); color: var(--green); }
+    .stat-icon.blue  { background: rgba(21,101,192,.12); color: var(--blue); }
+    .stat-icon.amber { background: rgba(245,158,11,.12); color: #f59e0b; }
+    .stat-icon.red   { background: rgba(239,68,68,.12);  color: #ef4444; }
+
+    /* ── Cards ── */
+    .dash-card {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .dash-card-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex; align-items: center; justify-content: space-between;
+      font-weight: 700; font-size: 14px; color: #374151;
+    }
+    .dash-card-body { padding: 20px 22px; }
+
+    /* ── Status badges ── */
+    .badge-pending   { background: #fef3c7; color: #92400e; }
+    .badge-confirmed { background: #d1fae5; color: #065f46; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .badge-paid      { background: #d1fae5; color: #065f46; }
+    .badge-failed    { background: #fee2e2; color: #991b1b; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; text-transform: uppercase; letter-spacing: .5px;
+    }
+
+    /* ── Table ── */
+    .dash-table { width: 100%; border-collapse: collapse; }
+    .dash-table th {
+      background: #f9fafb; font-size: 11px; font-weight: 700;
+      color: #6b7280; text-transform: uppercase; letter-spacing: .5px;
+      padding: 12px 16px; border-bottom: 1px solid #e5e7eb;
+    }
+    .dash-table td {
+      padding: 13px 16px; font-size: 13px; color: #374151;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .dash-table tr:last-child td { border-bottom: none; }
+    .dash-table tr:hover td { background: #fafafa; }
+
+    /* ── Buttons ── */
+    .btn-green {
+      background: var(--green); color: #fff; border: none;
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-green:hover { background: var(--green-dark); color: #fff; }
+    .btn-blue {
+      background: var(--blue); color: #fff; border: none;
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    .btn-blue:hover { background: var(--blue-dark); color: #fff; }
+    .btn-outline-green {
+      background: transparent; color: var(--green);
+      border: 1px solid var(--green);
+      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s;
+    }
+    .btn-outline-green:hover { background: var(--green); color: #fff; }
+
+    /* ── Forms ── */
+    .form-ctrl {
+      width: 100%; padding: 9px 13px; font-size: 14px;
+      border: 1px solid #d1d5db; border-radius: 8px;
+      background: #fff; color: #374151; outline: none;
+      transition: border-color .2s;
+    }
+    .form-ctrl:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,.1); }
+
+    /* ── Alerts ── */
+    .alert-success-custom {
+      background: #d1fae5; border: 1px solid #6ee7b7; color: #065f46;
+      border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-bottom: 16px;
+    }
+    .alert-error-custom {
+      background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b;
+      border-radius: 8px; padding: 12px 16px; font-size: 13px; margin-bottom: 16px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform .3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main-wrapper { margin-left: 0; }
+      .mobile-toggle {
+        display: flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; cursor: pointer;
+        background: #f3f4f6; border-radius: 8px; border: none;
+      }
+    }
+    @media (min-width: 769px) { .mobile-toggle { display: none; } }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name"><span class="brand-dot"></span>Easy Transit</div>
+    <div class="brand-sub">Admin Dashboard</div>
+  </div>
+
+  <ul class="sidebar-nav">
+    <li><span class="nav-section">Main</span></li>
+    <li>
+      <a href="{% url 'dashboard:overview' %}" class="{% if request.resolver_match.url_name == 'overview' %}active{% endif %}">
+        <i class="bi bi-grid-1x2-fill"></i> Overview
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'dashboard:bookings' %}" class="{% if 'booking' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-calendar2-check-fill"></i> Bookings
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'dashboard:payments' %}" class="{% if request.resolver_match.url_name == 'payments' %}active{% endif %}">
+        <i class="bi bi-credit-card-fill"></i> Payments
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'dashboard:notifications' %}" class="{% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <i class="bi bi-bell-fill"></i> Notifications
+      </a>
+    </li>
+    {% if user.is_superuser %}
+    <li><span class="nav-section">Admin</span></li>
+    <li>
+      <a href="{% url 'dashboard:users' %}" class="{% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-people-fill"></i> Users
+      </a>
+    </li>
+    <li>
+      <a href="{% url 'dashboard:settings' %}" class="{% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+        <i class="bi bi-gear-fill"></i> Settings
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+
+  <div class="sidebar-footer">
+    <div class="user-name">{{ user.get_full_name|default:user.username }}</div>
+    <div class="user-role">
+      {% if user.is_superuser %}Owner{% elif user_is_viewer %}Viewer{% else %}Manager{% endif %}
+    </div>
+    <form method="post" action="{% url 'dashboard:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-logout"><i class="bi bi-box-arrow-left"></i> Sign out</button>
+    </form>
+  </div>
+</nav>
+
+<!-- Main -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <div class="d-flex align-items-center gap-3">
+      <button class="mobile-toggle" id="sidebarToggle"><i class="bi bi-list"></i></button>
+      <span class="topbar-title">{% block page_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="topbar-right">
+      <span class="text-muted" style="font-size:13px">{{ user.email }}</span>
+    </div>
+  </header>
+
+  <div class="content-area">
+    {% for msg in messages %}
+      <div class="{% if msg.tags == 'error' %}alert-error-custom{% else %}alert-success-custom{% endif %}">
+        <i class="bi {% if msg.tags == 'error' %}bi-exclamation-circle{% else %}bi-check-circle{% endif %} me-2"></i>{{ msg }}
+      </div>
+    {% endfor %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.getElementById('sidebarToggle')?.addEventListener('click', function () {
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

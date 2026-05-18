@@ -121,6 +121,50 @@ class RideBooking(models.Model):
         super().save(*args, **kwargs)
 
 
+class SiteSettings(models.Model):
+    taxi_owner_email = models.EmailField(default='enquiries@easytransit.co.zw')
+    taxi_owner_phone = models.CharField(max_length=32, default='+263789423154')
+
+    # Pricing
+    pricing_min_km = models.DecimalField(max_digits=6, decimal_places=2, default=13.0)
+    pricing_brackets = JSONField(default=list)
+    pricing_above_35_per_km = models.DecimalField(max_digits=6, decimal_places=2, default=1.0)
+    pricing_base_passengers = models.PositiveSmallIntegerField(default=3)
+    pricing_extra_adult_fee = models.DecimalField(max_digits=6, decimal_places=2, default=10.0)
+    pricing_free_luggage = models.PositiveSmallIntegerField(default=5)
+    pricing_luggage_fee = models.DecimalField(max_digits=6, decimal_places=2, default=3.0)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site Settings'
+
+    @classmethod
+    def get_settings(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def get_pricing_cfg(self):
+        brackets = self.pricing_brackets or [
+            {"min": 13, "max": 15, "price": 25.0},
+            {"min": 16, "max": 20, "price": 30.0},
+            {"min": 21, "max": 25, "price": 35.0},
+            {"min": 26, "max": 35, "price": 40.0},
+        ]
+        return {
+            "MIN_DISTANCE_KM": float(self.pricing_min_km),
+            "BRACKETS": brackets,
+            "ABOVE_35_PER_KM": float(self.pricing_above_35_per_km),
+            "BASE_PASSENGERS": self.pricing_base_passengers,
+            "EXTRA_ADULT_FEE": float(self.pricing_extra_adult_fee),
+            "FREE_LUGGAGE_ITEMS": self.pricing_free_luggage,
+            "LUGGAGE_FEE": float(self.pricing_luggage_fee),
+        }
+
+    def __str__(self):
+        return 'Site Settings'
+
+
 class Payment(models.Model):
     STATUS_PENDING = 'PENDING'
     STATUS_PAID = 'PAID'

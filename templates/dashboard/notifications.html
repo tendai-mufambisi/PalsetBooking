@@ -1,0 +1,76 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Notifications — Easy Transit Dashboard{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <!-- New Bookings -->
+  <div class="col-lg-6">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="bi bi-calendar2-plus-fill me-2" style="color:#10b981"></i>Recent Bookings</span>
+        <a href="{% url 'dashboard:bookings' %}" style="font-size:12px;color:#10b981;text-decoration:none">View all</a>
+      </div>
+      <div>
+        {% for b in recent_bookings %}
+        <a href="{% url 'dashboard:booking_detail' b.pk %}" style="display:block;text-decoration:none;padding:14px 20px;border-bottom:1px solid #f3f4f6;transition:background .15s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+          <div class="d-flex justify-content-between align-items-start gap-3">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                <span style="font-size:13px;font-weight:700;color:#111827">{{ b.reference|default:"—" }}</span>
+                <span class="status-badge badge-{{ b.status|lower }}">{{ b.status }}</span>
+              </div>
+              <div style="font-size:12px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                <i class="bi bi-geo-alt" style="color:#10b981"></i> {{ b.pickup_address|truncatechars:35 }}
+              </div>
+              <div style="font-size:12px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                <i class="bi bi-geo" style="color:#1565c0"></i> {{ b.dropoff_address|truncatechars:35 }}
+              </div>
+              {% if b.passenger_full_name %}
+              <div style="font-size:11px;color:#9ca3af;margin-top:3px"><i class="bi bi-person me-1"></i>{{ b.passenger_full_name }}</div>
+              {% endif %}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:14px;font-weight:700;color:#10b981">${{ b.total_amount }}</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">{{ b.created_at|timesince }} ago</div>
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px"><i class="bi bi-inbox" style="font-size:28px;display:block;margin-bottom:8px"></i>No recent bookings</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Payments -->
+  <div class="col-lg-6">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="bi bi-check-circle-fill me-2" style="color:#1565c0"></i>Recent Payments Confirmed</span>
+        <a href="{% url 'dashboard:payments' %}" style="font-size:12px;color:#10b981;text-decoration:none">View all</a>
+      </div>
+      <div>
+        {% for p in recent_payments %}
+        <a href="{% url 'dashboard:booking_detail' p.booking.pk %}" style="display:block;text-decoration:none;padding:14px 20px;border-bottom:1px solid #f3f4f6;transition:background .15s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+          <div class="d-flex justify-content-between align-items-center gap-3">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#111827">Booking {{ p.booking.reference|default:"—" }}</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:2px">{{ p.booking.email }}</div>
+              <div style="font-size:11px;color:#9ca3af;margin-top:2px">{{ p.method }}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:15px;font-weight:800;color:#10b981">${{ p.amount }}</div>
+              <span class="status-badge badge-paid" style="margin-top:4px">PAID</span>
+              <div style="font-size:11px;color:#9ca3af;margin-top:4px">{{ p.updated_at|timesince }} ago</div>
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div style="padding:32px;text-align:center;color:#9ca3af;font-size:13px"><i class="bi bi-credit-card" style="font-size:28px;display:block;margin-bottom:8px"></i>No confirmed payments yet</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

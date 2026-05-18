@@ -1,9 +1,46 @@
-<html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Payment Confirmed — EasyTransit</title>
+    <style>
+      body{margin:0;padding:0;background-color:#f2f8f9;font-family:Roboto,Arial,system-ui,sans-serif;color:#051e23;line-height:1.5}
+      .wrapper{max-width:600px;margin:24px auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(5,30,35,.10)}
+      .header{background:linear-gradient(135deg,#10b981 0%,#059652 100%);padding:28px 32px;text-align:center}
+      .header h1{margin:0;color:#fff;font-size:22px;letter-spacing:.5px}
+      .header p{margin:4px 0 0;color:rgba(255,255,255,.85);font-size:13px}
+      .body{padding:28px 32px}
+      .body h2{margin:0 0 20px;color:#1c4b56;font-size:17px;border-bottom:2px solid #10b981;padding-bottom:8px}
+      table{width:100%;border-collapse:collapse}
+      td{padding:8px 4px;vertical-align:top;font-size:14px;border-bottom:1px solid #e8f4f6}
+      td:first-child{font-weight:700;color:#1c4b56;width:38%;white-space:nowrap}
+      .total-row td{font-size:16px;font-weight:700;color:#059652;border-bottom:none;padding-top:12px}
+      .checkmark{font-size:48px;text-align:center;margin:0 0 16px}
+      .footer{background:#1c4b56;padding:16px 32px;text-align:center}
+      .footer p{margin:0;color:rgba(255,255,255,.75);font-size:12px}
+    </style>
+  </head>
   <body>
-    <h2>Payment confirmed for booking {{ booking.id }}</h2>
-    <p>Thank you. Your payment has been received and the booking is confirmed.</p>
-    <p><strong>Pickup:</strong> {{ booking.pickup_address }}<br>
-    <strong>Dropoff:</strong> {{ booking.dropoff_address }}</p>
-    <p><strong>Total:</strong> {{ booking.total_amount }}</p>
+    <div class="wrapper">
+      <div class="header">
+        <h1>EasyTransit</h1>
+        <p>Payment Confirmed</p>
+      </div>
+      <div class="body">
+        <div class="checkmark">&#10003;</div>
+        <h2>Your payment has been received!</h2>
+        <p style="font-size:14px;color:#4b7280;margin-top:0">Booking <strong>#{{ booking.reference|default:booking.id }}</strong> is now confirmed.</p>
+        <table>
+          <tr><td>Pickup</td><td>{{ booking.pickup_address }}</td></tr>
+          <tr><td>Dropoff</td><td>{{ booking.dropoff_address }}</td></tr>
+          <tr class="total-row"><td>Total paid</td><td>USD ${{ booking.total_amount }}</td></tr>
+        </table>
+        <p style="margin-top:20px;font-size:13px;color:#4b7280">Thank you for choosing EasyTransit. We look forward to serving you!</p>
+      </div>
+      <div class="footer">
+        <p>EasyTransit &mdash; enquiries@easytransit.co.zw</p>
+      </div>
+    </div>
   </body>
 </html>

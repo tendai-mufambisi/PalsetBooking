@@ -1,0 +1,170 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Settings — Easy Transit Dashboard{% endblock %}
+{% block page_title %}Settings{% endblock %}
+
+{% block content %}
+<div style="max-width:640px">
+
+  <!-- Taxi Owner Contact -->
+  <div class="dash-card mb-3">
+    <div class="dash-card-header">
+      <i class="bi bi-telephone-fill me-2" style="color:#10b981"></i>Taxi Owner Contact
+    </div>
+    <div class="dash-card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="contact">
+        <div class="mb-3">
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Owner Email</label>
+          <input type="email" name="taxi_owner_email" value="{{ site_settings.taxi_owner_email }}" class="form-ctrl" placeholder="owner@example.com">
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Booking notifications are sent to this address. Default: <code>{{ django_email }}</code></div>
+        </div>
+        <div class="mb-3">
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Owner Phone (WhatsApp)</label>
+          <input type="text" name="taxi_owner_phone" value="{{ site_settings.taxi_owner_phone }}" class="form-ctrl" placeholder="+263789423154">
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Used for WhatsApp share button on booking confirmation. Default: <code>{{ django_phone }}</code></div>
+        </div>
+        <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;font-size:12px;color:#92400e;margin-bottom:18px">
+          <i class="bi bi-info-circle me-2"></i>
+          These settings override the environment defaults for the active session. To make them permanent, update the <code>TAXI_OWNER_EMAIL</code> and <code>TAXI_OWNER_PHONE</code> environment variables on the server.
+        </div>
+        <button type="submit" class="btn-green"><i class="bi bi-floppy-fill me-2"></i>Save Settings</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pricing -->
+  <div class="dash-card mb-3">
+    <div class="dash-card-header">
+      <i class="bi bi-currency-dollar me-2" style="color:#10b981"></i>Fare Pricing
+    </div>
+    <div class="dash-card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="pricing">
+
+        <!-- Distance brackets -->
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Distance Brackets</div>
+        <div style="overflow-x:auto;margin-bottom:18px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#f9fafb">
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Min km</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Max km</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Price ($)</th>
+                <th style="padding:8px 10px;border-bottom:1px solid #e5e7eb"></th>
+              </tr>
+            </thead>
+            <tbody id="bracketBody">
+              {% for b in pricing_brackets %}
+              <tr class="bracket-row">
+                <td style="padding:6px 10px"><input type="number" name="bracket_min" value="{{ b.min }}" step="0.1" min="0" class="form-ctrl" style="width:90px"></td>
+                <td style="padding:6px 10px"><input type="number" name="bracket_max" value="{{ b.max }}" step="0.1" min="0" class="form-ctrl" style="width:90px"></td>
+                <td style="padding:6px 10px"><input type="number" name="bracket_price" value="{{ b.price }}" step="0.01" min="0" class="form-ctrl" style="width:100px"></td>
+                <td style="padding:6px 10px"><button type="button" onclick="this.closest('tr').remove()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <button type="button" id="addBracket" style="margin-top:8px;background:#f0fdf4;color:#065f46;border:1px dashed #6ee7b7;border-radius:6px;padding:5px 14px;font-size:12px;cursor:pointer">+ Add bracket</button>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Minimum distance (km)</label>
+            <input type="number" name="pricing_min_km" value="{{ site_settings.pricing_min_km }}" step="0.1" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Trips shorter than this are charged at the first bracket price.</div>
+          </div>
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Rate above 35 km ($/km)</label>
+            <input type="number" name="pricing_above_35_per_km" value="{{ site_settings.pricing_above_35_per_km }}" step="0.01" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Per-km charge on top of the last bracket price for trips over 35 km.</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Passengers &amp; Luggage</div>
+        <div class="row g-3 mb-3">
+          <div class="col-sm-4">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Base passengers</label>
+            <input type="number" name="pricing_base_passengers" value="{{ site_settings.pricing_base_passengers }}" min="1" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Covered by the base fare.</div>
+          </div>
+          <div class="col-sm-4">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Extra passenger fee ($)</label>
+            <input type="number" name="pricing_extra_adult_fee" value="{{ site_settings.pricing_extra_adult_fee }}" step="0.01" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Per extra passenger above the base.</div>
+          </div>
+          <div class="col-sm-4">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Free luggage items</label>
+            <input type="number" name="pricing_free_luggage" value="{{ site_settings.pricing_free_luggage }}" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">First N bags are free.</div>
+          </div>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-sm-4">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Luggage fee per extra bag ($)</label>
+            <input type="number" name="pricing_luggage_fee" value="{{ site_settings.pricing_luggage_fee }}" step="0.01" min="0" class="form-ctrl">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-green"><i class="bi bi-floppy-fill me-2"></i>Save Pricing</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Account Security -->
+  <div class="dash-card mb-3">
+    <div class="dash-card-header">
+      <i class="bi bi-shield-lock-fill me-2" style="color:#1565c0"></i>Account Security
+    </div>
+    <div class="dash-card-body">
+      <p style="font-size:13px;color:#6b7280;margin-bottom:16px">Change your own dashboard password.</p>
+      <a href="{% url 'dashboard:password_reset' %}" class="btn-blue"><i class="bi bi-key-fill me-2"></i>Change Password via Email</a>
+    </div>
+  </div>
+
+  <!-- System Info -->
+  <div class="dash-card">
+    <div class="dash-card-header">
+      <i class="bi bi-server me-2" style="color:#9ca3af"></i>System Info
+    </div>
+    <div class="dash-card-body">
+      <table style="width:100%;font-size:13px;border-collapse:collapse">
+        <tr style="border-bottom:1px solid #f3f4f6">
+          <td style="padding:10px 0;color:#6b7280;width:180px">Platform</td>
+          <td style="padding:10px 0;font-weight:600;color:#374151">Easy Transit Booking</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f3f4f6">
+          <td style="padding:10px 0;color:#6b7280">Owner Email (env)</td>
+          <td style="padding:10px 0;font-weight:600;color:#374151">{{ django_email }}</td>
+        </tr>
+        <tr style="border-bottom:1px solid #f3f4f6">
+          <td style="padding:10px 0;color:#6b7280">Owner Phone (env)</td>
+          <td style="padding:10px 0;font-weight:600;color:#374151">{{ django_phone }}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 0;color:#6b7280">Settings Last Updated</td>
+          <td style="padding:10px 0;font-weight:600;color:#374151">{{ site_settings.updated_at|date:"d M Y, H:i"|default:"Never" }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('addBracket')?.addEventListener('click', function () {
+    const row = document.createElement('tr');
+    row.className = 'bracket-row';
+    row.innerHTML = `
+      <td style="padding:6px 10px"><input type="number" name="bracket_min" step="0.1" min="0" class="form-ctrl" style="width:90px"></td>
+      <td style="padding:6px 10px"><input type="number" name="bracket_max" step="0.1" min="0" class="form-ctrl" style="width:90px"></td>
+      <td style="padding:6px 10px"><input type="number" name="bracket_price" step="0.01" min="0" class="form-ctrl" style="width:100px"></td>
+      <td style="padding:6px 10px"><button type="button" onclick="this.closest('tr').remove()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button></td>
+    `;
+    document.getElementById('bracketBody').appendChild(row);
+  });
+</script>
+{% endblock %}

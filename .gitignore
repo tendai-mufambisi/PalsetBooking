@@ -2,8 +2,11 @@
 __pycache__/
 env/
 .venv/
+rideenv/
 *.sqlite3
 *.log
 .env
 .env.*
-".env" 
+".env"
+staticfiles/
+.claude/

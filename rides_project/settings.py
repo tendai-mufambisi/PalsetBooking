@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_URL = os.getenv("BASE_URL", "https://palset.pythonanywhere.com")
+BASE_URL = os.getenv("BASE_URL", "https://booking.easytransit.co.zw")
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-in-production")
 
 #DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
@@ -68,6 +68,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "rides.dashboard_views.dashboard_context_processor",
             ],
         },
     },
@@ -100,7 +101,10 @@ else:
 
 
 # Password validation
-AUTH_PASSWORD_VALIDATORS = []
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
@@ -122,58 +126,49 @@ if DEBUG:
 else:
     EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 
+# Use custom backend that bypasses SSL verification for local testing
+if DEBUG and os.getenv("IGNORE_EMAIL_SSL_VERIFICATION", "False") == "True":
+    EMAIL_BACKEND = "rides.email_backend.NoSSLVerificationEmailBackend"
+
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "True") == "True"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "enquiries@easytransit.co.zw")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "EasyTransit <lzambwi@gmail.com>")
+
 
 # Google Maps
 # New split keys: use a client key for browser (Maps JS + Places) and a server key for
 # server-to-server calls (Distance Matrix). For backwards compatibility the old
 # GOOGLE_MAPS_API_KEY env var is still accepted if either new var is not set.
-GOOGLE_MAPS_CLIENT_KEY = "AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw"
-#GOOGLE_MAPS_SERVER_KEY = os.getenv("GOOGLE_MAPS_SERVER_KEY", os.getenv("GOOGLE_MAPS_API_KEY", ""))
-# Backwards-compatible single var retained for older deployments
-#GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", GOOGLE_MAPS_CLIENT_KEY)
-GOOGLE_MAPS_API_KEY = "AIzaSyDGUkost0J9W-0Vb4eVuXZ1zbOAiIf4CJw"
+GOOGLE_MAPS_CLIENT_KEY = os.getenv("GOOGLE_MAPS_CLIENT_KEY", "")
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY", GOOGLE_MAPS_CLIENT_KEY)
 
 # Cache timeout for distance results (seconds)
 GOOGLE_DISTANCE_CACHE_TIMEOUT = int(os.getenv("GOOGLE_DISTANCE_CACHE_TIMEOUT", str(6 * 3600)))
 
-PAYNOW_INTEGRATION_ID='22865'
-PAYNOW_INTEGRATION_KEY='1aa3dd1c-5b72-4205-a3bc-f7a54906f3e5'
+PAYNOW_INTEGRATION_ID = os.getenv("PAYNOW_INTEGRATION_ID", "")
+PAYNOW_INTEGRATION_KEY = os.getenv("PAYNOW_INTEGRATION_KEY", "")
 
 
 PAYNOW_RETURN_URL = os.getenv("PAYNOW_RETURN_URL", f"{BASE_URL}/paynow/return/")
 PAYNOW_RESULT_URL = os.getenv("PAYNOW_RESULT_URL", f"{BASE_URL}/paynow/result/")
-PAYNOW_MERCHANT_EMAIL='mufambisitendaiblessed@gmail.com'
+PAYNOW_MERCHANT_EMAIL = os.getenv("PAYNOW_MERCHANT_EMAIL", "")
 # Set to False to disable TLS certificate verification for Paynow (use only for local testing)
-PAYNOW_VERIFY_SSL=False
+PAYNOW_VERIFY_SSL = os.getenv("PAYNOW_VERIFY_SSL", "True") == "True"
 # Taxi owner contact (defaults to easytransit from user input)
 TAXI_OWNER_EMAIL = os.getenv("TAXI_OWNER_EMAIL", "enquiries@easytransit.co.zw")
 TAXI_OWNER_PHONE = os.getenv("TAXI_OWNER_PHONE", "+263789423154")
 
-# Pricing constants
-PRICING = {
-    "MIN_DISTANCE_KM": 13.0,
-    "BRACKETS": [
-        {"min": 13, "max": 15, "price": 25.0},
-        {"min": 16, "max": 20, "price": 30.0},
-        {"min": 21, "max": 25, "price": 35.0},
-        {"min": 26, "max": 35, "price": 40.0},
-    ],
-    # For distance above 35 km, charge $40 + 1.0*(distance-35)
-    "ABOVE_35_PER_KM": 1.0,
-    "BASE_PASSENGERS": 3,  # Bracket price covers up to 3 passengers
-    "EXTRA_ADULT_FEE": 10.0,  # Each additional passenger pays this
-    "FREE_LUGGAGE_ITEMS": 5,  # First 5 bags are free
-    "LUGGAGE_FEE": 3.0,  # Additional bags cost $5 each
-}
-
 # Use JSONField default for Django < 3.1 alternative
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+# Auth redirects for custom dashboard
+LOGIN_URL = '/dashboard/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/dashboard/login/'
+PASSWORD_RESET_TIMEOUT = 86400  # 24 hours
 
 # Logging Configuration for Debugging
 LOGGING = {

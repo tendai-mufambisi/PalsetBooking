@@ -1,0 +1,104 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Bookings — Easy Transit Dashboard{% endblock %}
+{% block page_title %}Bookings{% endblock %}
+
+{% block content %}
+<div class="dash-card">
+  <!-- Filters -->
+  <div class="dash-card-header flex-wrap gap-2">
+    <span><i class="bi bi-calendar2-check-fill me-2" style="color:#10b981"></i>All Bookings
+      <span style="font-size:12px;color:#6b7280;font-weight:400;margin-left:8px">{{ total_count }} result{{ total_count|pluralize }}</span>
+    </span>
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+      <input type="text" name="q" value="{{ search }}" placeholder="Search ref, name, email, phone…" class="form-ctrl" style="width:240px">
+      <select name="status" class="form-ctrl" style="width:140px">
+        <option value="">All Status</option>
+        <option value="PENDING"    {% if status_filter == 'PENDING'    %}selected{% endif %}>Pending</option>
+        <option value="CONFIRMED"  {% if status_filter == 'CONFIRMED'  %}selected{% endif %}>Confirmed</option>
+        <option value="CANCELLED"  {% if status_filter == 'CANCELLED'  %}selected{% endif %}>Cancelled</option>
+      </select>
+      <select name="date_range" class="form-ctrl" style="width:140px">
+        <option value="">All Time</option>
+        <option value="today"  {% if date_filter == 'today'  %}selected{% endif %}>Today</option>
+        <option value="7days"  {% if date_filter == '7days'  %}selected{% endif %}>Last 7 Days</option>
+        <option value="30days" {% if date_filter == '30days' %}selected{% endif %}>Last 30 Days</option>
+      </select>
+      <button type="submit" class="btn-green">Filter</button>
+      {% if search or status_filter or date_filter %}
+        <a href="{% url 'dashboard:bookings' %}" class="btn-outline-green">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div style="overflow-x:auto">
+    <table class="dash-table">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Passenger</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Payment</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in page_obj %}
+        <tr>
+          <td><a href="{% url 'dashboard:booking_detail' b.pk %}" style="color:#10b981;font-weight:700;text-decoration:none">{{ b.reference|default:"—" }}</a></td>
+          <td>
+            <div style="font-weight:600">{{ b.passenger_full_name|default:"—" }}</div>
+            <div style="font-size:11px;color:#9ca3af">{{ b.email }}</div>
+          </td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ b.pickup_address }}">{{ b.pickup_address|truncatechars:30 }}</td>
+          <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ b.dropoff_address }}">{{ b.dropoff_address|truncatechars:30 }}</td>
+          <td style="white-space:nowrap;color:#6b7280;font-size:12px">
+            {{ b.created_at|date:"d M Y" }}<br>{{ b.created_at|date:"H:i" }}
+          </td>
+          <td style="font-weight:700">${{ b.total_amount }}</td>
+          <td style="font-size:12px;color:#6b7280">
+            {% if b.payment_option == 'POA' %}Cash
+            {% elif b.payment_option == 'pos_card' %}POS Card
+            {% elif b.payment_option == 'money_transfer' %}Transfer
+            {% elif b.payment_option == 'paylink' %}Paylink
+            {% elif b.payment_option == 'PAYNOW' %}Paynow
+            {% else %}{{ b.payment_option }}{% endif %}
+          </td>
+          <td>
+            <span class="status-badge badge-{{ b.status|lower }}">{{ b.status }}</span>
+          </td>
+          <td>
+            <a href="{% url 'dashboard:booking_detail' b.pk %}" style="color:#1565c0;font-size:13px;text-decoration:none"><i class="bi bi-eye"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9" style="text-align:center;padding:40px;color:#9ca3af">No bookings found</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="padding:16px 20px;border-top:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:13px;color:#6b7280">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="d-flex gap-2">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}&q={{ search }}&status={{ status_filter }}&date_range={{ date_filter }}" class="btn-outline-green" style="padding:6px 14px;font-size:12px">
+          <i class="bi bi-chevron-left"></i> Prev
+        </a>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&q={{ search }}&status={{ status_filter }}&date_range={{ date_filter }}" class="btn-green" style="padding:6px 14px;font-size:12px">
+          Next <i class="bi bi-chevron-right"></i>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

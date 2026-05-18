@@ -1,0 +1,154 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Overview — Easy Transit Dashboard{% endblock %}
+{% block page_title %}Overview{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Today's Bookings</div>
+          <div class="stat-value">{{ today_bookings }}</div>
+        </div>
+        <div class="stat-icon green"><i class="bi bi-calendar2-check"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card blue">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Today's Revenue</div>
+          <div class="stat-value">${{ today_revenue|floatformat:2 }}</div>
+        </div>
+        <div class="stat-icon blue"><i class="bi bi-currency-dollar"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card amber">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-value">{{ pending_count }}</div>
+        </div>
+        <div class="stat-icon amber"><i class="bi bi-clock"></i></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-xl-3">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">${{ total_revenue|floatformat:2 }}</div>
+        </div>
+        <div class="stat-icon green"><i class="bi bi-graph-up-arrow"></i></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart + Recent Bookings -->
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span><i class="bi bi-bar-chart-fill me-2" style="color:#10b981"></i>Booking Trend</span>
+        <div class="d-flex gap-2">
+          <button class="btn-outline-green" onclick="loadChart(7)" id="btn7">7 Days</button>
+          <button class="btn-green" onclick="loadChart(30)" id="btn30">30 Days</button>
+          <button class="btn-outline-green" onclick="loadChart(90)" id="btn90">90 Days</button>
+        </div>
+      </div>
+      <div class="dash-card-body">
+        <canvas id="bookingChart" height="90"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="dash-card h-100">
+      <div class="dash-card-header">
+        <span><i class="bi bi-clock-history me-2" style="color:#1565c0"></i>Recent Bookings</span>
+        <a href="{% url 'dashboard:bookings' %}" style="font-size:12px;color:#10b981;text-decoration:none">View all</a>
+      </div>
+      <div class="dash-card-body p-0">
+        {% for b in recent_bookings %}
+        <a href="{% url 'dashboard:booking_detail' b.pk %}" style="display:block;text-decoration:none;padding:14px 20px;border-bottom:1px solid #f3f4f6;">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#111827">{{ b.reference|default:"—" }}</div>
+              <div style="font-size:12px;color:#6b7280;margin-top:2px">{{ b.pickup_address|truncatechars:30 }}</div>
+            </div>
+            <div class="text-end">
+              <div style="font-size:12px;font-weight:700;color:#374151">${{ b.total_amount }}</div>
+              <span class="status-badge badge-{{ b.status|lower }} mt-1">{{ b.status }}</span>
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div style="padding:24px;text-align:center;color:#9ca3af;font-size:13px">No bookings yet</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  var initialLabels = {{ chart_labels|safe }};
+  var initialData   = {{ chart_data|safe }};
+  var chart;
+
+  function buildChart(labels, data) {
+    var ctx = document.getElementById('bookingChart').getContext('2d');
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Bookings',
+          data: data,
+          backgroundColor: 'rgba(16,185,129,.2)',
+          borderColor: '#10b981',
+          borderWidth: 2,
+          borderRadius: 6,
+          hoverBackgroundColor: 'rgba(16,185,129,.4)',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 }, grid: { color: '#f3f4f6' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  function loadChart(days) {
+    ['btn7','btn30','btn90'].forEach(id => {
+      var b = document.getElementById(id);
+      b.className = 'btn-outline-green';
+    });
+    var map = {7:'btn7', 30:'btn30', 90:'btn90'};
+    if (map[days]) document.getElementById(map[days]).className = 'btn-green';
+
+    fetch('/dashboard/api/chart-data/?days=' + days)
+      .then(r => r.json())
+      .then(d => buildChart(d.labels, d.data));
+  }
+
+  buildChart(initialLabels, initialData);
+</script>
+{% endblock %}

@@ -23,7 +23,11 @@ class EmailService:
             print('\n--- Owner email (html truncated) ---\n')
             print((html or '')[:2000])
 
-        send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [settings.TAXI_OWNER_EMAIL], html_message=html)
+        try:
+            send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [settings.TAXI_OWNER_EMAIL], html_message=html)
+            logger.info('Owner notification email sent successfully for booking %s', booking.id)
+        except Exception as e:
+            logger.error('Failed to send owner notification email for booking %s: %s', booking.id, str(e))
 
     @staticmethod
     def send_customer_notification(booking, payment_status: str = "UNPAID"):
@@ -40,7 +44,11 @@ class EmailService:
             print('\n--- Customer email (html truncated) ---\n')
             print((html or '')[:2000])
 
-        send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
+        try:
+            send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
+            logger.info('Customer notification email sent successfully for booking %s', booking.id)
+        except Exception as e:
+            logger.error('Failed to send customer notification email for booking %s: %s', booking.id, str(e))
 
     @staticmethod
     def send_payment_confirmation(booking):
@@ -55,4 +63,8 @@ class EmailService:
             print('\n--- Payment confirmation (html truncated) ---\n')
             print((html or '')[:2000])
 
-        send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
+        try:
+            send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
+            logger.info('Payment confirmation email sent successfully for booking %s', booking.id)
+        except Exception as e:
+            logger.error('Failed to send payment confirmation email for booking %s: %s', booking.id, str(e))

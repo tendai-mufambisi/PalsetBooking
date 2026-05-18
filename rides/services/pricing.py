@@ -1,10 +1,8 @@
 from decimal import Decimal, ROUND_HALF_UP
 import logging
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# Default pricing configuration used when settings.PRICING is missing or incomplete
 DEFAULT_PRICING = {
     "MIN_DISTANCE_KM": 13.0,
     "BRACKETS": [
@@ -19,6 +17,14 @@ DEFAULT_PRICING = {
     "FREE_LUGGAGE_ITEMS": 5,
     "LUGGAGE_FEE": 5.0,
 }
+
+
+def _get_pricing_cfg():
+    try:
+        from rides.models import SiteSettings
+        return SiteSettings.get_settings().get_pricing_cfg()
+    except Exception:
+        return {}
 
 
 class PricingService:
@@ -66,8 +72,7 @@ class PricingService:
         num_adults = num_adults + num_kids_seated
         num_kids_seated = 0
 
-        # Use safe getattr for settings to avoid AttributeError in production when PRICING is missing
-        pricing_cfg = getattr(settings, 'PRICING', {}) or {}
+        pricing_cfg = _get_pricing_cfg() or {}
 
         # Determine base distance price
         base_price = None
@@ -89,7 +94,8 @@ class PricingService:
         if base_price is None:
             # If above 35, use special rule
             if effective_distance > Decimal("35"):
-                base_35 = Decimal(str(DEFAULT_PRICING.get("BRACKETS")[-1]["price"]))
+                last_bracket_price = (brackets or DEFAULT_PRICING["BRACKETS"])[-1]["price"]
+                base_35 = Decimal(str(last_bracket_price))
                 per_km = Decimal(str(pricing_cfg.get("ABOVE_35_PER_KM", DEFAULT_PRICING["ABOVE_35_PER_KM"])))
                 extra_km = effective_distance - Decimal("35")
                 base_price = base_35 + (per_km * extra_km)

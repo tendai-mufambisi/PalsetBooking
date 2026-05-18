@@ -3,29 +3,55 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>New booking</title>
-    <style>body{font-family:system-ui, -apple-system, Roboto, Arial;color:#082033;line-height:1.4}.card{background:#fff;padding:16px;border-radius:8px}dt{font-weight:700}dd{margin:0 0 12px 0}</style>
+    <title>New Booking — EasyTransit</title>
+    <style>
+      body{margin:0;padding:0;background-color:#f2f8f9;font-family:Roboto,Arial,system-ui,sans-serif;color:#051e23;line-height:1.5}
+      .wrapper{max-width:600px;margin:24px auto;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(5,30,35,.10)}
+      .header{background:linear-gradient(135deg,#10b981 0%,#059652 100%);padding:28px 32px;text-align:center}
+      .header h1{margin:0;color:#fff;font-size:22px;letter-spacing:.5px}
+      .header p{margin:4px 0 0;color:rgba(255,255,255,.85);font-size:13px}
+      .body{padding:28px 32px}
+      .body h2{margin:0 0 20px;color:#1c4b56;font-size:17px;border-bottom:2px solid #10b981;padding-bottom:8px}
+      table{width:100%;border-collapse:collapse}
+      td{padding:8px 4px;vertical-align:top;font-size:14px;border-bottom:1px solid #e8f4f6}
+      td:first-child{font-weight:700;color:#1c4b56;width:38%;white-space:nowrap}
+      td:last-child{color:#051e23}
+      .footer{background:#1c4b56;padding:16px 32px;text-align:center}
+      .footer p{margin:0;color:rgba(255,255,255,.75);font-size:12px}
+      .badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700}
+      .badge-unpaid{background:#fef3c7;color:#92400e}
+      .badge-paid{background:#d1fae5;color:#065f46}
+    </style>
   </head>
   <body>
-    <div class="card">
-      <h2>New ride booking: {{ booking.reference|default:booking.id }}</h2>
-      <dl>
-      <div><dt>Pickup</dt><dd>{{ booking.pickup_address }}</dd></div>
-      <div><dt>Pickup date/time</dt><dd>{% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %} {% if booking.pickup_time %}{{ booking.pickup_time }}{% endif %}</dd></div>
-      <div><dt>Airport pickup</dt><dd>{% if booking.pickup_is_airport %}Yes{% else %}No{% endif %}</dd></div>
-      {% if booking.pickup_is_airport %}
-      <div><dt>Arrival</dt><dd>{{ booking.arrival_airline }} - {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %} {% if booking.arrival_time %}{{ booking.arrival_time }}{% endif %}</dd></div>
-      {% endif %}
-        <div><dt>Dropoff</dt><dd>{{ booking.dropoff_address }}</dd></div>
-        <div><dt>Distance</dt><dd>{{ booking.distance_km }} km</dd></div>
-        <div><dt>Passengers</dt><dd>{{ booking.num_adults }} adults{% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kids carried{% endif %}</dd></div>
-        <div><dt>Luggage</dt><dd>{{ booking.luggage_count }}</dd></div>
-        <div><dt>Phone</dt><dd>{{ booking.phone }} / {{ booking.email }}</dd></div>
-        <div><dt>Passenger</dt><dd>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</dd></div>
-        <div><dt>Notes</dt><dd>{{ booking.extra_instructions }}</dd></div>
-        <div><dt>Payment status</dt><dd>{{ payment_status }}</dd></div>
-      </dl>
-      <p>Call the driver/owner at {{ taxi_owner_phone }} to confirm the booking.</p>
+    <div class="wrapper">
+      <div class="header">
+        <h1>EasyTransit</h1>
+        <p>New Ride Booking Alert</p>
+      </div>
+      <div class="body">
+        <h2>Booking #{{ booking.reference|default:booking.id }}</h2>
+        <table>
+          <tr><td>Passenger</td><td>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</td></tr>
+          <tr><td>Phone / Email</td><td>{{ booking.phone }} / {{ booking.email }}</td></tr>
+          <tr><td>Pickup</td><td>{{ booking.pickup_address }}</td></tr>
+          <tr><td>Pickup date/time</td><td>{% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %}{% if booking.pickup_time %} {{ booking.pickup_time }}{% endif %}</td></tr>
+          <tr><td>Airport pickup</td><td>{% if booking.pickup_is_airport %}Yes{% else %}No{% endif %}</td></tr>
+          {% if booking.pickup_is_airport %}
+          <tr><td>Arrival flight</td><td>{{ booking.arrival_airline }} {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %}{% if booking.arrival_time %} {{ booking.arrival_time }}{% endif %}</td></tr>
+          {% endif %}
+          <tr><td>Dropoff</td><td>{{ booking.dropoff_address }}</td></tr>
+          <tr><td>Distance</td><td>{{ booking.distance_km }} km</td></tr>
+          <tr><td>Passengers</td><td>{{ booking.num_adults }} adult(s){% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kid(s) carried{% endif %}</td></tr>
+          <tr><td>Luggage</td><td>{{ booking.luggage_count }}</td></tr>
+          <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"—" }}</td></tr>
+          <tr><td>Payment status</td><td><span class="badge {% if payment_status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">{{ payment_status }}</span></td></tr>
+        </table>
+        <p style="margin-top:20px;font-size:14px;color:#1c4b56">Call the driver/owner at <strong>{{ taxi_owner_phone }}</strong> to confirm the booking.</p>
+      </div>
+      <div class="footer">
+        <p>EasyTransit &mdash; enquiries@easytransit.co.zw &mdash; {{ taxi_owner_phone }}</p>
+      </div>
     </div>
   </body>
 </html>

@@ -1,0 +1,165 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Booking {{ booking.reference }} — Easy Transit Dashboard{% endblock %}
+{% block page_title %}Booking {{ booking.reference|default:booking.pk }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'dashboard:bookings' %}" style="color:#10b981;font-size:13px;text-decoration:none"><i class="bi bi-arrow-left me-1"></i>Back to Bookings</a>
+</div>
+
+<div class="row g-3">
+  <!-- Left: booking info -->
+  <div class="col-lg-8">
+    <div class="dash-card mb-3">
+      <div class="dash-card-header">
+        <span><i class="bi bi-info-circle-fill me-2" style="color:#10b981"></i>Booking Details</span>
+        <span class="status-badge badge-{{ booking.status|lower }}">{{ booking.status }}</span>
+      </div>
+      <div class="dash-card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Reference</div>
+            <div style="font-size:15px;font-weight:700;color:#111827;margin-top:4px">{{ booking.reference|default:"—" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Booked On</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.created_at|date:"d M Y, H:i" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Pickup</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.pickup_address }}</div>
+            {% if booking.pickup_date %}<div style="font-size:12px;color:#6b7280">{{ booking.pickup_date }} at {{ booking.pickup_time }}</div>{% endif %}
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Dropoff</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.dropoff_address }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Distance</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.distance_km }} km</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Total Fare</div>
+            <div style="font-size:18px;font-weight:800;color:#10b981;margin-top:4px">${{ booking.total_amount }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Passenger -->
+    <div class="dash-card mb-3">
+      <div class="dash-card-header"><i class="bi bi-person-fill me-2" style="color:#1565c0"></i>Passenger</div>
+      <div class="dash-card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Name</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.salutation }} {{ booking.passenger_full_name|default:"—" }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Phone</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.phone }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Email</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.email }}</div>
+          </div>
+          <div class="col-sm-6">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Adults / Kids</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.num_adults }} adults, {{ booking.num_kids_carried }} kids, {{ booking.luggage_count }} bags</div>
+          </div>
+          {% if booking.extra_instructions %}
+          <div class="col-12">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Notes</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px;background:#f9fafb;padding:10px;border-radius:6px">{{ booking.extra_instructions }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Airport -->
+    {% if booking.pickup_is_airport %}
+    <div class="dash-card mb-3">
+      <div class="dash-card-header"><i class="bi bi-airplane-fill me-2" style="color:#f59e0b"></i>Airport Pickup</div>
+      <div class="dash-card-body">
+        <div class="row g-3">
+          <div class="col-sm-4">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase">Airline</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.arrival_airline|default:"—" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase">Flight No.</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.arrival_flight_number|default:"—" }}</div>
+          </div>
+          <div class="col-sm-4">
+            <div style="font-size:11px;color:#9ca3af;font-weight:700;text-transform:uppercase">Arrival</div>
+            <div style="font-size:14px;color:#374151;margin-top:4px">{{ booking.arrival_date }} {{ booking.arrival_time }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Payments log -->
+    <div class="dash-card">
+      <div class="dash-card-header"><i class="bi bi-credit-card-fill me-2" style="color:#1565c0"></i>Payment History</div>
+      <div style="overflow-x:auto">
+        <table class="dash-table">
+          <thead><tr><th>ID</th><th>Method</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for p in payments %}
+            <tr>
+              <td style="font-size:11px;color:#9ca3af;max-width:120px;overflow:hidden;text-overflow:ellipsis">{{ p.id }}</td>
+              <td>{{ p.method }}</td>
+              <td style="font-weight:700">${{ p.amount }}</td>
+              <td><span class="status-badge badge-{{ p.status|lower }}">{{ p.status }}</span></td>
+              <td style="font-size:12px;color:#6b7280">{{ p.created_at|date:"d M Y, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:#9ca3af">No payments recorded</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: actions -->
+  <div class="col-lg-4">
+    {% if can_edit %}
+    <div class="dash-card mb-3">
+      <div class="dash-card-header"><i class="bi bi-pencil-fill me-2" style="color:#10b981"></i>Update Status</div>
+      <div class="dash-card-body">
+        <form method="post">
+          {% csrf_token %}
+          <label style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px;display:block">Booking Status</label>
+          <select name="status" class="form-ctrl mb-3">
+            <option value="PENDING"   {% if booking.status == 'PENDING'   %}selected{% endif %}>Pending</option>
+            <option value="CONFIRMED" {% if booking.status == 'CONFIRMED' %}selected{% endif %}>Confirmed</option>
+            <option value="CANCELLED" {% if booking.status == 'CANCELLED' %}selected{% endif %}>Cancelled</option>
+          </select>
+          <button type="submit" class="btn-green w-100">Save Status</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="dash-card">
+      <div class="dash-card-header"><i class="bi bi-receipt me-2" style="color:#1565c0"></i>Payment Info</div>
+      <div class="dash-card-body">
+        <div style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px">Method</div>
+        <div style="font-size:14px;font-weight:600;color:#374151;margin-top:4px;margin-bottom:16px">
+          {% if booking.payment_option == 'POA' %}Cash on Arrival
+          {% elif booking.payment_option == 'pos_card' %}POS Card on Arrival
+          {% elif booking.payment_option == 'money_transfer' %}Money Transfer
+          {% elif booking.payment_option == 'paylink' %}Paylink
+          {% elif booking.payment_option == 'PAYNOW' %}Paynow (Online)
+          {% else %}{{ booking.payment_option }}{% endif %}
+        </div>
+        <div style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px">Total</div>
+        <div style="font-size:22px;font-weight:800;color:#10b981;margin-top:4px">${{ booking.total_amount }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
