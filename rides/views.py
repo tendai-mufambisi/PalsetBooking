@@ -21,6 +21,7 @@ from typing import Dict, Any
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from typing import Optional
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View, TemplateView
@@ -30,6 +31,8 @@ from django.conf import settings
 from django.db import transaction
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+
+
 
 from .models import RideBooking, Payment
 import datetime
@@ -68,7 +71,7 @@ def merged_adult_count(num_adults, num_kids_seated=0) -> int:
 
     return max(1, adults + max(0, seated))
 
-def build_booking_message(booking, eta_minutes=None, payment_label_override: str | None = None):
+def build_booking_message(booking, eta_minutes=None, payment_label_override: Optional[str] = None):
     """Return a multi-line plain-text summary of the booking suitable for WhatsApp sharing."""
     try:
         parts = []

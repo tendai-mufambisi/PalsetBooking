@@ -21,7 +21,7 @@ class EmailService:
             print('\n--- Owner email (text) ---\n')
             print(text)
             print('\n--- Owner email (html truncated) ---\n')
-            print((html or '')[:2000])
+            
 
         try:
             send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [settings.TAXI_OWNER_EMAIL], html_message=html)
@@ -42,7 +42,7 @@ class EmailService:
             print('\n--- Customer email (text) ---\n')
             print(text)
             print('\n--- Customer email (html truncated) ---\n')
-            print((html or '')[:2000])
+            print((html or '')[:2000].encode('ascii', errors='ignore').decode('ascii'))
 
         try:
             send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
@@ -61,7 +61,7 @@ class EmailService:
             print('\n--- Payment confirmation (text) ---\n')
             print(text)
             print('\n--- Payment confirmation (html truncated) ---\n')
-            print((html or '')[:2000])
+            
 
         try:
             send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)

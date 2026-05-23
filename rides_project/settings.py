@@ -92,12 +92,13 @@ if os.getenv("USE_REMOTE_DB", "False") == "True":
         }
     }
 else:
-    DATABASES = {
+	DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 
 
 # Password validation
@@ -116,7 +117,8 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 # Include top-level project `static/` directory so collectstatic and static file finders see files
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 
 # Email

@@ -46,6 +46,7 @@
           <tr><td>Luggage</td><td>{{ booking.luggage_count }}</td></tr>
           <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"—" }}</td></tr>
           <tr><td>Payment status</td><td><span class="badge {% if payment_status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">{{ payment_status }}</span></td></tr>
+          <tr><td style="font-size:15px;font-weight:700;color:#059652">Total to collect</td><td style="font-size:15px;font-weight:700;color:#059652">USD ${{ booking.total_amount }}</td></tr>
         </table>
         <p style="margin-top:20px;font-size:14px;color:#1c4b56">Call the driver/owner at <strong>{{ taxi_owner_phone }}</strong> to confirm the booking.</p>
       </div>
