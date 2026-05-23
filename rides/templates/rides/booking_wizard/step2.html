@@ -8,6 +8,24 @@
 <form method="POST" id="step2_form">
     {% csrf_token %}
 
+    <!-- Booking Passenger -->
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label style="font-weight: bold; margin-bottom: 10px; display: block;"><i class="bi bi-person-check"></i> Your Full Name</label>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+            <div>
+                <label style="font-size: 0.875rem; margin-bottom: 5px; display: block;">Salutation</label>
+                {{ form.salutation }}
+            </div>
+            <div>
+                <label style="font-size: 0.875rem; margin-bottom: 5px; display: block;">Full Name</label>
+                {{ form.passenger_full_name }}
+                {% if form.passenger_full_name.errors %}
+                    <div class="error-message">{{ form.passenger_full_name.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Passengers Section -->
     <div class="form-group">
         <label style="font-weight: bold; margin-bottom: 10px; display: block;"><i class="bi bi-people"></i> Passengers</label>
