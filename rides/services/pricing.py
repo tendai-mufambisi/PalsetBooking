@@ -18,6 +18,22 @@ DEFAULT_PRICING = {
     "LUGGAGE_FEE": 5.0,
 }
 
+DEFAULT_LONG_DISTANCE = {
+    "THRESHOLD_KM": 80.0,
+    "PER_KM": 1.40,
+    "BASE_PASSENGERS": 3,
+    "EXTRA_PAX_FEE": 30.0,
+    "FREE_LUGGAGE_ITEMS": 5,
+    "LUGGAGE_FEE": 5.0,
+}
+
+DEFAULT_CHAUFFEUR_PACKAGES = [
+    {"hours": 4,  "price": 100, "km_limit": 100, "window_start": "07:30", "window_end": "17:00", "max_passengers": 4},
+    {"hours": 6,  "price": 125, "km_limit": 130, "window_start": "07:30", "window_end": "20:00", "max_passengers": 4},
+    {"hours": 8,  "price": 170, "km_limit": 200, "window_start": "07:30", "window_end": "18:00", "max_passengers": 4},
+    {"hours": 12, "price": 200, "km_limit": 220, "window_start": "07:30", "window_end": "21:00", "max_passengers": 6},
+]
+
 
 def _get_pricing_cfg():
     try:
@@ -25,6 +41,22 @@ def _get_pricing_cfg():
         return SiteSettings.get_settings().get_pricing_cfg()
     except Exception:
         return {}
+
+
+def _get_long_distance_cfg():
+    try:
+        from rides.models import SiteSettings
+        return SiteSettings.get_settings().get_long_distance_cfg()
+    except Exception:
+        return {}
+
+
+def _get_chauffeur_packages():
+    try:
+        from rides.models import SiteSettings
+        return SiteSettings.get_settings().get_chauffeur_packages()
+    except Exception:
+        return DEFAULT_CHAUFFEUR_PACKAGES
 
 
 class PricingService:
@@ -125,6 +157,7 @@ class PricingService:
         total = cls._round(subtotal)
 
         breakdown = {
+            "ride_type": "city",
             "distance_km": float(distance),
             "effective_distance_km": float(effective_distance),
             "base_distance_price": float(cls._round(base_price)),
@@ -142,3 +175,93 @@ class PricingService:
         }
 
         return breakdown
+
+    @classmethod
+    def is_long_distance(cls, distance_km: float) -> bool:
+        cfg = _get_long_distance_cfg() or DEFAULT_LONG_DISTANCE
+        threshold = float(cfg.get("THRESHOLD_KM", DEFAULT_LONG_DISTANCE["THRESHOLD_KM"]))
+        return float(distance_km) >= threshold
+
+    @classmethod
+    def calculate_long_distance(cls, distance_km: float, num_adults: int = 1, luggage_count: int = 0) -> dict:
+        try:
+            distance = Decimal(str(float(distance_km)))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid distance_km: {exc}") from exc
+
+        try:
+            num_adults = int(num_adults)
+            luggage_count = int(luggage_count)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid passenger/luggage counts: {exc}") from exc
+
+        if num_adults < 1:
+            raise ValueError("At least one adult is required")
+
+        cfg = _get_long_distance_cfg() or DEFAULT_LONG_DISTANCE
+
+        per_km = Decimal(str(cfg.get("PER_KM", DEFAULT_LONG_DISTANCE["PER_KM"])))
+        base_passengers = int(cfg.get("BASE_PASSENGERS", DEFAULT_LONG_DISTANCE["BASE_PASSENGERS"]))
+        extra_pax_fee_rate = Decimal(str(cfg.get("EXTRA_PAX_FEE", DEFAULT_LONG_DISTANCE["EXTRA_PAX_FEE"])))
+        free_luggage = int(cfg.get("FREE_LUGGAGE_ITEMS", DEFAULT_LONG_DISTANCE["FREE_LUGGAGE_ITEMS"]))
+        luggage_fee_rate = Decimal(str(cfg.get("LUGGAGE_FEE", DEFAULT_LONG_DISTANCE["LUGGAGE_FEE"])))
+
+        base_price = cls._round(per_km * distance)
+
+        extra_pax = max(0, num_adults - base_passengers)
+        extra_pax_fee = cls._round(extra_pax_fee_rate * extra_pax)
+
+        chargeable_luggage = max(0, luggage_count - free_luggage)
+        luggage_fee = cls._round(luggage_fee_rate * chargeable_luggage)
+
+        total = cls._round(base_price + extra_pax_fee + luggage_fee)
+
+        return {
+            "ride_type": "long_distance",
+            "distance_km": float(distance),
+            "per_km_rate": float(per_km),
+            "base_distance_price": float(base_price),
+            "base_passengers": base_passengers,
+            "num_adults": num_adults,
+            "extra_passengers": extra_pax,
+            "extra_passenger_fee": float(extra_pax_fee),
+            "luggage_count": luggage_count,
+            "luggage_free": min(luggage_count, free_luggage),
+            "luggage_chargeable": chargeable_luggage,
+            "luggage_fee": float(luggage_fee),
+            "subtotal": float(total),
+            "total": float(total),
+        }
+
+    @classmethod
+    def calculate_chauffeur(cls, hours: int) -> dict:
+        try:
+            hours = int(hours)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid hours value: {exc}") from exc
+
+        packages = _get_chauffeur_packages()
+        package = next((p for p in packages if int(p.get("hours", 0)) == hours), None)
+
+        if package is None:
+            available = [p.get("hours") for p in packages]
+            raise ValueError(f"No chauffeur package found for {hours} hours. Available: {available}")
+
+        price = Decimal(str(package["price"]))
+
+        return {
+            "ride_type": "chauffeur",
+            "hours": hours,
+            "label": f"{hours} Hour Chauffeur Drive",
+            "price": float(price),
+            "km_limit": package.get("km_limit"),
+            "window_start": package.get("window_start"),
+            "window_end": package.get("window_end"),
+            "max_passengers": package.get("max_passengers"),
+            "subtotal": float(price),
+            "total": float(price),
+        }
+
+    @classmethod
+    def get_chauffeur_packages(cls) -> list:
+        return _get_chauffeur_packages()

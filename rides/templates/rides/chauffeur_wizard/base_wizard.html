@@ -1,0 +1,298 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Chauffeur Drive - Easy Transit{% endblock %}</title>
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --chauffeur-color: #1e3a5f;
+            --gold: #c9a84c;
+            --success-color: #10b981;
+            --danger-color: #dc3545;
+            --warning-color: #f59e0b;
+            --light-bg: #f8f9fa;
+            --border-light: #dee2e6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f2a47 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .wizard-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+            max-width: 620px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .wizard-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f2a47 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .wizard-header .badge-chauffeur {
+            display: inline-block;
+            background: var(--gold);
+            color: #1e3a5f;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .wizard-header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+        .wizard-header p { font-size: 13px; opacity: 0.85; margin: 0; }
+
+        .progress-bar-container {
+            padding: 16px 20px;
+            background: var(--light-bg);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .progress-steps { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+        .progress-step { flex: 1; text-align: center; }
+
+        .progress-step-circle {
+            width: 34px; height: 34px;
+            margin: 0 auto 6px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--border-light);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 13px; color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active .progress-step-circle {
+            background: var(--chauffeur-color);
+            border-color: var(--chauffeur-color);
+            color: white;
+        }
+
+        .progress-step.completed .progress-step-circle {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+
+        .progress-step-label { font-size: 11px; color: #666; font-weight: 500; }
+        .progress-step.active .progress-step-label { color: var(--chauffeur-color); font-weight: 700; }
+        .progress-step.completed .progress-step-label { color: var(--success-color); }
+
+        .wizard-body { padding: 36px 30px; }
+
+        .form-control, .form-select {
+            border: 1px solid var(--border-light);
+            border-radius: 6px; padding: 10px 12px; font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--chauffeur-color);
+            box-shadow: 0 0 0 3px rgba(30,58,95,0.1);
+        }
+
+        .form-label { font-weight: 600; color: #333; margin-bottom: 8px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        .form-text { font-size: 13px; color: #666; margin-top: 5px; }
+
+        .btn {
+            border-radius: 6px; font-weight: 600; padding: 10px 24px;
+            font-size: 14px; transition: all 0.3s ease; border: none; cursor: pointer;
+        }
+
+        .btn-primary { background: var(--chauffeur-color); color: white; }
+        .btn-primary:hover { background: #0f2a47; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30,58,95,0.3); }
+        .btn-primary:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
+        .btn-secondary { background: white; color: #555; border: 1px solid var(--border-light); }
+        .btn-secondary:hover { background: var(--light-bg); }
+
+        .btn-group-wizard {
+            display: flex; gap: 12px; justify-content: space-between;
+            margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border-light);
+        }
+
+        .error-message {
+            background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+            border-radius: 6px; padding: 12px; margin-bottom: 20px; font-size: 14px;
+        }
+
+        .warning-banner {
+            background: #fff3cd; color: #856404; border: 1px solid #ffc107;
+            border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 14px;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+
+        .warning-banner i { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+        .package-card {
+            border: 2px solid var(--border-light); border-radius: 10px;
+            padding: 16px; cursor: pointer; transition: all 0.25s ease;
+            margin-bottom: 12px; background: white;
+        }
+
+        .package-card:hover { border-color: var(--chauffeur-color); background: #f8faff; }
+
+        .package-card.selected {
+            border-color: var(--chauffeur-color);
+            background: linear-gradient(135deg, rgba(30,58,95,0.04) 0%, rgba(30,58,95,0.08) 100%);
+        }
+
+        .package-card .package-hours {
+            font-size: 18px; font-weight: 800; color: var(--chauffeur-color);
+        }
+
+        .package-card .package-price {
+            font-size: 22px; font-weight: 800; color: var(--gold);
+        }
+
+        .package-card .package-details { font-size: 12px; color: #555; margin-top: 8px; }
+        .package-card .package-details span { display: inline-block; margin-right: 12px; }
+
+        .package-conditions {
+            background: #f0f4f8; border-left: 4px solid var(--chauffeur-color);
+            border-radius: 4px; padding: 12px 16px; margin-top: 10px;
+            font-size: 13px; color: #333;
+        }
+
+        .package-conditions li { margin-bottom: 4px; }
+
+        .fare-summary {
+            background: var(--light-bg); padding: 20px; border-radius: 10px; margin-bottom: 20px;
+        }
+
+        .fare-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 10px; font-size: 14px;
+        }
+
+        .fare-row.total {
+            border-top: 2px solid #dee2e6; padding-top: 12px;
+            font-weight: 700; font-size: 18px; color: var(--chauffeur-color);
+        }
+
+        .payment-option {
+            background: white; border: 2px solid var(--border-light);
+            border-radius: 8px; padding: 14px 16px; margin-bottom: 10px;
+            cursor: pointer; transition: all 0.25s ease;
+        }
+
+        .payment-option:hover, .payment-option.selected { border-color: var(--chauffeur-color); background: #f8faff; }
+
+        .field-counter {
+            display: flex; align-items: center; gap: 12px;
+            border: 1px solid var(--border-light); border-radius: 6px;
+            padding: 8px; width: fit-content;
+        }
+
+        .field-counter button {
+            background: white; border: none; width: 32px; height: 32px;
+            border-radius: 4px; cursor: pointer; font-weight: bold;
+            color: var(--chauffeur-color); transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .field-counter button:hover { background: var(--light-bg); }
+        .field-counter input { width: 40px; text-align: center; border: none; font-weight: 600; font-size: 14px; }
+
+        @media (max-width: 576px) {
+            .wizard-body { padding: 24px 16px; }
+            .wizard-header h1 { font-size: 18px; }
+            .progress-step-label { display: none; }
+            .btn-group-wizard { flex-direction: column; }
+            .btn { width: 100%; }
+        }
+    </style>
+    {% load static %}
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="wizard-container">
+    <!-- Top Nav -->
+    <div style="background:#1e3a5f; padding:10px 20px; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            {% if logo_url %}
+                <img src="{{ logo_url }}" alt="Easy Transit" style="height:36px; object-fit:contain;">
+            {% else %}
+                <i class="bi bi-car-front-fill" style="font-size:22px; color:white;"></i>
+            {% endif %}
+            <span style="color:white; font-weight:700; font-size:15px;">Easy Transit</span>
+        </div>
+        <a href="https://easytransit.co.zw" target="_blank" rel="noopener"
+           style="display:inline-flex; align-items:center; gap:6px; background:white; color:#1e3a5f; font-size:13px; font-weight:700; padding:7px 16px; border-radius:6px; text-decoration:none;">
+            <i class="bi bi-house-fill"></i> Home
+        </a>
+    </div>
+
+    <div class="wizard-header">
+        {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Easy Transit" style="height:48px; margin-bottom:8px; object-fit:contain;">
+        {% else %}
+            <div style="width:48px; height:48px; background:rgba(255,255,255,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 8px;">
+                <i class="bi bi-car-front-fill" style="font-size:24px;"></i>
+            </div>
+        {% endif %}
+        <div class="badge-chauffeur"><i class="bi bi-car-front-fill"></i> Chauffeur Drive</div>
+        <h1>Book Your Chauffeur</h1>
+        <p>Dedicated driver &amp; vehicle &bull; Fuel included &bull; Harare city</p>
+    </div>
+
+    <div class="progress-bar-container">
+        <div class="progress-steps">
+            <div class="progress-step {% if step == 1 %}active{% elif step > 1 %}completed{% endif %}">
+                <div class="progress-step-circle">{% if step > 1 %}<i class="bi bi-check"></i>{% else %}1{% endif %}</div>
+                <div class="progress-step-label">Package</div>
+            </div>
+            <div class="progress-step {% if step == 2 %}active{% elif step > 2 %}completed{% endif %}">
+                <div class="progress-step-circle">{% if step > 2 %}<i class="bi bi-check"></i>{% else %}2{% endif %}</div>
+                <div class="progress-step-label">Passengers</div>
+            </div>
+            <div class="progress-step {% if step == 3 %}active{% elif step > 3 %}completed{% endif %}">
+                <div class="progress-step-circle">{% if step > 3 %}<i class="bi bi-check"></i>{% else %}3{% endif %}</div>
+                <div class="progress-step-label">Contact</div>
+            </div>
+            <div class="progress-step {% if step == 4 %}active{% elif step > 4 %}completed{% endif %}">
+                <div class="progress-step-circle">{% if step > 4 %}<i class="bi bi-check"></i>{% else %}4{% endif %}</div>
+                <div class="progress-step-label">Payment</div>
+            </div>
+            <div class="progress-step {% if step == 5 %}active{% endif %}">
+                <div class="progress-step-circle"><i class="bi bi-check-lg"></i></div>
+                <div class="progress-step-label">Confirm</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-body">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+{% if GOOGLE_MAPS_CLIENT_KEY %}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_CLIENT_KEY }}&libraries=places"></script>
+{% endif %}
+{% block extra_js %}{% endblock %}
+</body>
+</html>

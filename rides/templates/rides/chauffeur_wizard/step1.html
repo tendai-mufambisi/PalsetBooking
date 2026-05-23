@@ -1,0 +1,166 @@
+{% extends "rides/chauffeur_wizard/base_wizard.html" %}
+
+{% block title %}Step 1: Choose Package - Chauffeur Drive{% endblock %}
+
+{% block content %}
+<h2 style="font-size:20px; margin-bottom:6px; color:#1e3a5f;">Select Your Package</h2>
+<p style="font-size:13px; color:#666; margin-bottom:24px;">Choose a time block, then enter your pickup details.</p>
+
+{% if form.non_field_errors %}
+<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ form.non_field_errors }}</div>
+{% endif %}
+
+<form method="POST" id="chauffeur_step1_form">
+    {% csrf_token %}
+    <input type="hidden" id="chauffeur_hours" name="chauffeur_hours" value="{{ step1_data.chauffeur_hours|default:'' }}">
+    <input type="hidden" id="chauffeur_pickup_latitude" name="pickup_latitude" value="{{ step1_data.pickup_latitude|default:'' }}">
+    <input type="hidden" id="chauffeur_pickup_longitude" name="pickup_longitude" value="{{ step1_data.pickup_longitude|default:'' }}">
+
+    <!-- Package selection -->
+    <div class="form-group">
+        <label class="form-label"><i class="bi bi-clock"></i> Choose Duration</label>
+        <div id="packages_list">
+            {% for pkg in packages %}
+            <div class="package-card" id="pkg_{{ pkg.hours }}" onclick="selectPackage({{ pkg.hours }}, this)">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div class="package-hours">{{ pkg.hours }} Hours</div>
+                        <div class="package-details">
+                            <span><i class="bi bi-speedometer2"></i> Up to {{ pkg.km_limit }}km</span>
+                            <span><i class="bi bi-clock-history"></i> {{ pkg.window_start }}–{{ pkg.window_end }}</span>
+                            <span><i class="bi bi-people"></i> Up to {{ pkg.max_passengers }} passengers</span>
+                        </div>
+                    </div>
+                    <div class="package-price">${{ pkg.price }}</div>
+                </div>
+                <!-- Conditions revealed on select -->
+                <div class="package-conditions" id="conditions_{{ pkg.hours }}" style="display:none;">
+                    <ul style="margin:0; padding-left:18px;">
+                        <li>Up to {{ pkg.km_limit }}km within Harare per day</li>
+                        <li>Specify intended {{ pkg.hours }}hrs (between {{ pkg.window_start }} and {{ pkg.window_end }})</li>
+                        <li>Dedicated driver and vehicle included</li>
+                        <li>Fuel and driver costs included</li>
+                        <li>Up to {{ pkg.max_passengers }} passengers (enquire for more)</li>
+                        <li>City parking fees excluded</li>
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% if form.chauffeur_hours.errors %}
+        <div class="error-message" style="margin-top:8px;">{{ form.chauffeur_hours.errors }}</div>
+        {% endif %}
+    </div>
+
+    <!-- Pickup Address -->
+    <div class="form-group">
+        <label class="form-label" for="chauffeur_pickup_address"><i class="bi bi-geo-alt"></i> Pickup Location</label>
+        <input type="text" name="pickup_address" id="chauffeur_pickup_address"
+               class="form-control" placeholder="Enter your pickup address"
+               value="{{ step1_data.pickup_address|default:'' }}" autocomplete="off">
+        {% if form.pickup_address.errors %}
+        <div class="error-message" style="margin-top:6px;">{{ form.pickup_address.errors }}</div>
+        {% endif %}
+        <small class="form-text">Your driver will come to this location.</small>
+    </div>
+
+    <!-- Date & Time -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="form-group">
+            <label class="form-label" for="chauffeur_pickup_date"><i class="bi bi-calendar3"></i> Date</label>
+            <input type="date" name="pickup_date" id="chauffeur_pickup_date"
+                   class="form-control" value="{{ step1_data.pickup_date|default:'' }}" required>
+            {% if form.pickup_date.errors %}
+            <div class="error-message" style="margin-top:6px;">{{ form.pickup_date.errors }}</div>
+            {% endif %}
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="chauffeur_pickup_time"><i class="bi bi-clock"></i> Start Time</label>
+            <input type="time" name="pickup_time" id="chauffeur_pickup_time"
+                   class="form-control" value="{{ step1_data.pickup_time|default:'' }}" required>
+            {% if form.pickup_time.errors %}
+            <div class="error-message" style="margin-top:6px;">{{ form.pickup_time.errors }}</div>
+            {% endif %}
+            <small class="form-text" id="time_hint">Must fall within the selected package window.</small>
+        </div>
+    </div>
+
+    <div class="btn-group-wizard">
+        <a href="{% url 'rides:service_selector' %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+        <button type="submit" class="btn btn-primary" id="submit_btn" disabled>
+            Next: Passengers <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const selectedHours = parseInt("{{ step1_data.chauffeur_hours|default:'0' }}") || 0;
+
+function selectPackage(hours, el) {
+    // Deselect all
+    document.querySelectorAll('.package-card').forEach(c => {
+        c.classList.remove('selected');
+        c.querySelector('[id^="conditions_"]').style.display = 'none';
+    });
+    // Select clicked
+    el.classList.add('selected');
+    el.querySelector('#conditions_' + hours).style.display = 'block';
+    document.getElementById('chauffeur_hours').value = hours;
+
+    // Update time hint
+    const pkg = packages.find(p => p.hours === hours);
+    if (pkg) {
+        document.getElementById('time_hint').textContent =
+            'Must be between ' + pkg.window_start + ' and ' + pkg.window_end;
+    }
+    enableSubmit();
+}
+
+function enableSubmit() {
+    const h = document.getElementById('chauffeur_hours').value;
+    const addr = document.getElementById('chauffeur_pickup_address').value.trim();
+    const date = document.getElementById('chauffeur_pickup_date').value;
+    const time = document.getElementById('chauffeur_pickup_time').value;
+    const lat = document.getElementById('chauffeur_pickup_latitude').value;
+    document.getElementById('submit_btn').disabled = !(h && addr && date && time && lat);
+}
+
+// Pre-select if returning to this step
+if (selectedHours) {
+    const card = document.getElementById('pkg_' + selectedHours);
+    if (card) selectPackage(selectedHours, card);
+}
+
+// Google Places Autocomplete
+window.addEventListener('load', function() {
+    if (typeof google === 'undefined') return;
+    const input = document.getElementById('chauffeur_pickup_address');
+    const ac = new google.maps.places.Autocomplete(input, {
+        componentRestrictions: { country: 'zw' },
+        fields: ['formatted_address', 'geometry'],
+    });
+    ac.addListener('place_changed', function() {
+        const place = ac.getPlace();
+        if (place.geometry) {
+            document.getElementById('chauffeur_pickup_latitude').value = place.geometry.location.lat();
+            document.getElementById('chauffeur_pickup_longitude').value = place.geometry.location.lng();
+            input.value = place.formatted_address || input.value;
+        }
+        enableSubmit();
+    });
+    input.addEventListener('input', function() {
+        document.getElementById('chauffeur_pickup_latitude').value = '';
+        document.getElementById('chauffeur_pickup_longitude').value = '';
+        enableSubmit();
+    });
+});
+
+document.getElementById('chauffeur_pickup_date').addEventListener('change', enableSubmit);
+document.getElementById('chauffeur_pickup_time').addEventListener('change', enableSubmit);
+
+// Package data for JS hint lookups
+const packages = {{ packages|safe }};
+</script>
+{% endblock %}

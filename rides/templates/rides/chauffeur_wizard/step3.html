@@ -1,0 +1,52 @@
+{% extends "rides/chauffeur_wizard/base_wizard.html" %}
+
+{% block title %}Step 3: Contact Details - Chauffeur Drive{% endblock %}
+
+{% block content %}
+<h2 style="font-size:20px; margin-bottom:6px; color:#1e3a5f;">Contact Details</h2>
+<p style="font-size:13px; color:#666; margin-bottom:24px;">We will use this to confirm your booking and send your driver's details.</p>
+
+{% if form.non_field_errors %}
+<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ form.non_field_errors }}</div>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label class="form-label" for="phone"><i class="bi bi-telephone"></i> Phone Number <span style="color:#dc3545;">*</span></label>
+        <input type="tel" name="phone" id="phone" class="form-control"
+               placeholder="+263 77 000 0000"
+               value="{{ step3_data.phone|default:'' }}">
+        {% if form.phone.errors %}
+        <div class="error-message">{{ form.phone.errors }}</div>
+        {% endif %}
+        <small class="form-text">Your driver will call this number.</small>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="email"><i class="bi bi-envelope"></i> Email Address</label>
+        <input type="email" name="email" id="email" class="form-control"
+               placeholder="your@email.com"
+               value="{{ step3_data.email|default:'' }}">
+        {% if form.email.errors %}
+        <div class="error-message">{{ form.email.errors }}</div>
+        {% endif %}
+        <small class="form-text">For booking confirmation email (optional).</small>
+    </div>
+
+    <div class="form-group">
+        <label class="form-label" for="extra_instructions"><i class="bi bi-chat-text"></i> Special Instructions</label>
+        <textarea name="extra_instructions" id="extra_instructions" class="form-control" rows="3"
+                  placeholder="e.g. planned stops, specific areas, special requirements">{{ step3_data.extra_instructions|default:'' }}</textarea>
+        {% if form.extra_instructions.errors %}
+        <div class="error-message">{{ form.extra_instructions.errors }}</div>
+        {% endif %}
+    </div>
+
+    <div class="btn-group-wizard">
+        <a href="{% url 'rides:chauffeur_wizard' step=2 %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+        <button type="submit" class="btn btn-primary">Next: Payment <i class="bi bi-arrow-right"></i></button>
+    </div>
+</form>
+{% endblock %}

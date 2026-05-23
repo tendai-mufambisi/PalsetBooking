@@ -1,0 +1,154 @@
+{% extends "rides/chauffeur_wizard/base_wizard.html" %}
+
+{% block title %}Step 2: Passengers - Chauffeur Drive{% endblock %}
+
+{% block content %}
+<h2 style="font-size:20px; margin-bottom:6px; color:#1e3a5f;">Passenger Details</h2>
+
+{% if selected_package %}
+<div style="background:#f0f4f8; border-left:4px solid #1e3a5f; border-radius:4px; padding:10px 14px; margin-bottom:20px; font-size:13px;">
+    <strong>{{ selected_package.hours }}-Hour Package</strong> &bull;
+    Up to {{ selected_package.max_passengers }} passengers &bull;
+    {{ selected_package.window_start }}–{{ selected_package.window_end }}
+</div>
+{% endif %}
+
+<!-- Over-limit warning (shown dynamically by JS, or server-side on re-render) -->
+<div class="warning-banner" id="over_limit_banner" style="display:none;">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+        <strong>More passengers than standard package</strong><br>
+        Your booking will be flagged. The Easy Transit team will contact you to confirm arrangements and any additional cost.
+        You can still proceed.
+    </div>
+</div>
+
+<form method="POST" id="chauffeur_step2_form">
+    {% csrf_token %}
+    <input type="hidden" id="passengers_json" name="passengers_json" value="[]">
+    <input type="hidden" id="num_adults" name="num_adults" value="{{ step2_data.num_adults|default:'1' }}">
+    <input type="hidden" id="num_kids_carried" name="num_kids_carried" value="{{ step2_data.num_kids_carried|default:'0' }}">
+    <input type="hidden" id="luggage_count" name="luggage_count" value="{{ step2_data.luggage_count|default:'0' }}">
+    <input type="hidden" id="baby_car_seater" name="baby_car_seater" value="{{ step2_data.baby_car_seater|default:'0' }}">
+
+    <!-- Name -->
+    <div class="form-group" style="margin-bottom:20px;">
+        <label style="font-weight:bold; margin-bottom:10px; display:block;"><i class="bi bi-person-check"></i> Your Full Name</label>
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px;">
+            <div>
+                <label style="font-size:0.875rem; margin-bottom:5px; display:block;">Salutation</label>
+                {{ form.salutation }}
+            </div>
+            <div>
+                <label style="font-size:0.875rem; margin-bottom:5px; display:block;">Full Name</label>
+                {{ form.passenger_full_name }}
+                {% if form.passenger_full_name.errors %}
+                <div class="error-message">{{ form.passenger_full_name.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:24px; padding-top:20px; border-top:1px solid #ddd;">
+        <h4 style="margin-bottom:16px;"><i class="bi bi-people"></i> Number of Passengers</h4>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-person"></i> Adults (includes seated children)</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_adults">−</button>
+                <input type="text" id="display_num_adults" readonly value="{{ step2_data.num_adults|default:'1' }}">
+                <button type="button" class="btn-increment" data-field="num_adults">+</button>
+            </div>
+            <small class="form-text">Everyone taking a seat counts.</small>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-shield-baby"></i> Baby Car Seat <span style="color:#10b981; font-weight:600;">$10 flat</span></label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="baby_car_seater">−</button>
+                <input type="text" id="display_baby_car_seater" readonly value="{{ step2_data.baby_car_seater|default:'0' }}">
+                <button type="button" class="btn-increment" data-field="baby_car_seater">+</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-backpack"></i> Kids Carried <small class="form-text">(free)</small></label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_kids_carried">−</button>
+                <input type="text" id="display_num_kids_carried" readonly value="{{ step2_data.num_kids_carried|default:'0' }}">
+                <button type="button" class="btn-increment" data-field="num_kids_carried">+</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-suitcase-lg"></i> Luggage Bags</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="luggage_count">−</button>
+                <input type="text" id="display_luggage_count" readonly value="{{ step2_data.luggage_count|default:'0' }}">
+                <button type="button" class="btn-increment" data-field="luggage_count">+</button>
+            </div>
+            <small class="form-text">First 5 bags free, then charged per extra bag.</small>
+        </div>
+    </div>
+
+    <div class="btn-group-wizard">
+        <a href="{% url 'rides:chauffeur_wizard' step=1 %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+        <button type="submit" class="btn btn-primary">Next: Contact <i class="bi bi-arrow-right"></i></button>
+    </div>
+</form>
+
+<script>
+const maxPassengers = {% if selected_package %}{{ selected_package.max_passengers }}{% else %}99{% endif %};
+
+const fields = {
+    num_adults:      { min: 1, max: 20, initial: {{ step2_data.num_adults|default:1 }} },
+    baby_car_seater: { min: 0, max: 5,  initial: {{ step2_data.baby_car_seater|default:0 }} },
+    num_kids_carried:{ min: 0, max: 10, initial: {{ step2_data.num_kids_carried|default:0 }} },
+    luggage_count:   { min: 0, max: 20, initial: {{ step2_data.luggage_count|default:0 }} },
+};
+
+function checkOverLimit() {
+    const adults = parseInt(document.getElementById('num_adults').value) || 1;
+    const banner = document.getElementById('over_limit_banner');
+    if (adults > maxPassengers) {
+        banner.style.display = 'flex';
+    } else {
+        banner.style.display = 'none';
+    }
+}
+
+document.querySelectorAll('.btn-increment').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        const field = btn.dataset.field;
+        const hidden = document.getElementById(field);
+        const display = document.getElementById('display_' + field);
+        let val = parseInt(hidden.value) || 0;
+        if (val < fields[field].max) {
+            val++;
+            hidden.value = val;
+            display.value = val;
+        }
+        checkOverLimit();
+    });
+});
+
+document.querySelectorAll('.btn-decrement').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        const field = btn.dataset.field;
+        const hidden = document.getElementById(field);
+        const display = document.getElementById('display_' + field);
+        let val = parseInt(hidden.value) || 0;
+        if (val > fields[field].min) {
+            val--;
+            hidden.value = val;
+            display.value = val;
+        }
+        checkOverLimit();
+    });
+});
+
+checkOverLimit();
+</script>
+{% endblock %}

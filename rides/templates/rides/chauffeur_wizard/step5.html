@@ -1,0 +1,80 @@
+{% extends "rides/chauffeur_wizard/base_wizard.html" %}
+
+{% block title %}Booking Confirmed - Chauffeur Drive{% endblock %}
+
+{% block content %}
+<div style="text-align:center; padding:10px 0 24px;">
+    <div style="width:64px; height:64px; background:#10b981; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+        <i class="bi bi-check-lg" style="font-size:32px; color:white;"></i>
+    </div>
+    <h2 style="font-size:22px; font-weight:800; color:#1e3a5f; margin-bottom:6px;">Booking Confirmed!</h2>
+    <p style="font-size:14px; color:#666;">Your chauffeur drive has been booked. We'll be in touch shortly.</p>
+</div>
+
+{% if booking %}
+<div style="background:#f8f9fa; border-radius:10px; padding:20px; margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <span style="font-size:13px; color:#666; text-transform:uppercase; letter-spacing:1px;">Booking Reference</span>
+        <span style="font-size:18px; font-weight:800; color:#1e3a5f;">{{ booking.reference }}</span>
+    </div>
+
+    <div style="font-size:14px; border-top:1px solid #dee2e6; padding-top:14px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span style="color:#666;">Package</span>
+            <span style="font-weight:600;">{{ booking.chauffeur_package_label }}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span style="color:#666;">Pickup</span>
+            <span style="font-weight:600; text-align:right; max-width:60%;">{{ booking.pickup_address }}</span>
+        </div>
+        {% if booking.pickup_date %}
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span style="color:#666;">Date &amp; Time</span>
+            <span style="font-weight:600;">{{ booking.pickup_date }} at {{ booking.pickup_time|time:"H:i" }}</span>
+        </div>
+        {% endif %}
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <span style="color:#666;">Passengers</span>
+            <span style="font-weight:600;">
+                {{ booking.num_adults }}
+                {% if booking.passengers_over_limit %}
+                <span style="color:#f59e0b; font-size:12px;">(to be confirmed)</span>
+                {% endif %}
+            </span>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-top:1px solid #dee2e6; padding-top:12px; margin-top:4px;">
+            <span style="color:#666;">Total</span>
+            <span style="font-size:18px; font-weight:800; color:#c9a84c;">${{ booking.total_amount }}</span>
+        </div>
+    </div>
+</div>
+
+{% if booking.passengers_over_limit %}
+<div class="warning-banner">
+    <i class="bi bi-telephone-fill"></i>
+    <div><strong>We'll call you</strong> — your booking has more passengers than the standard package. Our team will contact you to arrange and confirm.</div>
+</div>
+{% endif %}
+
+{% if whatsapp_message %}
+<a href="{{ whatsapp_message }}" target="_blank" rel="noopener"
+   style="display:block; background:#25d366; color:white; text-align:center; border-radius:8px; padding:12px 16px; font-weight:700; font-size:14px; text-decoration:none; margin-bottom:14px;">
+    <i class="bi bi-whatsapp"></i> Share on WhatsApp
+</a>
+{% endif %}
+
+{% else %}
+<div style="background:#fff3cd; border-radius:8px; padding:16px; margin-bottom:20px; font-size:14px; color:#856404;">
+    <i class="bi bi-info-circle"></i> Your booking was received. Please check your email for confirmation details.
+</div>
+{% endif %}
+
+<div style="display:flex; gap:10px; margin-top:8px;">
+    <a href="{% url 'rides:service_selector' %}" class="btn btn-secondary" style="flex:1; text-align:center;">
+        <i class="bi bi-house"></i> Home
+    </a>
+    <a href="{% url 'rides:chauffeur_wizard_start' %}?reset=1" class="btn btn-primary" style="flex:1; text-align:center;">
+        <i class="bi bi-plus-circle"></i> New Booking
+    </a>
+</div>
+{% endblock %}

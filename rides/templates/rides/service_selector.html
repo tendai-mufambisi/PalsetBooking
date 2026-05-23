@@ -1,0 +1,250 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Book a Ride - Easy Transit</title>
+    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f2a47 0%, #1e3a5f 60%, #10b981 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        .selector-container {
+            max-width: 580px;
+            width: 100%;
+        }
+
+        .brand {
+            text-align: center;
+            color: white;
+            margin-bottom: 32px;
+        }
+
+        .brand h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .brand p {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 14px;
+            padding: 28px 24px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            display: block;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .service-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        .service-card.city:hover { border-color: #10b981; }
+        .service-card.chauffeur:hover { border-color: #c9a84c; }
+
+        .service-card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .service-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .service-icon.city { background: #e8faf3; color: #10b981; }
+        .service-icon.chauffeur { background: #f0f4f8; color: #1e3a5f; }
+
+        .service-title { font-size: 18px; font-weight: 800; color: #1a1a1a; margin-bottom: 2px; }
+        .service-subtitle { font-size: 13px; color: #666; }
+
+        .service-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .feature-tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .feature-tag.city { background: #e8faf3; color: #059669; }
+        .feature-tag.chauffeur { background: #f0f4f8; color: #1e3a5f; }
+        .feature-tag.gold { background: #fef9ec; color: #92700a; }
+
+        .service-cta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .service-cta .price-hint { font-size: 13px; color: #888; }
+        .service-cta .arrow {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; transition: all 0.2s;
+        }
+
+        .service-card.city .arrow { background: #10b981; color: white; }
+        .service-card.chauffeur .arrow { background: #1e3a5f; color: white; }
+
+        .service-card:hover .arrow { transform: translateX(4px); }
+
+        .chauffeur-packages {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .pkg-mini {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .pkg-mini strong { color: #c9a84c; font-size: 14px; }
+
+        .footer-note {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .brand h1 { font-size: 22px; }
+            .service-card { padding: 20px 16px; }
+            .chauffeur-packages { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<!-- Top Nav -->
+<div style="position:fixed; top:0; left:0; right:0; z-index:100; background:rgba(10,143,99,0.95); backdrop-filter:blur(6px); padding:10px 20px; display:flex; align-items:center; justify-content:space-between;">
+    <div style="display:flex; align-items:center; gap:10px;">
+        {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Easy Transit" style="height:36px; object-fit:contain;">
+        {% else %}
+            <i class="bi bi-car-front-fill" style="font-size:22px; color:white;"></i>
+        {% endif %}
+        <span style="color:white; font-weight:700; font-size:15px;">Easy Transit</span>
+    </div>
+    <a href="https://easytransit.co.zw" target="_blank" rel="noopener"
+       style="display:inline-flex; align-items:center; gap:6px; background:white; color:#0a8f63; font-size:13px; font-weight:700; padding:7px 16px; border-radius:6px; text-decoration:none;">
+        <i class="bi bi-house-fill"></i> Home
+    </a>
+</div>
+
+<div class="selector-container" style="padding-top:72px;">
+    <div class="brand">
+        {% if logo_url %}
+            <img src="{{ logo_url }}" alt="Easy Transit" style="height:64px; margin-bottom:12px; object-fit:contain; filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));">
+        {% else %}
+            <i class="bi bi-car-front-fill" style="font-size:48px; display:block; margin-bottom:8px;"></i>
+        {% endif %}
+        <h1>Easy Transit</h1>
+        <p>Harare's trusted transport service</p>
+    </div>
+
+    <!-- Regular / Long Distance -->
+    <a href="{% url 'rides:booking_wizard_start' %}" class="service-card city">
+        <div class="service-card-header">
+            <div class="service-icon city"><i class="bi bi-geo-alt-fill"></i></div>
+            <div>
+                <div class="service-title">Book a Ride</div>
+                <div class="service-subtitle">City trips &amp; Long Distance</div>
+            </div>
+        </div>
+
+        <div class="service-features">
+            <span class="feature-tag city"><i class="bi bi-check"></i> Point-to-point</span>
+            <span class="feature-tag city"><i class="bi bi-check"></i> Airport transfers</span>
+            <span class="feature-tag city"><i class="bi bi-check"></i> Long distance</span>
+            <span class="feature-tag city"><i class="bi bi-check"></i> From $25</span>
+        </div>
+
+        <div class="service-cta">
+            <span class="price-hint">Fare calculated by distance</span>
+            <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+        </div>
+    </a>
+
+    <!-- Chauffeur Drive -->
+    <a href="{% url 'rides:chauffeur_wizard_start' %}" class="service-card chauffeur">
+        <div class="service-card-header">
+            <div class="service-icon chauffeur"><i class="bi bi-person-badge-fill"></i></div>
+            <div>
+                <div class="service-title">Chauffeur Drive</div>
+                <div class="service-subtitle">Dedicated driver for the day</div>
+            </div>
+        </div>
+
+        <div class="service-features">
+            <span class="feature-tag chauffeur"><i class="bi bi-check"></i> Dedicated driver &amp; vehicle</span>
+            <span class="feature-tag chauffeur"><i class="bi bi-check"></i> Fuel included</span>
+            <span class="feature-tag gold"><i class="bi bi-star-fill"></i> Fixed price per package</span>
+        </div>
+
+        {% if chauffeur_packages %}
+        <div class="chauffeur-packages">
+            {% for pkg in chauffeur_packages %}
+            <div class="pkg-mini">
+                <strong>${{ pkg.price }}</strong> — {{ pkg.hours }} hrs<br>
+                <span style="color:#666;">Up to {{ pkg.km_limit }}km</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="service-cta">
+            <span class="price-hint">Fixed price, no surprises</span>
+            <span class="arrow"><i class="bi bi-arrow-right"></i></span>
+        </div>
+    </a>
+
+    <div class="footer-note">
+        Questions? Call or WhatsApp
+        <a href="tel:{{ TAXI_OWNER_PHONE }}" style="color:rgba(255,255,255,0.9); font-weight:600;">{{ TAXI_OWNER_PHONE }}</a>
+    </div>
+</div>
+</body>
+</html>

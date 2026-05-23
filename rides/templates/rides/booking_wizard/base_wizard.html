@@ -1,5 +1,6 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -397,6 +398,22 @@
 </head>
 <body>
     <div class="wizard-container">
+        <!-- Top Nav -->
+        <div style="background:#0a8f63; padding:10px 20px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                {% if logo_url %}
+                    <img src="{{ logo_url }}" alt="Easy Transit" style="height:36px; object-fit:contain;">
+                {% else %}
+                    <i class="bi bi-car-front-fill" style="font-size:22px; color:white;"></i>
+                {% endif %}
+                <span style="color:white; font-weight:700; font-size:15px;">Easy Transit</span>
+            </div>
+            <a href="https://easytransit.co.zw" target="_blank" rel="noopener"
+               style="display:inline-flex; align-items:center; gap:6px; background:white; color:#0a8f63; font-size:13px; font-weight:700; padding:7px 16px; border-radius:6px; text-decoration:none;">
+                <i class="bi bi-house-fill"></i> Home
+            </a>
+        </div>
+
         <!-- Header -->
         <div class="wizard-header">
             <h1>Book a Ride</h1>

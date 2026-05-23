@@ -249,6 +249,49 @@ class Step5ConfirmationForm(forms.Form):
 
 
 # ============================================================================
+# Chauffeur Drive Forms
+# ============================================================================
+
+class ChauffeurStep1Form(forms.Form):
+    """Chauffeur Step 1: Pickup location, date/time, and package duration."""
+
+    pickup_address = forms.CharField(
+        max_length=512,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter pickup location',
+            'id': 'chauffeur_pickup_address',
+        })
+    )
+    pickup_latitude = forms.FloatField(
+        widget=forms.HiddenInput(attrs={'id': 'chauffeur_pickup_latitude'}),
+        required=False,
+    )
+    pickup_longitude = forms.FloatField(
+        widget=forms.HiddenInput(attrs={'id': 'chauffeur_pickup_longitude'}),
+        required=False,
+    )
+    pickup_date = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'chauffeur_pickup_date'})
+    )
+    pickup_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time', 'id': 'chauffeur_pickup_time'})
+    )
+    chauffeur_hours = forms.IntegerField(
+        widget=forms.HiddenInput(attrs={'id': 'chauffeur_hours'}),
+        min_value=1,
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('pickup_latitude') or not cleaned.get('pickup_longitude'):
+            raise ValidationError('Please select a valid pickup location from the suggestions.')
+        if not cleaned.get('chauffeur_hours'):
+            raise ValidationError('Please select a package duration.')
+        return cleaned
+
+
+# ============================================================================
 # Legacy Full Booking Form (kept for backward compatibility)
 # ============================================================================
 

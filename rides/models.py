@@ -25,6 +25,10 @@ class RideBooking(models.Model):
     STATUS_CONFIRMED = 'CONFIRMED'
     STATUS_CANCELLED = 'CANCELLED'
 
+    RIDE_TYPE_CITY = 'city'
+    RIDE_TYPE_LONG_DISTANCE = 'long_distance'
+    RIDE_TYPE_CHAUFFEUR = 'chauffeur'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     pickup_address = models.CharField(max_length=512)
     pickup_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -77,6 +81,19 @@ class RideBooking(models.Model):
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
     passengers_json = JSONField(null=True, blank=True)
 
+    ride_type = models.CharField(
+        max_length=20,
+        choices=[
+            (RIDE_TYPE_CITY, 'City Ride'),
+            (RIDE_TYPE_LONG_DISTANCE, 'Long Distance'),
+            (RIDE_TYPE_CHAUFFEUR, 'Chauffeur Drive'),
+        ],
+        default=RIDE_TYPE_CITY,
+    )
+    chauffeur_hours = models.PositiveSmallIntegerField(null=True, blank=True)
+    chauffeur_package_label = models.CharField(max_length=64, null=True, blank=True)
+    passengers_over_limit = models.BooleanField(default=False)
+
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -125,7 +142,7 @@ class SiteSettings(models.Model):
     taxi_owner_email = models.EmailField(default='enquiries@easytransit.co.zw')
     taxi_owner_phone = models.CharField(max_length=32, default='+263789423154')
 
-    # Pricing
+    # City Ride Pricing
     pricing_min_km = models.DecimalField(max_digits=6, decimal_places=2, default=13.0)
     pricing_brackets = JSONField(default=list)
     pricing_above_35_per_km = models.DecimalField(max_digits=6, decimal_places=2, default=1.0)
@@ -133,6 +150,29 @@ class SiteSettings(models.Model):
     pricing_extra_adult_fee = models.DecimalField(max_digits=6, decimal_places=2, default=10.0)
     pricing_free_luggage = models.PositiveSmallIntegerField(default=5)
     pricing_luggage_fee = models.DecimalField(max_digits=6, decimal_places=2, default=3.0)
+
+    # Long Distance Pricing
+    long_distance_threshold_km = models.DecimalField(
+        max_digits=6, decimal_places=2, default=80.0,
+        help_text='Trips at or beyond this distance (km) are treated as Long Distance'
+    )
+    long_distance_per_km = models.DecimalField(max_digits=6, decimal_places=2, default=1.40)
+    long_distance_base_passengers = models.PositiveSmallIntegerField(default=3)
+    long_distance_extra_pax_fee = models.DecimalField(max_digits=6, decimal_places=2, default=30.0)
+    long_distance_free_luggage = models.PositiveSmallIntegerField(default=5)
+    long_distance_luggage_fee = models.DecimalField(max_digits=6, decimal_places=2, default=5.0)
+
+    # Chauffeur Drive Packages (JSON list)
+    # Each entry: {"hours": 4, "price": 100, "km_limit": 100,
+    #              "window_start": "07:30", "window_end": "17:00", "max_passengers": 4}
+    chauffeur_packages = JSONField(
+        default=list,
+        help_text=(
+            'List of chauffeur drive packages. Each entry must have: '
+            'hours (int), price (decimal), km_limit (int), '
+            'window_start ("HH:MM"), window_end ("HH:MM"), max_passengers (int).'
+        )
+    )
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -160,6 +200,25 @@ class SiteSettings(models.Model):
             "FREE_LUGGAGE_ITEMS": self.pricing_free_luggage,
             "LUGGAGE_FEE": float(self.pricing_luggage_fee),
         }
+
+    def get_long_distance_cfg(self):
+        return {
+            "THRESHOLD_KM": float(self.long_distance_threshold_km),
+            "PER_KM": float(self.long_distance_per_km),
+            "BASE_PASSENGERS": self.long_distance_base_passengers,
+            "EXTRA_PAX_FEE": float(self.long_distance_extra_pax_fee),
+            "FREE_LUGGAGE_ITEMS": self.long_distance_free_luggage,
+            "LUGGAGE_FEE": float(self.long_distance_luggage_fee),
+        }
+
+    def get_chauffeur_packages(self):
+        default = [
+            {"hours": 4,  "price": 100, "km_limit": 100, "window_start": "07:30", "window_end": "17:00", "max_passengers": 4},
+            {"hours": 6,  "price": 125, "km_limit": 130, "window_start": "07:30", "window_end": "20:00", "max_passengers": 4},
+            {"hours": 8,  "price": 170, "km_limit": 200, "window_start": "07:30", "window_end": "18:00", "max_passengers": 4},
+            {"hours": 12, "price": 200, "km_limit": 220, "window_start": "07:30", "window_end": "21:00", "max_passengers": 6},
+        ]
+        return self.chauffeur_packages or default
 
     def __str__(self):
         return 'Site Settings'

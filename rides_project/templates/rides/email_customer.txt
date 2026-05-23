@@ -1,9 +1,0 @@
-Booking confirmation: {{ booking.id }}
-
-Pickup: {{ booking.pickup_address }}
-Dropoff: {{ booking.dropoff_address }}
-Distance (km): {{ booking.distance_km }}
-Total: ${{ booking.total_amount }}
-Payment status: {{ payment_status }}
-
-To call the driver: tel:{{ taxi_owner_phone }}

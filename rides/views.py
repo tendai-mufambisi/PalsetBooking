@@ -43,6 +43,7 @@ from .forms import (
     Step4FarePaymentForm,
     Step5ConfirmationForm,
     BookingForm,
+    ChauffeurStep1Form,
 )
 from .serializers import (
     CreateBookingSerializer,
@@ -54,6 +55,33 @@ from .services.distance import DistanceService
 from .services.pricing import PricingService
 from .services.paynow import PaynowService
 from .services.email_service import EmailService
+
+
+def _logo_url():
+    """Return the static URL for the Easy Transit logo, or None if not uploaded yet."""
+    from django.templatetags.static import static
+    from django.contrib.staticfiles.finders import find
+    if find('img/logo.png'):
+        return static('img/logo.png')
+    return None
+
+
+def _calculate_fare(distance_km, num_adults, num_kids_seated=0, baby_car_seater=0, num_kids_carried=0, luggage_count=0):
+    """Pick city vs long-distance pricing automatically based on distance threshold."""
+    if PricingService.is_long_distance(distance_km):
+        return PricingService.calculate_long_distance(
+            distance_km=distance_km,
+            num_adults=num_adults,
+            luggage_count=luggage_count,
+        )
+    return PricingService.calculate(
+        distance_km=distance_km,
+        num_adults=num_adults,
+        num_kids_seated=num_kids_seated,
+        baby_car_seater=baby_car_seater,
+        num_kids_carried=num_kids_carried,
+        luggage_count=luggage_count,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -75,12 +103,24 @@ def build_booking_message(booking, eta_minutes=None, payment_label_override: Opt
     """Return a multi-line plain-text summary of the booking suitable for WhatsApp sharing."""
     try:
         parts = []
-        parts.append("Hello Easy Transit, I have just booked a ride on your platform 🚗")
+        ride_type = getattr(booking, 'ride_type', 'city')
+        if ride_type == 'chauffeur':
+            parts.append("Hello Easy Transit, I have just booked a *Chauffeur Drive* on your platform 🚗")
+        elif ride_type == 'long_distance':
+            parts.append("Hello Easy Transit, I have just booked a *Long Distance* ride on your platform 🚗")
+        else:
+            parts.append("Hello Easy Transit, I have just booked a ride on your platform 🚗")
         parts.append("")
         parts.append("*Booking Details:*")
         parts.append("")
         bid = getattr(booking, 'reference', None) or str(booking.id)
         parts.append(f"*Booking ID:* {bid}")
+
+        if ride_type == 'chauffeur':
+            pkg_label = getattr(booking, 'chauffeur_package_label', None) or f"{getattr(booking, 'chauffeur_hours', '?')} Hour Chauffeur Drive"
+            parts.append(f"*Service:* {pkg_label}")
+        elif ride_type == 'long_distance':
+            parts.append("*Service:* Long Distance")
 
         # Pickup with optional date/time
         pickup_line = f"*Pickup:* {booking.pickup_address}"
@@ -158,6 +198,9 @@ def build_booking_message(booking, eta_minutes=None, payment_label_override: Opt
 
         if booking.luggage_count:
             parts.append(f"*Luggage:* {booking.luggage_count} bag(s)")
+
+        if getattr(booking, 'passengers_over_limit', False):
+            parts.append("⚠️ *Passengers exceed standard package limit — follow up required*")
 
         # Extra instructions and contact
         if getattr(booking, 'extra_instructions', None):
@@ -272,6 +315,7 @@ class MultiStepBookingWizardView(View):
             'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
             'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
             'csrf_token': get_token(request),
+            'logo_url': _logo_url(),
         }
 
         # Restore previous step data from session if user navigates back
@@ -370,16 +414,16 @@ class MultiStepBookingWizardView(View):
                     self.request.session[self.get_session_key('step1')] = session_step1
                     self.request.session.modified = True
 
-                fare_breakdown = PricingService.calculate(
+                fare_breakdown = _calculate_fare(
                     distance_km=distance_km,
                     num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
-                    num_kids_seated=0,
                     baby_car_seater=step2.get('baby_car_seater', 0),
                     num_kids_carried=step2.get('num_kids_carried', 0),
                     luggage_count=step2.get('luggage_count', 0),
                 )
                 context['fare_breakdown'] = fare_breakdown
                 context['estimated_fare'] = fare_breakdown['total']
+                context['ride_type'] = fare_breakdown.get('ride_type', 'city')
             except Exception as e:
                 logger.exception('Fare calculation failed')
                 context['fare_error'] = str(e)
@@ -571,10 +615,9 @@ class MultiStepBookingWizardView(View):
                             (step1['dropoff_latitude'], step1['dropoff_longitude']),
                         )
 
-                    fare_breakdown = PricingService.calculate(
+                    fare_breakdown = _calculate_fare(
                         distance_km=distance_km,
                         num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
-                        num_kids_seated=0,
                         baby_car_seater=step2.get('baby_car_seater', 0),
                         num_kids_carried=step2.get('num_kids_carried', 0),
                         luggage_count=step2.get('luggage_count', 0),
@@ -609,6 +652,7 @@ class MultiStepBookingWizardView(View):
                             payment_option=payment_method,
                             price_breakdown=fare_breakdown,
                             total_amount=Decimal(str(fare_breakdown['total'])),
+                            ride_type=fare_breakdown.get('ride_type', RideBooking.RIDE_TYPE_CITY),
                             status=RideBooking.STATUS_PENDING,
                         )
 
@@ -734,15 +778,14 @@ class MultiStepBookingWizardView(View):
                             (step1.get('pickup_latitude'), step1.get('pickup_longitude')),
                             (step1.get('dropoff_latitude'), step1.get('dropoff_longitude')),
                         )
-                    fare_breakdown = PricingService.calculate(
+                    fare_breakdown = _calculate_fare(
                         distance_km=distance_km,
                         num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
-                        num_kids_seated=0,
                         baby_car_seater=step2.get('baby_car_seater', 0),
                         num_kids_carried=step2.get('num_kids_carried', 0),
                         luggage_count=step2.get('luggage_count', 0),
                     )
-                    context_extra = {'fare_breakdown': fare_breakdown}
+                    context_extra = {'fare_breakdown': fare_breakdown, 'ride_type': fare_breakdown.get('ride_type', 'city')}
                 except Exception as e:
                     logger.exception('Fare calculation failed on re-render')
                     context_extra = {'fare_error': str(e), 'estimated_fare': 'Unable to calculate'}
@@ -761,6 +804,424 @@ class MultiStepBookingWizardView(View):
                 return render(request, 'rides/booking_wizard/step4.html', context)
 
         return redirect('rides:booking_wizard_start')
+
+
+# ============================================================================
+# Chauffeur Drive Booking Wizard (Session-Based)
+# ============================================================================
+
+class ChauffeurBookingWizardView(View):
+    """
+    Separate booking wizard for Chauffeur Drive service.
+
+    Flow:
+    - Step 1: Pickup address + date/time + package selection (4/6/8/12 hrs)
+    - Step 2: Passengers & luggage (with over-limit warning)
+    - Step 3: Contact & extra instructions
+    - Step 4: Fare preview & payment method
+    - Step 5: Confirmation
+    """
+
+    VALID_STEPS = [1, 2, 3, 4, 5]
+    SESSION_KEY_PREFIX = 'chauffeur_wizard'
+
+    def get_session_key(self, key):
+        return f"{self.SESSION_KEY_PREFIX}_{key}"
+
+    def get_wizard_data(self):
+        data = {}
+        for key in ['step1', 'step2', 'step3', 'step4']:
+            session_key = self.get_session_key(key)
+            if session_key in self.request.session:
+                item = dict(self.request.session[session_key])
+                if key == 'step1':
+                    pd = item.get('pickup_date')
+                    pt = item.get('pickup_time')
+                    try:
+                        if isinstance(pd, str) and pd:
+                            item['pickup_date'] = datetime.date.fromisoformat(pd)
+                    except Exception:
+                        pass
+                    try:
+                        if isinstance(pt, str) and pt:
+                            item['pickup_time'] = datetime.time.fromisoformat(pt)
+                    except Exception:
+                        pass
+                data[key] = item
+        return data
+
+    def clear_wizard_session(self):
+        for key in list(self.request.session.keys()):
+            if key.startswith(self.SESSION_KEY_PREFIX):
+                del self.request.session[key]
+        self.request.session.modified = True
+
+    def clear_wizard_steps(self):
+        for step_key in ['step1', 'step2', 'step3', 'step4']:
+            session_key = self.get_session_key(step_key)
+            if session_key in self.request.session:
+                del self.request.session[session_key]
+        self.request.session.modified = True
+
+    def _base_context(self, step):
+        return {
+            'step': step,
+            'total_steps': 4,
+            'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
+            'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
+            'csrf_token': get_token(self.request),
+            'logo_url': _logo_url(),
+        }
+
+    def get(self, request, step=1):
+        step = int(step)
+        if step not in self.VALID_STEPS:
+            return redirect('rides:chauffeur_wizard_start')
+
+        context = self._base_context(step)
+        wizard_data = self.get_wizard_data()
+
+        if step == 1:
+            reset_param = (request.GET.get('reset') or '').lower()
+            if reset_param in ('1', 'true', 'yes'):
+                self.clear_wizard_session()
+                wizard_data = {}
+            else:
+                booking_key = self.get_session_key('booking_id')
+                if booking_key in request.session:
+                    self.clear_wizard_steps()
+                    wizard_data = {}
+
+            packages = PricingService.get_chauffeur_packages()
+            form = ChauffeurStep1Form(initial=wizard_data.get('step1', {}))
+            context.update({'form': form, 'packages': packages, 'step1_data': wizard_data.get('step1', {})})
+            return render(request, 'rides/chauffeur_wizard/step1.html', context)
+
+        elif step == 2:
+            if 'step1' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=1)
+
+            packages = PricingService.get_chauffeur_packages()
+            selected_hours = wizard_data['step1'].get('chauffeur_hours')
+            selected_package = next((p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)), None)
+
+            form = Step2PassengersLuggageForm(initial=wizard_data.get('step2', {}))
+            context.update({
+                'form': form,
+                'step1_data': wizard_data['step1'],
+                'selected_package': selected_package,
+            })
+            return render(request, 'rides/chauffeur_wizard/step2.html', context)
+
+        elif step == 3:
+            if 'step2' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=2)
+
+            form = Step3ContactExtraForm(initial=wizard_data.get('step3', {}))
+            context.update({
+                'form': form,
+                'step1_data': wizard_data.get('step1', {}),
+                'step2_data': wizard_data.get('step2', {}),
+            })
+            return render(request, 'rides/chauffeur_wizard/step3.html', context)
+
+        elif step == 4:
+            if 'step3' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=3)
+
+            step1 = wizard_data['step1']
+            hours = step1.get('chauffeur_hours')
+            try:
+                fare_breakdown = PricingService.calculate_chauffeur(hours)
+                context['fare_breakdown'] = fare_breakdown
+                context['estimated_fare'] = fare_breakdown['total']
+            except Exception as e:
+                logger.exception('Chauffeur fare calculation failed')
+                context['fare_error'] = str(e)
+                context['estimated_fare'] = 'Unable to calculate'
+
+            form = Step4FarePaymentForm()
+            context.update({
+                'form': form,
+                'step1_data': step1,
+                'step2_data': wizard_data.get('step2', {}),
+                'step3_data': wizard_data.get('step3', {}),
+            })
+            return render(request, 'rides/chauffeur_wizard/step4.html', context)
+
+        elif step == 5:
+            if not all(k in wizard_data for k in ['step1', 'step2', 'step3']):
+                return redirect('rides:chauffeur_wizard', step=1)
+
+            booking_id = request.session.get(self.get_session_key('booking_id'))
+            booking = None
+            if booking_id:
+                try:
+                    booking = RideBooking.objects.get(pk=booking_id)
+                except Exception:
+                    try:
+                        booking = RideBooking.objects.get(reference=booking_id)
+                    except RideBooking.DoesNotExist:
+                        booking = None
+
+            whatsapp_message = None
+            if booking:
+                try:
+                    from urllib.parse import quote
+                    payment_status = "Pending"
+                    if booking.payment_option == RideBooking.PAYMENT_ON_ARRIVAL:
+                        payment_status = "Pay on Arrival (Cash)"
+                    elif booking.payment_option == RideBooking.PAYMENT_PAYNOW:
+                        payment_status = "Pay Online (Paynow)"
+                    msg = build_booking_message(booking, payment_label_override=payment_status)
+                    phone = settings.TAXI_OWNER_PHONE.lstrip('+')
+                    whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
+                except Exception as e:
+                    logger.exception('Error generating WhatsApp message: %s', e)
+
+            context.update({
+                'step1_data': wizard_data.get('step1', {}),
+                'step2_data': wizard_data.get('step2', {}),
+                'step3_data': wizard_data.get('step3', {}),
+                'booking': booking,
+                'whatsapp_message': whatsapp_message,
+            })
+            return render(request, 'rides/chauffeur_wizard/step5.html', context)
+
+        return redirect('rides:chauffeur_wizard_start')
+
+    def post(self, request, step=1):
+        step = int(step)
+        if step not in self.VALID_STEPS:
+            return redirect('rides:chauffeur_wizard_start')
+
+        wizard_data = self.get_wizard_data()
+        context = self._base_context(step)
+
+        if step == 1:
+            form = ChauffeurStep1Form(request.POST)
+            packages = PricingService.get_chauffeur_packages()
+            if form.is_valid():
+                def _iso(d):
+                    return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
+
+                self.request.session[self.get_session_key('step1')] = {
+                    'pickup_address': form.cleaned_data['pickup_address'],
+                    'pickup_latitude': form.cleaned_data.get('pickup_latitude'),
+                    'pickup_longitude': form.cleaned_data.get('pickup_longitude'),
+                    'pickup_date': _iso(form.cleaned_data.get('pickup_date')),
+                    'pickup_time': _iso(form.cleaned_data.get('pickup_time')),
+                    'chauffeur_hours': form.cleaned_data['chauffeur_hours'],
+                }
+                self.request.session.modified = True
+                return redirect('rides:chauffeur_wizard', step=2)
+
+            context.update({'form': form, 'packages': packages, 'step1_data': {}})
+            return render(request, 'rides/chauffeur_wizard/step1.html', context)
+
+        elif step == 2:
+            if 'step1' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=1)
+
+            form = Step2PassengersLuggageForm(request.POST)
+            packages = PricingService.get_chauffeur_packages()
+            selected_hours = wizard_data['step1'].get('chauffeur_hours')
+            selected_package = next((p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)), None)
+
+            if form.is_valid():
+                passengers_json = request.POST.get('passengers_json') or '[]'
+                num_adults = merged_adult_count(form.cleaned_data['num_adults'], request.POST.get('num_kids_seated', 0))
+
+                over_limit = bool(selected_package and num_adults > int(selected_package.get('max_passengers', 99)))
+
+                self.request.session[self.get_session_key('step2')] = {
+                    'num_adults': num_adults,
+                    'num_kids_seated': 0,
+                    'baby_car_seater': form.cleaned_data['baby_car_seater'],
+                    'num_kids_carried': form.cleaned_data['num_kids_carried'],
+                    'luggage_count': form.cleaned_data['luggage_count'],
+                    'passengers_json': passengers_json,
+                    'salutation': form.cleaned_data.get('salutation'),
+                    'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
+                    'passengers_over_limit': over_limit,
+                }
+                self.request.session.modified = True
+                return redirect('rides:chauffeur_wizard', step=3)
+
+            context.update({
+                'form': form,
+                'step1_data': wizard_data['step1'],
+                'selected_package': selected_package,
+            })
+            return render(request, 'rides/chauffeur_wizard/step2.html', context)
+
+        elif step == 3:
+            if 'step2' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=2)
+
+            form = Step3ContactExtraForm(request.POST)
+            if form.is_valid():
+                self.request.session[self.get_session_key('step3')] = {
+                    'phone': form.cleaned_data['phone'],
+                    'email': form.cleaned_data['email'],
+                    'extra_instructions': form.cleaned_data['extra_instructions'],
+                    'salutation': form.cleaned_data.get('salutation'),
+                    'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
+                }
+                self.request.session.modified = True
+                return redirect('rides:chauffeur_wizard', step=4)
+
+            context.update({
+                'form': form,
+                'step1_data': wizard_data.get('step1', {}),
+                'step2_data': wizard_data.get('step2', {}),
+            })
+            return render(request, 'rides/chauffeur_wizard/step3.html', context)
+
+        elif step == 4:
+            if 'step3' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=3)
+
+            form = Step4FarePaymentForm(request.POST)
+            if form.is_valid():
+                step1 = wizard_data['step1']
+                step2 = wizard_data['step2']
+                step3 = wizard_data['step3']
+                payment_method = form.cleaned_data['payment_method']
+                hours = step1.get('chauffeur_hours')
+
+                try:
+                    fare_breakdown = PricingService.calculate_chauffeur(hours)
+
+                    with transaction.atomic():
+                        booking = RideBooking.objects.create(
+                            pickup_address=step1['pickup_address'],
+                            pickup_lat=Decimal(str(step1['pickup_latitude'])) if step1.get('pickup_latitude') else None,
+                            pickup_lng=Decimal(str(step1['pickup_longitude'])) if step1.get('pickup_longitude') else None,
+                            dropoff_address='Chauffeur Drive — to be arranged',
+                            distance_km=Decimal('0'),
+                            num_adults=step2.get('num_adults', 1),
+                            num_kids_seated=0,
+                            baby_car_seater=step2.get('baby_car_seater', 0),
+                            num_kids_carried=step2.get('num_kids_carried', 0),
+                            luggage_count=step2.get('luggage_count', 0),
+                            phone=step3['phone'],
+                            email=step3['email'],
+                            extra_instructions=step3.get('extra_instructions', ''),
+                            pickup_date=step1.get('pickup_date'),
+                            pickup_time=step1.get('pickup_time'),
+                            salutation=step2.get('salutation'),
+                            passenger_full_name=step2.get('passenger_full_name'),
+                            payment_option=payment_method,
+                            price_breakdown=fare_breakdown,
+                            total_amount=Decimal(str(fare_breakdown['total'])),
+                            ride_type=RideBooking.RIDE_TYPE_CHAUFFEUR,
+                            chauffeur_hours=hours,
+                            chauffeur_package_label=fare_breakdown.get('label', ''),
+                            passengers_over_limit=step2.get('passengers_over_limit', False),
+                            status=RideBooking.STATUS_PENDING,
+                        )
+
+                        bref = getattr(booking, 'reference', None) or str(booking.id)
+                        self.request.session[self.get_session_key('booking_id')] = str(bref)
+                        self.request.session.modified = True
+
+                        immediate_methods = [
+                            RideBooking.PAYMENT_ON_ARRIVAL,
+                            RideBooking.PAYMENT_CARD_ON_ARRIVAL,
+                            RideBooking.PAYMENT_MONEY_TRANSFER,
+                            RideBooking.PAYMENT_PAYLINK,
+                        ]
+
+                        if payment_method in immediate_methods:
+                            booking.status = RideBooking.STATUS_CONFIRMED
+                            booking.save()
+
+                            Payment.objects.create(
+                                booking=booking,
+                                method=payment_method,
+                                amount=booking.total_amount,
+                                status=Payment.STATUS_PENDING,
+                            )
+
+                            payment_label = {
+                                RideBooking.PAYMENT_ON_ARRIVAL: 'Pay on Arrival (Cash)',
+                                RideBooking.PAYMENT_CARD_ON_ARRIVAL: 'Pay on Arrival (POS/CARD)',
+                                RideBooking.PAYMENT_MONEY_TRANSFER: 'Money Transfer Agency',
+                                RideBooking.PAYMENT_PAYLINK: 'Paylink',
+                            }.get(payment_method, payment_method)
+
+                            EmailService.send_owner_notification(booking, payment_status=payment_label)
+                            EmailService.send_customer_notification(booking, payment_status=payment_label)
+
+                            return redirect('rides:chauffeur_wizard', step=5)
+
+                        else:
+                            payment = Payment.objects.create(
+                                booking=booking,
+                                method='PAYNOW',
+                                amount=booking.total_amount,
+                                status=Payment.STATUS_PENDING,
+                            )
+
+                            paynow = PaynowService()
+                            paynow_response = paynow.create_transaction(
+                                amount=float(payment.amount),
+                                reference=str(payment.id),
+                                email=booking.email,
+                                phone=booking.phone,
+                            )
+
+                            self.request.session['last_payment_id'] = str(payment.id)
+                            self.request.session['last_booking_id'] = str(bref)
+                            self.request.session.modified = True
+
+                            payment.paynow_response = paynow_response
+                            candidates = [
+                                paynow_response.get('paynowreference'),
+                                paynow_response.get('paynow_reference'),
+                                paynow_response.get('reference'),
+                                paynow_response.get('transaction_id'),
+                            ]
+                            for c in candidates:
+                                if c:
+                                    payment.paynow_reference = str(c)
+                                    break
+                            payment.save()
+
+                            redirect_url = paynow_response.get('redirectUrl') or paynow_response.get('redirect_url')
+                            if redirect_url:
+                                return redirect(redirect_url)
+
+                            return render(request, 'rides/paynow_redirect.html', {
+                                'redirect_url': redirect_url,
+                                'payment_id': str(payment.id),
+                                'booking_id': str(bref),
+                            })
+
+                except Exception as e:
+                    logger.exception('Chauffeur booking creation failed')
+                    context['error'] = f'Failed to create booking: {e}'
+                    return render(request, 'rides/chauffeur_wizard/step4.html', context)
+
+            # Form invalid — re-render with fare
+            step1 = wizard_data.get('step1', {})
+            hours = step1.get('chauffeur_hours')
+            try:
+                fare_breakdown = PricingService.calculate_chauffeur(hours)
+                context['fare_breakdown'] = fare_breakdown
+            except Exception:
+                context['fare_error'] = 'Unable to calculate fare'
+
+            context.update({
+                'form': form,
+                'step1_data': step1,
+                'step2_data': wizard_data.get('step2', {}),
+                'step3_data': wizard_data.get('step3', {}),
+            })
+            return render(request, 'rides/chauffeur_wizard/step4.html', context)
+
+        return redirect('rides:chauffeur_wizard_start')
 
 
 # ============================================================================
@@ -837,10 +1298,9 @@ class DistanceFareCalcView(APIView):
             )
 
             # Calculate fare
-            fare_breakdown = PricingService.calculate(
+            fare_breakdown = _calculate_fare(
                 distance_km=distance_km,
                 num_adults=num_adults,
-                num_kids_seated=0,
                 baby_car_seater=request.POST.get('baby_car_seater', 0),
                 num_kids_carried=num_kids_carried,
                 luggage_count=luggage_count,
@@ -863,6 +1323,22 @@ class DistanceFareCalcView(APIView):
                 {'error': f'Calculation failed: {e}'},
                 status=500
             )
+
+
+# ============================================================================
+# Service Selector (Landing / Entry Point)
+# ============================================================================
+
+class ServiceSelectorView(TemplateView):
+    """Landing page — user picks Regular/Long Distance or Chauffeur Drive."""
+    template_name = 'rides/service_selector.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['TAXI_OWNER_PHONE'] = settings.TAXI_OWNER_PHONE
+        ctx['chauffeur_packages'] = PricingService.get_chauffeur_packages()
+        ctx['logo_url'] = _logo_url()
+        return ctx
 
 
 # ============================================================================
