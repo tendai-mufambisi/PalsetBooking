@@ -113,6 +113,14 @@
                 </div>
             {% endif %}
 
+            <!-- Special Notes -->
+            {% if booking.extra_instructions %}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <span>Special Notes:</span>
+                <strong style="text-align: right; max-width: 60%;">{{ booking.extra_instructions }}</strong>
+            </div>
+            {% endif %}
+
             <!-- Contact -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Phone:</span>

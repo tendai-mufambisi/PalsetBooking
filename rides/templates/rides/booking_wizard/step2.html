@@ -8,19 +8,25 @@
 <form method="POST" id="step2_form">
     {% csrf_token %}
 
-    <!-- Passengers Section -->
-    <div class="form-group">
-        <label style="font-weight: bold; margin-bottom: 10px; display: block;"><i class="bi bi-people"></i> Passengers</label>
-        <div id="passengers_container">
-            <!-- Passengers will be added here dynamically -->
+    <!-- Booking Passenger -->
+    <div class="form-group" style="margin-bottom: 20px;">
+        <label style="font-weight: bold; margin-bottom: 10px; display: block;"><i class="bi bi-person-check"></i> Your Full Name</label>
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px;">
+            <div>
+                <label style="font-size: 0.875rem; margin-bottom: 5px; display: block;">Salutation</label>
+                {{ form.salutation }}
+            </div>
+            <div>
+                <label style="font-size: 0.875rem; margin-bottom: 5px; display: block;">Full Name</label>
+                {{ form.passenger_full_name }}
+                {% if form.passenger_full_name.errors %}
+                    <div class="error-message">{{ form.passenger_full_name.errors }}</div>
+                {% endif %}
+            </div>
         </div>
-        <button type="button" id="add_passenger_btn" class="btn btn-sm btn-secondary" style="width: 100%; margin-top: 10px;">
-            <i class="bi bi-plus-circle"></i> Add Passenger
-        </button>
-        {% if form.passengers_json.errors %}
-            <div class="error-message">{{ form.passengers_json.errors }}</div>
-        {% endif %}
     </div>
+
+
     
     <!-- Hidden JSON with passenger details (fallback if form field not present) -->
     <input type="hidden" id="passengers_json" name="passengers_json" value="[]">

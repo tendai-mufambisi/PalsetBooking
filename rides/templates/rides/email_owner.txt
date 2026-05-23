@@ -20,5 +20,8 @@ Passenger name: {% if booking.passenger_full_name %}{{ booking.salutation }} {{ 
 Extra instructions: {{ booking.extra_instructions }}
 
 Payment status: {{ payment_status }}
+USD ${{ booking.total_amount }}
+
+
 
 Please call the driver/owner at {{ taxi_owner_phone }} to confirm the booking.

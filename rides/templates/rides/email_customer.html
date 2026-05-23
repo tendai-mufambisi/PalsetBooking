@@ -42,7 +42,7 @@
           <tr><td>Arrival flight</td><td>{{ booking.arrival_airline }} {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %}{% if booking.arrival_time %} {{ booking.arrival_time }}{% endif %}</td></tr>
           {% endif %}
           <tr><td>Distance</td><td>{{ booking.distance_km }} km</td></tr>
-          {% if booking.extra_instructions %}<tr><td>Notes</td><td>{{ booking.extra_instructions }}</td></tr>{% endif %}
+          <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"—" }}</td></tr>
           <tr><td>Payment status</td><td><span class="badge {% if payment_status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">{{ payment_status }}</span></td></tr>
           <tr class="total-row"><td>Total</td><td>USD ${{ booking.total_amount }}</td></tr>
         </table>

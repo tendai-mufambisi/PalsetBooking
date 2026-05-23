@@ -122,6 +122,18 @@ class Step2PassengersLuggageForm(forms.Form):
         initial=0,
         widget=forms.HiddenInput()
     )
+    salutation = forms.CharField(
+        max_length=32,
+        required=False,
+        widget=forms.Select(choices=[
+            ('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss'), ('Ms', 'Ms'),
+            ('Dr', 'Dr'), ('Professor', 'Professor'), ('Rev', 'Rev'), ('Hon', 'Hon'),
+        ])
+    )
+    passenger_full_name = forms.CharField(
+        max_length=256,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name (e.g. John Doe)'})
+    )
 
     def clean(self):
         cleaned = super().clean()
