@@ -1,52 +1,145 @@
 {% extends "rides/chauffeur_wizard/base_wizard.html" %}
 
-{% block title %}Step 3: Contact Details - Chauffeur Drive{% endblock %}
+{% block title %}Step 3: Passenger Details - Chauffeur Drive{% endblock %}
 
 {% block content %}
-<h2 style="font-size:20px; margin-bottom:6px; color:#1e3a5f;">Contact Details</h2>
-<p style="font-size:13px; color:#666; margin-bottom:24px;">We will use this to confirm your booking and send your driver's details.</p>
+<h2 style="font-size:20px; margin-bottom:4px; color:#1e3a5f;">Passenger Details</h2>
+<p style="font-size:13px; color:#666; margin-bottom:20px;">Tell us who we are picking up and how many passengers will be travelling.</p>
 
-{% if form.non_field_errors %}
-<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ form.non_field_errors }}</div>
+{% if selected_package %}
+<div style="background:#f0f4f8; border-left:4px solid #1e3a5f; border-radius:4px; padding:10px 14px; margin-bottom:20px; font-size:13px;">
+    <strong>{{ selected_package.hours }}-Hour Package</strong> &bull;
+    Up to {{ selected_package.max_passengers }} passengers standard &bull; ${{ selected_package.price }}
+</div>
 {% endif %}
 
-<form method="POST">
+<!-- Over-limit warning -->
+<div class="warning-banner" id="over_limit_banner" style="display:none;">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+        <strong>Passengers exceed the standard package limit.</strong><br>
+        Your booking will be flagged for follow-up. Easy Transit will contact you to confirm arrangements and any additional cost. You can still proceed.
+    </div>
+</div>
+
+<form method="POST" id="chauffeur_step3_form">
     {% csrf_token %}
+    <input type="hidden" id="num_adults" name="num_adults" value="{{ step3_data.num_adults|default:'1' }}">
+    <input type="hidden" id="num_kids_carried" name="num_kids_carried" value="{{ step3_data.num_kids_carried|default:'0' }}">
+    <input type="hidden" id="luggage_count" name="luggage_count" value="{{ step3_data.luggage_count|default:'0' }}">
+    <input type="hidden" id="baby_car_seater" name="baby_car_seater" value="{{ step3_data.baby_car_seater|default:'0' }}">
 
-    <div class="form-group">
-        <label class="form-label" for="phone"><i class="bi bi-telephone"></i> Phone Number <span style="color:#dc3545;">*</span></label>
-        <input type="tel" name="phone" id="phone" class="form-control"
-               placeholder="+263 77 000 0000"
-               value="{{ step3_data.phone|default:'' }}">
-        {% if form.phone.errors %}
-        <div class="error-message">{{ form.phone.errors }}</div>
-        {% endif %}
-        <small class="form-text">Your driver will call this number.</small>
+    <!-- Main Passenger Name -->
+    <div class="form-group" style="margin-bottom:24px; background:#f8f9fa; border-radius:8px; padding:16px;">
+        <label style="font-weight:700; margin-bottom:12px; display:block; color:#1e3a5f;">
+            <i class="bi bi-person-check-fill"></i> Name of Person Being Picked Up <span style="color:#dc3545;">*</span>
+        </label>
+        <p style="font-size:12px; color:#666; margin-bottom:12px;">
+            Please provide the full name of the main passenger — the person our driver will be meeting and collecting.
+        </p>
+        <div style="display:grid; grid-template-columns:140px 1fr; gap:10px;">
+            <div>
+                <label style="font-size:12px; font-weight:600; margin-bottom:5px; display:block; color:#555;">Title</label>
+                {{ form.salutation }}
+            </div>
+            <div>
+                <label style="font-size:12px; font-weight:600; margin-bottom:5px; display:block; color:#555;">Full Name</label>
+                {{ form.passenger_full_name }}
+                {% if form.passenger_full_name.errors %}
+                <div class="error-message" style="margin-top:4px;">{{ form.passenger_full_name.errors }}</div>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
-    <div class="form-group">
-        <label class="form-label" for="email"><i class="bi bi-envelope"></i> Email Address</label>
-        <input type="email" name="email" id="email" class="form-control"
-               placeholder="your@email.com"
-               value="{{ step3_data.email|default:'' }}">
-        {% if form.email.errors %}
-        <div class="error-message">{{ form.email.errors }}</div>
-        {% endif %}
-        <small class="form-text">For booking confirmation email (optional).</small>
-    </div>
+    <!-- Passenger Count -->
+    <div style="padding-top:4px;">
+        <h4 style="margin-bottom:16px; font-size:15px; color:#1e3a5f;"><i class="bi bi-people"></i> Number of Passengers</h4>
 
-    <div class="form-group">
-        <label class="form-label" for="extra_instructions"><i class="bi bi-chat-text"></i> Special Instructions</label>
-        <textarea name="extra_instructions" id="extra_instructions" class="form-control" rows="3"
-                  placeholder="e.g. planned stops, specific areas, special requirements">{{ step3_data.extra_instructions|default:'' }}</textarea>
-        {% if form.extra_instructions.errors %}
-        <div class="error-message">{{ form.extra_instructions.errors }}</div>
-        {% endif %}
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-person"></i> Seated Passengers (adults + children in seats)</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_adults">&#8722;</button>
+                <input type="text" id="display_num_adults" title="Number of seated passengers" readonly value="{{ step3_data.num_adults|default:'1' }}">
+                <button type="button" class="btn-increment" data-field="num_adults">+</button>
+            </div>
+            <small class="form-text">Anyone occupying a seat counts here.</small>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-shield-baby"></i> Baby Car Seat&nbsp;&nbsp;<span style="color:#10b981; font-weight:600;">$10 flat fee</span></label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="baby_car_seater">&#8722;</button>
+                <input type="text" id="display_baby_car_seater" title="Number of baby car seats" readonly value="{{ step3_data.baby_car_seater|default:'0' }}">
+                <button type="button" class="btn-increment" data-field="baby_car_seater">+</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-backpack"></i> Infants / Kids Carried <small class="form-text">(free)</small></label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_kids_carried">&#8722;</button>
+                <input type="text" id="display_num_kids_carried" title="Number of kids carried" readonly value="{{ step3_data.num_kids_carried|default:'0' }}">
+                <button type="button" class="btn-increment" data-field="num_kids_carried">+</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label"><i class="bi bi-suitcase-lg"></i> Luggage Bags</label>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="luggage_count">&#8722;</button>
+                <input type="text" id="display_luggage_count" title="Number of luggage bags" readonly value="{{ step3_data.luggage_count|default:'0' }}">
+                <button type="button" class="btn-increment" data-field="luggage_count">+</button>
+            </div>
+            <small class="form-text">First 5 bags free, then charged per extra bag.</small>
+        </div>
     </div>
 
     <div class="btn-group-wizard">
         <a href="{% url 'rides:chauffeur_wizard' step=2 %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
-        <button type="submit" class="btn btn-primary">Next: Payment <i class="bi bi-arrow-right"></i></button>
+        <button type="submit" class="btn btn-primary">Next: Contact <i class="bi bi-arrow-right"></i></button>
     </div>
 </form>
+
+<script>
+const maxPassengers = {% if selected_package %}{{ selected_package.max_passengers }}{% else %}99{% endif %};
+
+const fields = {
+    num_adults:       { min: 1, max: 20, initial: {{ step3_data.num_adults|default:1 }} },
+    baby_car_seater:  { min: 0, max: 5,  initial: {{ step3_data.baby_car_seater|default:0 }} },
+    num_kids_carried: { min: 0, max: 10, initial: {{ step3_data.num_kids_carried|default:0 }} },
+    luggage_count:    { min: 0, max: 20, initial: {{ step3_data.luggage_count|default:0 }} },
+};
+
+function checkOverLimit() {
+    const adults = parseInt(document.getElementById('num_adults').value) || 1;
+    document.getElementById('over_limit_banner').style.display = adults > maxPassengers ? 'flex' : 'none';
+}
+
+document.querySelectorAll('.btn-increment').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        const field = btn.dataset.field;
+        const hidden = document.getElementById(field);
+        const display = document.getElementById('display_' + field);
+        let val = parseInt(hidden.value) || 0;
+        if (val < fields[field].max) { val++; hidden.value = val; display.value = val; }
+        checkOverLimit();
+    });
+});
+
+document.querySelectorAll('.btn-decrement').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        const field = btn.dataset.field;
+        const hidden = document.getElementById(field);
+        const display = document.getElementById('display_' + field);
+        let val = parseInt(hidden.value) || 0;
+        if (val > fields[field].min) { val--; hidden.value = val; display.value = val; }
+        checkOverLimit();
+    });
+});
+
+checkOverLimit();
+</script>
 {% endblock %}

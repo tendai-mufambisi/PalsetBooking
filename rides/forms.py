@@ -70,6 +70,11 @@ class Step1PickupDropoffForm(forms.Form):
     arrival_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'id_arrival_date'}))
     arrival_time = forms.TimeField(required=False, widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time', 'id': 'id_arrival_time'}))
 
+    distance_km = forms.FloatField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'id': 'distance_km'}),
+    )
+
     def clean(self):
         cleaned = super().clean()
         pickup_lat = cleaned.get('pickup_latitude')
@@ -155,7 +160,7 @@ class Step3ContactExtraForm(forms.Form):
         })
     )
     email = forms.EmailField(
-        required=False,
+        required=True,
         widget=forms.EmailInput(attrs={
             'class': 'form-control',
             'placeholder': 'your@email.com',
@@ -187,14 +192,16 @@ class Step3ContactExtraForm(forms.Form):
     def clean(self):
         cleaned = super().clean()
         phone = cleaned.get('phone', '').strip()
-        
+
         if not phone:
             raise ValidationError('Phone number is required.')
-        
-        # Simple phone validation: must have at least 5 digits
+
         if len([c for c in phone if c.isdigit()]) < 5:
             raise ValidationError('Phone number must contain at least 5 digits.')
-        
+
+        if not cleaned.get('email', '').strip():
+            raise ValidationError('Email address is required.')
+
         return cleaned
 
 
@@ -253,14 +260,30 @@ class Step5ConfirmationForm(forms.Form):
 # ============================================================================
 
 class ChauffeurStep1Form(forms.Form):
-    """Chauffeur Step 1: Pickup location, date/time, and package duration."""
+    """Chauffeur Step 1: Package duration selection only."""
+
+    chauffeur_hours = forms.IntegerField(
+        widget=forms.HiddenInput(attrs={'id': 'chauffeur_hours'}),
+        min_value=1,
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        if not cleaned.get('chauffeur_hours'):
+            raise ValidationError('Please select a package duration.')
+        return cleaned
+
+
+class ChauffeurStep2Form(forms.Form):
+    """Chauffeur Step 2: Trip details — pickup location, dates, times, and trip summary."""
 
     pickup_address = forms.CharField(
         max_length=512,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter pickup location',
+            'placeholder': 'Search for your pickup name or starting point',
             'id': 'chauffeur_pickup_address',
+            'autocomplete': 'off',
         })
     )
     pickup_latitude = forms.FloatField(
@@ -271,23 +294,77 @@ class ChauffeurStep1Form(forms.Form):
         widget=forms.HiddenInput(attrs={'id': 'chauffeur_pickup_longitude'}),
         required=False,
     )
+    pickup_address_detail = forms.CharField(
+        max_length=256,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g. Gate 2, Unit 5B, specific street or landmark',
+            'id': 'chauffeur_pickup_address_detail',
+        })
+    )
     pickup_date = forms.DateField(
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'chauffeur_pickup_date'})
     )
     pickup_time = forms.TimeField(
         widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time', 'id': 'chauffeur_pickup_time'})
     )
-    chauffeur_hours = forms.IntegerField(
-        widget=forms.HiddenInput(attrs={'id': 'chauffeur_hours'}),
-        min_value=1,
+    approximate_end_time = forms.TimeField(
+        required=False,
+        widget=forms.TimeInput(attrs={'class': 'form-control', 'type': 'time', 'id': 'chauffeur_end_time'})
+    )
+    trip_summary = forms.CharField(
+        max_length=500,
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'id': 'trip_summary',
+            'placeholder': 'e.g. Airport pickup, then RBZ, Joina City, CBD, Avondale',
+        })
     )
 
     def clean(self):
         cleaned = super().clean()
         if not cleaned.get('pickup_latitude') or not cleaned.get('pickup_longitude'):
             raise ValidationError('Please select a valid pickup location from the suggestions.')
-        if not cleaned.get('chauffeur_hours'):
-            raise ValidationError('Please select a package duration.')
+        if not cleaned.get('pickup_date'):
+            raise ValidationError('Please provide the pickup date.')
+        if not cleaned.get('pickup_time'):
+            raise ValidationError('Please provide the start time.')
+        return cleaned
+
+
+class ChauffeurStep4ContactForm(forms.Form):
+    """Chauffeur Step 4: Contact details — phone and email both required."""
+
+    phone = forms.CharField(
+        max_length=32,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '+263 77 000 0000',
+            'id': 'phone',
+            'type': 'tel',
+        })
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'your@email.com',
+            'id': 'email',
+        })
+    )
+
+    def clean(self):
+        cleaned = super().clean()
+        phone = cleaned.get('phone', '').strip()
+        if not phone:
+            raise ValidationError('Phone number is required.')
+        if len([c for c in phone if c.isdigit()]) < 5:
+            raise ValidationError('Phone number must contain at least 5 digits.')
+        if not cleaned.get('email'):
+            raise ValidationError('Email address is required.')
         return cleaned
 
 

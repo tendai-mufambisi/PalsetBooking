@@ -42,14 +42,14 @@
           <tr><td>Arrival flight</td><td>{{ booking.arrival_airline }} {{ booking.arrival_flight_number }} on {% if booking.arrival_date %}{{ booking.arrival_date }}{% endif %}{% if booking.arrival_time %} {{ booking.arrival_time }}{% endif %}</td></tr>
           {% endif %}
           <tr><td>Distance</td><td>{{ booking.distance_km }} km</td></tr>
-          <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"—" }}</td></tr>
+          <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"N/A" }}</td></tr>
           <tr><td>Payment status</td><td><span class="badge {% if payment_status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">{{ payment_status }}</span></td></tr>
           <tr class="total-row"><td>Total</td><td>USD ${{ booking.total_amount }}</td></tr>
         </table>
         <p style="margin-top:20px;font-size:13px;color:#4b7280">We may contact you at <strong>{{ booking.phone }}</strong> if needed. Thank you for choosing EasyTransit!</p>
       </div>
       <div class="footer">
-        <p>EasyTransit &mdash; enquiries@easytransit.co.zw</p>
+        <p>EasyTransit | enquiries@easytransit.co.zw</p>
       </div>
     </div>
   </body>

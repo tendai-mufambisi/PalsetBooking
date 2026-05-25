@@ -33,10 +33,10 @@
     </div>
   </div>
 
-  <!-- Pricing -->
+  <!-- City / Short Distance Pricing -->
   <div class="dash-card mb-3">
     <div class="dash-card-header">
-      <i class="bi bi-currency-dollar me-2" style="color:#10b981"></i>Fare Pricing
+      <i class="bi bi-currency-dollar me-2" style="color:#10b981"></i>City / Short Distance Pricing
     </div>
     <div class="dash-card-body">
       <form method="post">
@@ -108,6 +108,74 @@
         </div>
 
         <button type="submit" class="btn-green"><i class="bi bi-floppy-fill me-2"></i>Save Pricing</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Long Distance Pricing -->
+  <div class="dash-card mb-3">
+    <div class="dash-card-header">
+      <i class="bi bi-signpost-split-fill me-2" style="color:#f59e0b"></i>Long Distance Pricing
+    </div>
+    <div class="dash-card-body">
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;font-size:12px;color:#92400e;margin-bottom:18px">
+        <i class="bi bi-info-circle me-2"></i>
+        Trips at or beyond the <strong>distance threshold</strong> below are automatically treated as Long Distance and charged at the flat per-km rate. The booking form will warn customers before they reach payment.
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="long_distance">
+
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Long Distance threshold (km)</label>
+            <input type="number" name="ld_threshold_km" value="{{ site_settings.long_distance_threshold_km }}" step="1" min="1" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Trips at or beyond this distance are priced as Long Distance. Default: {{ ld_default_threshold }} km</div>
+          </div>
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Rate per km ($/km)</label>
+            <input type="number" name="ld_per_km" value="{{ site_settings.long_distance_per_km }}" step="0.01" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Flat rate charged per kilometre. Default: ${{ ld_default_per_km }}/km</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Passengers</div>
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Base passengers covered</label>
+            <input type="number" name="ld_base_passengers" value="{{ site_settings.long_distance_base_passengers }}" min="1" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Passengers covered by the base per-km fare. Default: {{ ld_default_base_pax }}</div>
+          </div>
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Extra passenger fee ($)</label>
+            <input type="number" name="ld_extra_pax_fee" value="{{ site_settings.long_distance_extra_pax_fee }}" step="0.01" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Flat fee per passenger above the base. Default: ${{ ld_default_extra_pax }} each</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px">Luggage</div>
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Free luggage items</label>
+            <input type="number" name="ld_free_luggage" value="{{ site_settings.long_distance_free_luggage }}" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">First N bags are included. Default: {{ ld_default_free_luggage }}</div>
+          </div>
+          <div class="col-sm-6">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Extra bag fee ($/bag)</label>
+            <input type="number" name="ld_luggage_fee" value="{{ site_settings.long_distance_luggage_fee }}" step="0.01" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Charged for each bag beyond the free allowance. Default: ${{ ld_default_luggage_fee }}</div>
+          </div>
+        </div>
+
+        <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:8px;padding:12px 14px;font-size:12px;color:#065f46;margin-bottom:18px">
+          <strong>Current pricing summary:</strong>
+          ${{ site_settings.long_distance_per_km }}/km &bull;
+          up to {{ site_settings.long_distance_base_passengers }} passengers included &bull;
+          extra passengers ${{ site_settings.long_distance_extra_pax_fee }} each &bull;
+          {{ site_settings.long_distance_free_luggage }} bags free then ${{ site_settings.long_distance_luggage_fee }}/bag
+        </div>
+
+        <button type="submit" class="btn-green"><i class="bi bi-floppy-fill me-2"></i>Save Long Distance Pricing</button>
       </form>
     </div>
   </div>

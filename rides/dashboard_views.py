@@ -443,7 +443,7 @@ class DashboardSettingsView(View):
     @_require_dashboard
     @_require_owner
     def get(self, request):
-        from rides.services.pricing import DEFAULT_PRICING
+        from rides.services.pricing import DEFAULT_PRICING, DEFAULT_LONG_DISTANCE
         site_settings = SiteSettings.get_settings()
         brackets = site_settings.pricing_brackets or DEFAULT_PRICING['BRACKETS']
         return render(request, 'dashboard/settings.html', {
@@ -451,6 +451,12 @@ class DashboardSettingsView(View):
             'django_email': settings.TAXI_OWNER_EMAIL,
             'django_phone': settings.TAXI_OWNER_PHONE,
             'pricing_brackets': brackets,
+            'ld_default_threshold': DEFAULT_LONG_DISTANCE['THRESHOLD_KM'],
+            'ld_default_per_km': DEFAULT_LONG_DISTANCE['PER_KM'],
+            'ld_default_base_pax': DEFAULT_LONG_DISTANCE['BASE_PASSENGERS'],
+            'ld_default_extra_pax': DEFAULT_LONG_DISTANCE['EXTRA_PAX_FEE'],
+            'ld_default_free_luggage': DEFAULT_LONG_DISTANCE['FREE_LUGGAGE_ITEMS'],
+            'ld_default_luggage_fee': DEFAULT_LONG_DISTANCE['LUGGAGE_FEE'],
         })
 
     @_require_dashboard
@@ -481,9 +487,23 @@ class DashboardSettingsView(View):
                         })
                 site_settings.pricing_brackets = brackets
                 site_settings.save()
-                messages.success(request, 'Pricing updated successfully.')
+                messages.success(request, 'City pricing updated successfully.')
             except (ValueError, TypeError) as e:
                 messages.error(request, f'Invalid pricing value: {e}')
+
+        elif form_type == 'long_distance':
+            try:
+                site_settings.long_distance_threshold_km = float(request.POST.get('ld_threshold_km', 80))
+                site_settings.long_distance_per_km = float(request.POST.get('ld_per_km', 1.40))
+                site_settings.long_distance_base_passengers = int(request.POST.get('ld_base_passengers', 3))
+                site_settings.long_distance_extra_pax_fee = float(request.POST.get('ld_extra_pax_fee', 40.0))
+                site_settings.long_distance_free_luggage = int(request.POST.get('ld_free_luggage', 5))
+                site_settings.long_distance_luggage_fee = float(request.POST.get('ld_luggage_fee', 5.0))
+                site_settings.save()
+                messages.success(request, 'Long distance pricing updated successfully.')
+            except (ValueError, TypeError) as e:
+                messages.error(request, f'Invalid long distance pricing value: {e}')
+
         else:
             email = request.POST.get('taxi_owner_email', '').strip()
             phone = request.POST.get('taxi_owner_phone', '').strip()

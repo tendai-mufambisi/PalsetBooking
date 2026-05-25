@@ -52,6 +52,7 @@ class RideBooking(models.Model):
     # Pickup scheduling and passenger details
     pickup_date = models.DateField(null=True, blank=True)
     pickup_time = models.TimeField(null=True, blank=True)
+    approximate_end_time = models.TimeField(null=True, blank=True)
 
     # Airport / flight details (optional; required only for airport pickups)
     pickup_is_airport = models.BooleanField(default=False)
@@ -158,7 +159,7 @@ class SiteSettings(models.Model):
     )
     long_distance_per_km = models.DecimalField(max_digits=6, decimal_places=2, default=1.40)
     long_distance_base_passengers = models.PositiveSmallIntegerField(default=3)
-    long_distance_extra_pax_fee = models.DecimalField(max_digits=6, decimal_places=2, default=30.0)
+    long_distance_extra_pax_fee = models.DecimalField(max_digits=6, decimal_places=2, default=40.0)
     long_distance_free_luggage = models.PositiveSmallIntegerField(default=5)
     long_distance_luggage_fee = models.DecimalField(max_digits=6, decimal_places=2, default=5.0)
 

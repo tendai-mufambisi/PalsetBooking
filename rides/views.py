@@ -44,6 +44,8 @@ from .forms import (
     Step5ConfirmationForm,
     BookingForm,
     ChauffeurStep1Form,
+    ChauffeurStep2Form,
+    ChauffeurStep4ContactForm,
 )
 from .serializers import (
     CreateBookingSerializer,
@@ -160,8 +162,18 @@ def build_booking_message(booking, eta_minutes=None, payment_label_override: Opt
                         arr_parts.append(f"Arrival time: {at}")
                 parts.append("*Arrival:* " + ", ".join(arr_parts))
 
-        parts.append(f"*Dropoff:* {booking.dropoff_address}")
-        parts.append(f"*Distance:* {booking.distance_km} km")
+        if ride_type != 'chauffeur':
+            parts.append(f"*Dropoff:* {booking.dropoff_address}")
+            parts.append(f"*Distance:* {booking.distance_km} km")
+        else:
+            aet = getattr(booking, 'approximate_end_time', None)
+            if aet:
+                try:
+                    parts.append(f"*Approx End Time:* {aet.strftime('%H:%M')}")
+                except Exception:
+                    parts.append(f"*Approx End Time:* {aet}")
+            if getattr(booking, 'extra_instructions', None):
+                parts.append(f"*Trip Summary:* {booking.extra_instructions}")
         if eta_minutes:
             parts.append(f"*Estimated Time:* {eta_minutes} minutes")
 
@@ -316,6 +328,7 @@ class MultiStepBookingWizardView(View):
             'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
             'csrf_token': get_token(request),
             'logo_url': _logo_url(),
+            'ld_threshold_km': PricingService._get_ld_threshold(),
         }
 
         # Restore previous step data from session if user navigates back
@@ -354,8 +367,12 @@ class MultiStepBookingWizardView(View):
             form = Step2PassengersLuggageForm(
                 initial=wizard_data.get('step2', {})
             )
+            step1 = wizard_data['step1']
+            distance_km = float(step1.get('distance_km') or 0)
             context['form'] = form
-            context['step1_data'] = wizard_data['step1']
+            context['step1_data'] = step1
+            context['is_long_distance'] = PricingService.is_long_distance(distance_km) if distance_km > 0 else False
+            context['ld_threshold_km'] = PricingService._get_ld_threshold()
             return render(request, 'rides/booking_wizard/step2.html', context)
 
         elif step == 3:
@@ -515,7 +532,7 @@ class MultiStepBookingWizardView(View):
                     'dropoff_address': form.cleaned_data['dropoff_address'],
                     'dropoff_latitude': form.cleaned_data['dropoff_latitude'],
                     'dropoff_longitude': form.cleaned_data['dropoff_longitude'],
-                    'distance_km': 0,  # Will be calculated in Step 4
+                    'distance_km': form.cleaned_data.get('distance_km') or 0,
                     'pickup_date': _iso_date(form.cleaned_data.get('pickup_date')),
                     'pickup_time': _iso_date(form.cleaned_data.get('pickup_time')),
                     'pickup_is_airport': bool(form.cleaned_data.get('pickup_is_airport')),
@@ -807,22 +824,22 @@ class MultiStepBookingWizardView(View):
 
 
 # ============================================================================
-# Chauffeur Drive Booking Wizard (Session-Based)
+# Chauffeur Drive Booking Wizard (Session-Based, 6-Step)
 # ============================================================================
 
 class ChauffeurBookingWizardView(View):
     """
-    Separate booking wizard for Chauffeur Drive service.
+    Chauffeur Drive booking wizard — 6-step flow.
 
-    Flow:
-    - Step 1: Pickup address + date/time + package selection (4/6/8/12 hrs)
-    - Step 2: Passengers & luggage (with over-limit warning)
-    - Step 3: Contact & extra instructions
-    - Step 4: Fare preview & payment method
-    - Step 5: Confirmation
+    Step 1: Package selection (duration only)
+    Step 2: Trip details (pickup location, date, start/end time, trip summary)
+    Step 3: Passenger details (main passenger name + counts)
+    Step 4: Contact details (phone + email, both required)
+    Step 5: Payment (full booking summary + payment method)
+    Step 6: Confirmation (read-only)
     """
 
-    VALID_STEPS = [1, 2, 3, 4, 5]
+    VALID_STEPS = [1, 2, 3, 4, 5, 6]
     SESSION_KEY_PREFIX = 'chauffeur_wizard'
 
     def get_session_key(self, key):
@@ -834,9 +851,10 @@ class ChauffeurBookingWizardView(View):
             session_key = self.get_session_key(key)
             if session_key in self.request.session:
                 item = dict(self.request.session[session_key])
-                if key == 'step1':
+                if key == 'step2':
                     pd = item.get('pickup_date')
                     pt = item.get('pickup_time')
+                    aet = item.get('approximate_end_time')
                     try:
                         if isinstance(pd, str) and pd:
                             item['pickup_date'] = datetime.date.fromisoformat(pd)
@@ -845,6 +863,11 @@ class ChauffeurBookingWizardView(View):
                     try:
                         if isinstance(pt, str) and pt:
                             item['pickup_time'] = datetime.time.fromisoformat(pt)
+                    except Exception:
+                        pass
+                    try:
+                        if isinstance(aet, str) and aet:
+                            item['approximate_end_time'] = datetime.time.fromisoformat(aet)
                     except Exception:
                         pass
                 data[key] = item
@@ -866,12 +889,27 @@ class ChauffeurBookingWizardView(View):
     def _base_context(self, step):
         return {
             'step': step,
-            'total_steps': 4,
+            'total_steps': 5,
             'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
             'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
             'csrf_token': get_token(self.request),
             'logo_url': _logo_url(),
         }
+
+    def _label_packages(self, packages):
+        """Add display_label and billing_note to each package."""
+        result = []
+        for i, pkg in enumerate(packages):
+            pkg = dict(pkg)
+            if i == 0:
+                pkg['display_label'] = f"Up to {pkg['hours']} Hours"
+                pkg['billing_note'] = f"Ideal for trips up to {pkg['hours']} hours"
+            else:
+                prev_hours = packages[i - 1]['hours']
+                pkg['display_label'] = f"{prev_hours}hrs+ to {pkg['hours']} Hours"
+                pkg['billing_note'] = f"Any trip over {prev_hours}hrs is billed at the {pkg['hours']}-hour rate"
+            result.append(pkg)
+        return result
 
     def get(self, request, step=1):
         step = int(step)
@@ -893,8 +931,13 @@ class ChauffeurBookingWizardView(View):
                     wizard_data = {}
 
             packages = PricingService.get_chauffeur_packages()
+            labeled_packages = self._label_packages(packages)
             form = ChauffeurStep1Form(initial=wizard_data.get('step1', {}))
-            context.update({'form': form, 'packages': packages, 'step1_data': wizard_data.get('step1', {})})
+            context.update({
+                'form': form,
+                'packages': labeled_packages,
+                'step1_data': wizard_data.get('step1', {}),
+            })
             return render(request, 'rides/chauffeur_wizard/step1.html', context)
 
         elif step == 2:
@@ -902,13 +945,17 @@ class ChauffeurBookingWizardView(View):
                 return redirect('rides:chauffeur_wizard', step=1)
 
             packages = PricingService.get_chauffeur_packages()
+            labeled_packages = self._label_packages(packages)
             selected_hours = wizard_data['step1'].get('chauffeur_hours')
-            selected_package = next((p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)), None)
-
-            form = Step2PassengersLuggageForm(initial=wizard_data.get('step2', {}))
+            selected_package = next(
+                (p for p in labeled_packages if int(p.get('hours', 0)) == int(selected_hours or 0)),
+                None,
+            )
+            form = ChauffeurStep2Form(initial=wizard_data.get('step2', {}))
             context.update({
                 'form': form,
                 'step1_data': wizard_data['step1'],
+                'step2_data': wizard_data.get('step2', {}),
                 'selected_package': selected_package,
             })
             return render(request, 'rides/chauffeur_wizard/step2.html', context)
@@ -917,11 +964,19 @@ class ChauffeurBookingWizardView(View):
             if 'step2' not in wizard_data:
                 return redirect('rides:chauffeur_wizard', step=2)
 
-            form = Step3ContactExtraForm(initial=wizard_data.get('step3', {}))
+            packages = PricingService.get_chauffeur_packages()
+            selected_hours = wizard_data['step1'].get('chauffeur_hours')
+            selected_package = next(
+                (p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)),
+                None,
+            )
+            form = Step2PassengersLuggageForm(initial=wizard_data.get('step3', {}))
             context.update({
                 'form': form,
                 'step1_data': wizard_data.get('step1', {}),
                 'step2_data': wizard_data.get('step2', {}),
+                'step3_data': wizard_data.get('step3', {}),
+                'selected_package': selected_package,
             })
             return render(request, 'rides/chauffeur_wizard/step3.html', context)
 
@@ -929,8 +984,25 @@ class ChauffeurBookingWizardView(View):
             if 'step3' not in wizard_data:
                 return redirect('rides:chauffeur_wizard', step=3)
 
+            form = ChauffeurStep4ContactForm(initial=wizard_data.get('step4', {}))
+            context.update({
+                'form': form,
+                'step4_data': wizard_data.get('step4', {}),
+            })
+            return render(request, 'rides/chauffeur_wizard/step4.html', context)
+
+        elif step == 5:
+            if 'step4' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=4)
+
             step1 = wizard_data['step1']
             hours = step1.get('chauffeur_hours')
+            packages = PricingService.get_chauffeur_packages()
+            labeled_packages = self._label_packages(packages)
+            selected_package = next(
+                (p for p in labeled_packages if int(p.get('hours', 0)) == int(hours or 0)),
+                None,
+            )
             try:
                 fare_breakdown = PricingService.calculate_chauffeur(hours)
                 context['fare_breakdown'] = fare_breakdown
@@ -946,11 +1018,13 @@ class ChauffeurBookingWizardView(View):
                 'step1_data': step1,
                 'step2_data': wizard_data.get('step2', {}),
                 'step3_data': wizard_data.get('step3', {}),
+                'step4_data': wizard_data.get('step4', {}),
+                'selected_package': selected_package,
             })
-            return render(request, 'rides/chauffeur_wizard/step4.html', context)
+            return render(request, 'rides/chauffeur_wizard/step5.html', context)
 
-        elif step == 5:
-            if not all(k in wizard_data for k in ['step1', 'step2', 'step3']):
+        elif step == 6:
+            if not all(k in wizard_data for k in ['step1', 'step2', 'step3', 'step4']):
                 return redirect('rides:chauffeur_wizard', step=1)
 
             booking_id = request.session.get(self.get_session_key('booking_id'))
@@ -968,11 +1042,13 @@ class ChauffeurBookingWizardView(View):
             if booking:
                 try:
                     from urllib.parse import quote
-                    payment_status = "Pending"
-                    if booking.payment_option == RideBooking.PAYMENT_ON_ARRIVAL:
-                        payment_status = "Pay on Arrival (Cash)"
-                    elif booking.payment_option == RideBooking.PAYMENT_PAYNOW:
+                    payment_status = "Pay on Arrival (Cash)"
+                    if booking.payment_option == RideBooking.PAYMENT_PAYNOW:
                         payment_status = "Pay Online (Paynow)"
+                    elif booking.payment_option == RideBooking.PAYMENT_CARD_ON_ARRIVAL:
+                        payment_status = "Pay on Arrival (POS/CARD)"
+                    elif booking.payment_option == RideBooking.PAYMENT_MONEY_TRANSFER:
+                        payment_status = "Money Transfer"
                     msg = build_booking_message(booking, payment_label_override=payment_status)
                     phone = settings.TAXI_OWNER_PHONE.lstrip('+')
                     whatsapp_message = f"https://wa.me/{phone}?text={quote(msg)}"
@@ -983,10 +1059,11 @@ class ChauffeurBookingWizardView(View):
                 'step1_data': wizard_data.get('step1', {}),
                 'step2_data': wizard_data.get('step2', {}),
                 'step3_data': wizard_data.get('step3', {}),
+                'step4_data': wizard_data.get('step4', {}),
                 'booking': booking,
                 'whatsapp_message': whatsapp_message,
             })
-            return render(request, 'rides/chauffeur_wizard/step5.html', context)
+            return render(request, 'rides/chauffeur_wizard/step6.html', context)
 
         return redirect('rides:chauffeur_wizard_start')
 
@@ -1001,49 +1078,42 @@ class ChauffeurBookingWizardView(View):
         if step == 1:
             form = ChauffeurStep1Form(request.POST)
             packages = PricingService.get_chauffeur_packages()
+            labeled_packages = self._label_packages(packages)
             if form.is_valid():
-                def _iso(d):
-                    return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
-
                 self.request.session[self.get_session_key('step1')] = {
-                    'pickup_address': form.cleaned_data['pickup_address'],
-                    'pickup_latitude': form.cleaned_data.get('pickup_latitude'),
-                    'pickup_longitude': form.cleaned_data.get('pickup_longitude'),
-                    'pickup_date': _iso(form.cleaned_data.get('pickup_date')),
-                    'pickup_time': _iso(form.cleaned_data.get('pickup_time')),
                     'chauffeur_hours': form.cleaned_data['chauffeur_hours'],
                 }
                 self.request.session.modified = True
                 return redirect('rides:chauffeur_wizard', step=2)
 
-            context.update({'form': form, 'packages': packages, 'step1_data': {}})
+            context.update({'form': form, 'packages': labeled_packages, 'step1_data': {}})
             return render(request, 'rides/chauffeur_wizard/step1.html', context)
 
         elif step == 2:
             if 'step1' not in wizard_data:
                 return redirect('rides:chauffeur_wizard', step=1)
 
-            form = Step2PassengersLuggageForm(request.POST)
+            form = ChauffeurStep2Form(request.POST)
             packages = PricingService.get_chauffeur_packages()
+            labeled_packages = self._label_packages(packages)
             selected_hours = wizard_data['step1'].get('chauffeur_hours')
-            selected_package = next((p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)), None)
-
+            selected_package = next(
+                (p for p in labeled_packages if int(p.get('hours', 0)) == int(selected_hours or 0)),
+                None,
+            )
             if form.is_valid():
-                passengers_json = request.POST.get('passengers_json') or '[]'
-                num_adults = merged_adult_count(form.cleaned_data['num_adults'], request.POST.get('num_kids_seated', 0))
-
-                over_limit = bool(selected_package and num_adults > int(selected_package.get('max_passengers', 99)))
+                def _iso(d):
+                    return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
 
                 self.request.session[self.get_session_key('step2')] = {
-                    'num_adults': num_adults,
-                    'num_kids_seated': 0,
-                    'baby_car_seater': form.cleaned_data['baby_car_seater'],
-                    'num_kids_carried': form.cleaned_data['num_kids_carried'],
-                    'luggage_count': form.cleaned_data['luggage_count'],
-                    'passengers_json': passengers_json,
-                    'salutation': form.cleaned_data.get('salutation'),
-                    'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
-                    'passengers_over_limit': over_limit,
+                    'pickup_address': form.cleaned_data['pickup_address'],
+                    'pickup_latitude': form.cleaned_data.get('pickup_latitude'),
+                    'pickup_longitude': form.cleaned_data.get('pickup_longitude'),
+                    'pickup_address_detail': form.cleaned_data.get('pickup_address_detail', ''),
+                    'pickup_date': _iso(form.cleaned_data.get('pickup_date')),
+                    'pickup_time': _iso(form.cleaned_data.get('pickup_time')),
+                    'approximate_end_time': _iso(form.cleaned_data.get('approximate_end_time')),
+                    'trip_summary': form.cleaned_data.get('trip_summary', ''),
                 }
                 self.request.session.modified = True
                 return redirect('rides:chauffeur_wizard', step=3)
@@ -1051,6 +1121,7 @@ class ChauffeurBookingWizardView(View):
             context.update({
                 'form': form,
                 'step1_data': wizard_data['step1'],
+                'step2_data': {},
                 'selected_package': selected_package,
             })
             return render(request, 'rides/chauffeur_wizard/step2.html', context)
@@ -1059,14 +1130,26 @@ class ChauffeurBookingWizardView(View):
             if 'step2' not in wizard_data:
                 return redirect('rides:chauffeur_wizard', step=2)
 
-            form = Step3ContactExtraForm(request.POST)
+            form = Step2PassengersLuggageForm(request.POST)
+            packages = PricingService.get_chauffeur_packages()
+            selected_hours = wizard_data['step1'].get('chauffeur_hours')
+            selected_package = next(
+                (p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)),
+                None,
+            )
             if form.is_valid():
+                num_adults = merged_adult_count(form.cleaned_data['num_adults'], request.POST.get('num_kids_seated', 0))
+                over_limit = bool(selected_package and num_adults > int(selected_package.get('max_passengers', 99)))
+
                 self.request.session[self.get_session_key('step3')] = {
-                    'phone': form.cleaned_data['phone'],
-                    'email': form.cleaned_data['email'],
-                    'extra_instructions': form.cleaned_data['extra_instructions'],
+                    'num_adults': num_adults,
+                    'num_kids_seated': 0,
+                    'baby_car_seater': form.cleaned_data['baby_car_seater'],
+                    'num_kids_carried': form.cleaned_data['num_kids_carried'],
+                    'luggage_count': form.cleaned_data['luggage_count'],
                     'salutation': form.cleaned_data.get('salutation'),
                     'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
+                    'passengers_over_limit': over_limit,
                 }
                 self.request.session.modified = True
                 return redirect('rides:chauffeur_wizard', step=4)
@@ -1075,6 +1158,8 @@ class ChauffeurBookingWizardView(View):
                 'form': form,
                 'step1_data': wizard_data.get('step1', {}),
                 'step2_data': wizard_data.get('step2', {}),
+                'step3_data': {},
+                'selected_package': selected_package,
             })
             return render(request, 'rides/chauffeur_wizard/step3.html', context)
 
@@ -1082,43 +1167,82 @@ class ChauffeurBookingWizardView(View):
             if 'step3' not in wizard_data:
                 return redirect('rides:chauffeur_wizard', step=3)
 
-            form = Step4FarePaymentForm(request.POST)
+            form = ChauffeurStep4ContactForm(request.POST)
             if form.is_valid():
-                step1 = wizard_data['step1']
-                step2 = wizard_data['step2']
-                step3 = wizard_data['step3']
+                self.request.session[self.get_session_key('step4')] = {
+                    'phone': form.cleaned_data['phone'],
+                    'email': form.cleaned_data['email'],
+                }
+                self.request.session.modified = True
+                return redirect('rides:chauffeur_wizard', step=5)
+
+            context.update({
+                'form': form,
+                'step4_data': {},
+            })
+            return render(request, 'rides/chauffeur_wizard/step4.html', context)
+
+        elif step == 5:
+            if 'step4' not in wizard_data:
+                return redirect('rides:chauffeur_wizard', step=4)
+
+            form = Step4FarePaymentForm(request.POST)
+            step1 = wizard_data.get('step1', {})
+            step2 = wizard_data.get('step2', {})
+            step3 = wizard_data.get('step3', {})
+            step4 = wizard_data.get('step4', {})
+            hours = step1.get('chauffeur_hours')
+
+            packages = PricingService.get_chauffeur_packages()
+            labeled_packages = self._label_packages(packages)
+            selected_package = next(
+                (p for p in labeled_packages if int(p.get('hours', 0)) == int(hours or 0)),
+                None,
+            )
+
+            if form.is_valid():
                 payment_method = form.cleaned_data['payment_method']
-                hours = step1.get('chauffeur_hours')
 
                 try:
                     fare_breakdown = PricingService.calculate_chauffeur(hours)
 
+                    # Build full pickup address including any additional detail
+                    full_pickup = step2.get('pickup_address', '')
+                    if step2.get('pickup_address_detail'):
+                        full_pickup += f' ({step2["pickup_address_detail"]})'
+
+                    num_adults = step3.get('num_adults', 1)
+                    over_limit = bool(
+                        selected_package and num_adults > int(selected_package.get('max_passengers', 99))
+                    )
+
                     with transaction.atomic():
                         booking = RideBooking.objects.create(
-                            pickup_address=step1['pickup_address'],
-                            pickup_lat=Decimal(str(step1['pickup_latitude'])) if step1.get('pickup_latitude') else None,
-                            pickup_lng=Decimal(str(step1['pickup_longitude'])) if step1.get('pickup_longitude') else None,
-                            dropoff_address='Chauffeur Drive — to be arranged',
+                            pickup_address=full_pickup,
+                            pickup_lat=Decimal(str(step2['pickup_latitude'])) if step2.get('pickup_latitude') else None,
+                            pickup_lng=Decimal(str(step2['pickup_longitude'])) if step2.get('pickup_longitude') else None,
+                            dropoff_address='Chauffeur Drive - itinerary to be arranged',
                             distance_km=Decimal('0'),
-                            num_adults=step2.get('num_adults', 1),
+                            num_adults=num_adults,
                             num_kids_seated=0,
-                            baby_car_seater=step2.get('baby_car_seater', 0),
-                            num_kids_carried=step2.get('num_kids_carried', 0),
-                            luggage_count=step2.get('luggage_count', 0),
-                            phone=step3['phone'],
-                            email=step3['email'],
-                            extra_instructions=step3.get('extra_instructions', ''),
-                            pickup_date=step1.get('pickup_date'),
-                            pickup_time=step1.get('pickup_time'),
-                            salutation=step2.get('salutation'),
-                            passenger_full_name=step2.get('passenger_full_name'),
+                            baby_car_seater=step3.get('baby_car_seater', 0),
+                            num_kids_carried=step3.get('num_kids_carried', 0),
+                            luggage_count=step3.get('luggage_count', 0),
+                            phone=step4['phone'],
+                            email=step4['email'],
+                            extra_instructions=step2.get('trip_summary', ''),
+                            pickup_date=step2.get('pickup_date'),
+                            pickup_time=step2.get('pickup_time'),
+                            approximate_end_time=step2.get('approximate_end_time'),
+                            salutation=step3.get('salutation'),
+                            passenger_full_name=step3.get('passenger_full_name'),
                             payment_option=payment_method,
                             price_breakdown=fare_breakdown,
                             total_amount=Decimal(str(fare_breakdown['total'])),
                             ride_type=RideBooking.RIDE_TYPE_CHAUFFEUR,
                             chauffeur_hours=hours,
                             chauffeur_package_label=fare_breakdown.get('label', ''),
-                            passengers_over_limit=step2.get('passengers_over_limit', False),
+                            passengers_over_limit=over_limit,
                             status=RideBooking.STATUS_PENDING,
                         )
 
@@ -1154,7 +1278,7 @@ class ChauffeurBookingWizardView(View):
                             EmailService.send_owner_notification(booking, payment_status=payment_label)
                             EmailService.send_customer_notification(booking, payment_status=payment_label)
 
-                            return redirect('rides:chauffeur_wizard', step=5)
+                            return redirect('rides:chauffeur_wizard', step=6)
 
                         else:
                             payment = Payment.objects.create(
@@ -1202,11 +1326,22 @@ class ChauffeurBookingWizardView(View):
                 except Exception as e:
                     logger.exception('Chauffeur booking creation failed')
                     context['error'] = f'Failed to create booking: {e}'
-                    return render(request, 'rides/chauffeur_wizard/step4.html', context)
+                    try:
+                        fare_breakdown = PricingService.calculate_chauffeur(hours)
+                        context['fare_breakdown'] = fare_breakdown
+                    except Exception:
+                        context['fare_error'] = 'Unable to calculate fare'
+                    context.update({
+                        'form': form,
+                        'step1_data': step1,
+                        'step2_data': step2,
+                        'step3_data': step3,
+                        'step4_data': step4,
+                        'selected_package': selected_package,
+                    })
+                    return render(request, 'rides/chauffeur_wizard/step5.html', context)
 
             # Form invalid — re-render with fare
-            step1 = wizard_data.get('step1', {})
-            hours = step1.get('chauffeur_hours')
             try:
                 fare_breakdown = PricingService.calculate_chauffeur(hours)
                 context['fare_breakdown'] = fare_breakdown
@@ -1216,10 +1351,12 @@ class ChauffeurBookingWizardView(View):
             context.update({
                 'form': form,
                 'step1_data': step1,
-                'step2_data': wizard_data.get('step2', {}),
-                'step3_data': wizard_data.get('step3', {}),
+                'step2_data': step2,
+                'step3_data': step3,
+                'step4_data': step4,
+                'selected_package': selected_package,
             })
-            return render(request, 'rides/chauffeur_wizard/step4.html', context)
+            return render(request, 'rides/chauffeur_wizard/step5.html', context)
 
         return redirect('rides:chauffeur_wizard_start')
 

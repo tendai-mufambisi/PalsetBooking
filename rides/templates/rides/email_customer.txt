@@ -12,5 +12,5 @@ Passenger: {% if booking.passenger_full_name %}{{ booking.salutation }} {{ booki
 Payment status: {{ payment_status }}
 
 We may contact you at {{ booking.phone }} if needed. Thank you for choosing us.
-Notes: {{ booking.extra_instructions | default:"—" }}
+Notes: {{ booking.extra_instructions|default:"N/A" }}
 

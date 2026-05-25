@@ -59,6 +59,14 @@
     <!-- Hidden dropoff coordinates -->
     <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="{{ step1_data.dropoff_latitude|default:'' }}">
     <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="{{ step1_data.dropoff_longitude|default:'' }}">
+    <!-- Hidden distance (populated by JS fare calc) -->
+    <input type="hidden" id="distance_km" name="distance_km" value="{{ step1_data.distance_km|default:'' }}">
+
+    <!-- Long-distance trip alert (hidden until JS detects long-distance) -->
+    <div id="long_distance_alert" style="display:none;margin-top:12px;padding:14px 16px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;color:#92400e;">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px;"><i class="bi bi-sign-intersection-fill" style="color:#f59e0b;margin-right:6px;"></i>This looks like a Long Distance trip</div>
+      <div style="font-size:13px;">Your route is <strong><span id="ld_distance_display">-</span> km</strong> — trips of <strong id="ld_threshold_display">80</strong> km or more are priced at the long distance flat rate ($1.40/km, up to 3 passengers). You can continue booking normally.</div>
+    </div>
 
     <div style="margin-top:14px;">
         <label for="pickup_is_airport" class="form-label" style="display:block;">
@@ -286,6 +294,41 @@
         }
     }
 
+    const LD_THRESHOLD = parseFloat('{{ ld_threshold_km|default:"80" }}') || 80;
+
+    function checkLongDistance() {
+        const pLat = document.getElementById('pickup_latitude').value;
+        const pLng = document.getElementById('pickup_longitude').value;
+        const dLat = document.getElementById('dropoff_latitude').value;
+        const dLng = document.getElementById('dropoff_longitude').value;
+        if (!pLat || !pLng || !dLat || !dLng) return;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch('/api/distance-fare/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({
+                pickup_latitude: pLat, pickup_longitude: pLng,
+                dropoff_latitude: dLat, dropoff_longitude: dLng,
+                num_adults: 1,
+            }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            const dist = parseFloat(data.distance_km) || 0;
+            document.getElementById('distance_km').value = dist > 0 ? dist.toFixed(2) : '';
+            const alert = document.getElementById('long_distance_alert');
+            if (dist >= LD_THRESHOLD) {
+                document.getElementById('ld_distance_display').textContent = dist.toFixed(1);
+                document.getElementById('ld_threshold_display').textContent = LD_THRESHOLD;
+                alert.style.display = 'block';
+            } else {
+                alert.style.display = 'none';
+            }
+        })
+        .catch(() => {});
+    }
+
     function validateStep1() {
         const pickupLat = document.getElementById('pickup_latitude').value;
         const pickupLng = document.getElementById('pickup_longitude').value;
@@ -315,6 +358,10 @@
 
         if (isValid) {
             document.getElementById('step1_info').style.display = 'none';
+        }
+
+        if (baseValid) {
+            checkLongDistance();
         }
     }
 

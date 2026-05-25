@@ -1,95 +1,53 @@
 {% extends "rides/chauffeur_wizard/base_wizard.html" %}
 
-{% block title %}Step 4: Fare & Payment - Chauffeur Drive{% endblock %}
+{% block title %}Step 4: Contact Details - Chauffeur Drive{% endblock %}
 
 {% block content %}
-<h2 style="font-size:20px; margin-bottom:6px; color:#1e3a5f;">Fare &amp; Payment</h2>
-<p style="font-size:13px; color:#666; margin-bottom:20px;">Review your package and choose how you'd like to pay.</p>
+<h2 style="font-size:20px; margin-bottom:4px; color:#1e3a5f;">Contact Details</h2>
+<p style="font-size:13px; color:#666; margin-bottom:24px;">
+    We will use these to confirm your booking and send your driver's details. Both fields are required.
+</p>
 
-{% if error %}
-<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ error }}</div>
+{% if form.non_field_errors %}
+<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ form.non_field_errors }}</div>
 {% endif %}
 
-{% if fare_breakdown %}
-<div class="fare-summary">
-    <div style="text-align:center; margin-bottom:16px;">
-        <div style="font-size:13px; color:#666; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Your Package</div>
-        <div style="font-size:20px; font-weight:800; color:#1e3a5f;">{{ fare_breakdown.label }}</div>
-    </div>
-
-    <div class="fare-row">
-        <span><i class="bi bi-clock"></i> Duration</span>
-        <span>{{ fare_breakdown.hours }} hours</span>
-    </div>
-    <div class="fare-row">
-        <span><i class="bi bi-speedometer2"></i> Km limit</span>
-        <span>Up to {{ fare_breakdown.km_limit }}km</span>
-    </div>
-    <div class="fare-row">
-        <span><i class="bi bi-clock-history"></i> Operating window</span>
-        <span>{{ fare_breakdown.window_start }} – {{ fare_breakdown.window_end }}</span>
-    </div>
-    <div class="fare-row">
-        <span><i class="bi bi-people"></i> Max passengers (standard)</span>
-        <span>{{ fare_breakdown.max_passengers }}</span>
-    </div>
-
-    {% if step2_data.passengers_over_limit %}
-    <div class="warning-banner" style="margin-top:12px;">
-        <i class="bi bi-exclamation-triangle-fill"></i>
-        <div>Passenger count exceeds standard package — you will be contacted to confirm.</div>
-    </div>
-    {% endif %}
-
-    <div class="fare-row total" style="margin-top:16px;">
-        <span>Total</span>
-        <span style="color:#c9a84c;">${{ fare_breakdown.total }}</span>
-    </div>
-
-    <div style="font-size:12px; color:#666; margin-top:10px; text-align:center;">
-        Includes dedicated driver &amp; vehicle &bull; Fuel &bull; Driver costs<br>
-        City parking fees are excluded
-    </div>
-</div>
-{% elif fare_error %}
-<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ fare_error }}</div>
-{% endif %}
-
-<form method="POST" id="step4_form">
+<form method="POST">
     {% csrf_token %}
 
-    <h4 style="margin-bottom:14px;"><i class="bi bi-credit-card"></i> Payment Method</h4>
-
-    {% for value, label in form.payment_method.field.choices %}
-    <div class="payment-option" id="opt_{{ value }}" onclick="selectPayment('{{ value }}', this)">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <input type="radio" name="payment_method" id="pm_{{ value }}" value="{{ value }}"
-                   {% if form.payment_method.value == value %}checked{% endif %}
-                   style="width:18px; height:18px; accent-color:#1e3a5f;">
-            <label for="pm_{{ value }}" style="cursor:pointer; font-weight:500; margin:0;">{{ label }}</label>
-        </div>
+    <div class="form-group">
+        <label class="form-label" for="phone">
+            <i class="bi bi-telephone-fill"></i> Phone Number <span style="color:#dc3545;">*</span>
+        </label>
+        <input type="tel" name="phone" id="phone" class="form-control"
+               placeholder="+263 77 000 0000"
+               value="{{ step4_data.phone|default:'' }}" required>
+        {% if form.phone.errors %}
+        <div class="error-message" style="margin-top:6px;">{{ form.phone.errors }}</div>
+        {% endif %}
+        <small class="form-text">Your driver will call or WhatsApp this number.</small>
     </div>
-    {% endfor %}
 
-    {% if form.payment_method.errors %}
-    <div class="error-message">{{ form.payment_method.errors }}</div>
-    {% endif %}
+    <div class="form-group">
+        <label class="form-label" for="email">
+            <i class="bi bi-envelope-fill"></i> Email Address <span style="color:#dc3545;">*</span>
+        </label>
+        <input type="email" name="email" id="email" class="form-control"
+               placeholder="your@email.com"
+               value="{{ step4_data.email|default:'' }}" required>
+        {% if form.email.errors %}
+        <div class="error-message" style="margin-top:6px;">{{ form.email.errors }}</div>
+        {% endif %}
+        <small class="form-text">Your booking confirmation and receipt will be sent here.</small>
+    </div>
 
     <div class="btn-group-wizard">
-        <a href="{% url 'rides:chauffeur_wizard' step=3 %}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Back</a>
-        <button type="submit" class="btn btn-primary">Confirm Booking <i class="bi bi-check-lg"></i></button>
+        <a href="{% url 'rides:chauffeur_wizard' step=3 %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Next: Review &amp; Pay <i class="bi bi-arrow-right"></i>
+        </button>
     </div>
 </form>
-
-<script>
-function selectPayment(value, el) {
-    document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    document.getElementById('pm_' + value).checked = true;
-}
-// Pre-highlight if one is already checked
-document.querySelectorAll('input[name="payment_method"]').forEach(r => {
-    if (r.checked) r.closest('.payment-option').classList.add('selected');
-});
-</script>
 {% endblock %}

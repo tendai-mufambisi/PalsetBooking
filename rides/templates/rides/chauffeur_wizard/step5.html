@@ -1,80 +1,173 @@
 {% extends "rides/chauffeur_wizard/base_wizard.html" %}
 
-{% block title %}Booking Confirmed - Chauffeur Drive{% endblock %}
+{% block title %}Step 5: Review &amp; Pay - Chauffeur Drive{% endblock %}
 
 {% block content %}
-<div style="text-align:center; padding:10px 0 24px;">
-    <div style="width:64px; height:64px; background:#10b981; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-        <i class="bi bi-check-lg" style="font-size:32px; color:white;"></i>
-    </div>
-    <h2 style="font-size:22px; font-weight:800; color:#1e3a5f; margin-bottom:6px;">Booking Confirmed!</h2>
-    <p style="font-size:14px; color:#666;">Your chauffeur drive has been booked. We'll be in touch shortly.</p>
-</div>
+<h2 style="font-size:20px; margin-bottom:4px; color:#1e3a5f;">Review &amp; Confirm</h2>
+<p style="font-size:13px; color:#666; margin-bottom:20px;">Please review your booking details before choosing a payment method.</p>
 
-{% if booking %}
-<div style="background:#f8f9fa; border-radius:10px; padding:20px; margin-bottom:20px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-        <span style="font-size:13px; color:#666; text-transform:uppercase; letter-spacing:1px;">Booking Reference</span>
-        <span style="font-size:18px; font-weight:800; color:#1e3a5f;">{{ booking.reference }}</span>
-    </div>
+{% if error %}
+<div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ error }}</div>
+{% endif %}
 
-    <div style="font-size:14px; border-top:1px solid #dee2e6; padding-top:14px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <span style="color:#666;">Package</span>
-            <span style="font-weight:600;">{{ booking.chauffeur_package_label }}</span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <span style="color:#666;">Pickup</span>
-            <span style="font-weight:600; text-align:right; max-width:60%;">{{ booking.pickup_address }}</span>
-        </div>
-        {% if booking.pickup_date %}
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <span style="color:#666;">Date &amp; Time</span>
-            <span style="font-weight:600;">{{ booking.pickup_date }} at {{ booking.pickup_time|time:"H:i" }}</span>
-        </div>
-        {% endif %}
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-            <span style="color:#666;">Passengers</span>
-            <span style="font-weight:600;">
-                {{ booking.num_adults }}
-                {% if booking.passengers_over_limit %}
-                <span style="color:#f59e0b; font-size:12px;">(to be confirmed)</span>
+<!-- ── Full Booking Summary ── -->
+<div style="background:#f8f9fa; border-radius:10px; padding:20px; margin-bottom:20px; border:1px solid #e9ecef;">
+    <h4 style="font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#1e3a5f; margin-bottom:14px; border-bottom:2px solid #1e3a5f; padding-bottom:8px;">
+        <i class="bi bi-clipboard-check"></i> Booking Summary
+    </h4>
+
+    <!-- Package -->
+    {% if fare_breakdown %}
+    <div class="fare-row">
+        <span style="color:#666;"><i class="bi bi-clock"></i> Package</span>
+        <span style="font-weight:700; color:#1e3a5f;">{{ fare_breakdown.label }}</span>
+    </div>
+    <div class="fare-row">
+        <span style="color:#666;"><i class="bi bi-speedometer2"></i> Km included</span>
+        <span>Up to {{ fare_breakdown.km_limit }}km</span>
+    </div>
+    <div class="fare-row">
+        <span style="color:#666;"><i class="bi bi-people"></i> Max passengers (standard)</span>
+        <span>{{ fare_breakdown.max_passengers }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Trip details -->
+    <div style="border-top:1px solid #dee2e6; margin:12px 0 12px; padding-top:12px;">
+        {% if step2_data.pickup_address %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-geo-alt-fill"></i> Pickup Location</span>
+            <span style="text-align:right; max-width:58%;">
+                {{ step2_data.pickup_address }}
+                {% if step2_data.pickup_address_detail %}
+                <br><small style="color:#888;">{{ step2_data.pickup_address_detail }}</small>
                 {% endif %}
             </span>
         </div>
-        <div style="display:flex; justify-content:space-between; border-top:1px solid #dee2e6; padding-top:12px; margin-top:4px;">
-            <span style="color:#666;">Total</span>
-            <span style="font-size:18px; font-weight:800; color:#c9a84c;">${{ booking.total_amount }}</span>
+        {% endif %}
+        {% if step2_data.pickup_date %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-calendar3"></i> Date</span>
+            <span>{{ step2_data.pickup_date }}</span>
+        </div>
+        {% endif %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-clock"></i> Start Time</span>
+            <span>{{ step2_data.pickup_time|default:"—" }}</span>
+        </div>
+        {% if step2_data.approximate_end_time %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-clock-history"></i> Approx End Time</span>
+            <span>{{ step2_data.approximate_end_time }}</span>
+        </div>
+        {% endif %}
+        {% if step2_data.trip_summary %}
+        <div class="fare-row" style="align-items:flex-start;">
+            <span style="color:#666; white-space:nowrap;"><i class="bi bi-map"></i> Trip Summary</span>
+            <span style="text-align:right; max-width:62%; font-size:13px;">{{ step2_data.trip_summary }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Passenger details -->
+    <div style="border-top:1px solid #dee2e6; margin:0 0 12px; padding-top:12px;">
+        {% if step3_data.passenger_full_name %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-person-check"></i> Passenger</span>
+            <span style="font-weight:600;">
+                {% if step3_data.salutation %}{{ step3_data.salutation }} {% endif %}{{ step3_data.passenger_full_name }}
+            </span>
+        </div>
+        {% endif %}
+        {% if step3_data.num_adults %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-people"></i> Passengers</span>
+            <span>
+                {{ step3_data.num_adults }} seated
+                {% if step3_data.num_kids_carried and step3_data.num_kids_carried > 0 %}, {{ step3_data.num_kids_carried }} carried{% endif %}
+                {% if step3_data.luggage_count and step3_data.luggage_count > 0 %}, {{ step3_data.luggage_count }} bag(s){% endif %}
+            </span>
+        </div>
+        {% endif %}
+        {% if step3_data.passengers_over_limit %}
+        <div class="warning-banner" style="margin-top:8px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>Passenger count exceeds the standard package. We will contact you to confirm arrangements.</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contact -->
+    <div style="border-top:1px solid #dee2e6; margin:0 0 12px; padding-top:12px;">
+        {% if step4_data.phone %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-telephone"></i> Phone</span>
+            <span>{{ step4_data.phone }}</span>
+        </div>
+        {% endif %}
+        {% if step4_data.email %}
+        <div class="fare-row">
+            <span style="color:#666;"><i class="bi bi-envelope"></i> Email</span>
+            <span>{{ step4_data.email }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Total -->
+    {% if fare_breakdown %}
+    <div class="fare-row total" style="margin-top:4px;">
+        <span>Total Amount</span>
+        <span style="color:#c9a84c; font-size:22px;">${{ fare_breakdown.total }}</span>
+    </div>
+    <div style="font-size:12px; color:#888; margin-top:8px; text-align:center;">
+        Includes dedicated driver &amp; vehicle &bull; Fuel &bull; Driver costs &bull; City parking fees excluded
+    </div>
+    {% elif fare_error %}
+    <div class="error-message"><i class="bi bi-exclamation-triangle"></i> {{ fare_error }}</div>
+    {% endif %}
+</div>
+
+<!-- ── Payment Method ── -->
+<form method="POST" id="step5_form">
+    {% csrf_token %}
+
+    <h4 style="margin-bottom:14px; font-size:15px; color:#1e3a5f;">
+        <i class="bi bi-credit-card"></i> Choose Payment Method
+    </h4>
+
+    {% for value, label in form.payment_method.field.choices %}
+    <div class="payment-option" id="opt_{{ value }}" onclick="selectPayment('{{ value }}', this)">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <input type="radio" name="payment_method" id="pm_{{ value }}" value="{{ value }}"
+                   {% if form.payment_method.value == value %}checked{% endif %}
+                   style="width:18px; height:18px; accent-color:#1e3a5f;">
+            <label for="pm_{{ value }}" style="cursor:pointer; font-weight:500; margin:0;">{{ label }}</label>
         </div>
     </div>
-</div>
+    {% endfor %}
 
-{% if booking.passengers_over_limit %}
-<div class="warning-banner">
-    <i class="bi bi-telephone-fill"></i>
-    <div><strong>We'll call you</strong> — your booking has more passengers than the standard package. Our team will contact you to arrange and confirm.</div>
-</div>
-{% endif %}
+    {% if form.payment_method.errors %}
+    <div class="error-message">{{ form.payment_method.errors }}</div>
+    {% endif %}
 
-{% if whatsapp_message %}
-<a href="{{ whatsapp_message }}" target="_blank" rel="noopener"
-   style="display:block; background:#25d366; color:white; text-align:center; border-radius:8px; padding:12px 16px; font-weight:700; font-size:14px; text-decoration:none; margin-bottom:14px;">
-    <i class="bi bi-whatsapp"></i> Share on WhatsApp
-</a>
-{% endif %}
+    <div class="btn-group-wizard">
+        <a href="{% url 'rides:chauffeur_wizard' step=4 %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+        <button type="submit" class="btn btn-primary" style="background:#10b981;">
+            <i class="bi bi-check-circle-fill"></i> Confirm Booking
+        </button>
+    </div>
+</form>
 
-{% else %}
-<div style="background:#fff3cd; border-radius:8px; padding:16px; margin-bottom:20px; font-size:14px; color:#856404;">
-    <i class="bi bi-info-circle"></i> Your booking was received. Please check your email for confirmation details.
-</div>
-{% endif %}
-
-<div style="display:flex; gap:10px; margin-top:8px;">
-    <a href="{% url 'rides:service_selector' %}" class="btn btn-secondary" style="flex:1; text-align:center;">
-        <i class="bi bi-house"></i> Home
-    </a>
-    <a href="{% url 'rides:chauffeur_wizard_start' %}?reset=1" class="btn btn-primary" style="flex:1; text-align:center;">
-        <i class="bi bi-plus-circle"></i> New Booking
-    </a>
-</div>
+<script>
+function selectPayment(value, el) {
+    document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('pm_' + value).checked = true;
+}
+document.querySelectorAll('input[name="payment_method"]').forEach(r => {
+    if (r.checked) r.closest('.payment-option').classList.add('selected');
+});
+</script>
 {% endblock %}

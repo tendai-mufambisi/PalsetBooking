@@ -5,6 +5,23 @@
 {% block content %}
 <h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Passenger Details</h2>
 
+{% if is_long_distance %}
+<div style="margin-bottom:20px;padding:16px 18px;background:#fffbeb;border:2px solid #fcd34d;border-radius:10px;color:#78350f;">
+  <div style="font-weight:700;font-size:15px;margin-bottom:6px;">
+    <i class="bi bi-sign-intersection-fill" style="color:#f59e0b;margin-right:6px;"></i>Long Distance Trip
+  </div>
+  <div style="font-size:13px;line-height:1.6;">
+    Your route is over <strong>{{ ld_threshold_km }} km</strong> — this is a <strong>long distance</strong> booking.
+    The fare uses our flat long distance rate:
+    <ul style="margin:8px 0 0 16px;padding:0;">
+      <li>$1.40 per km (up to 3 passengers)</li>
+      <li>4th passenger and beyond: $40 each</li>
+      <li>Up to 5 bags free — extra bags $5 each</li>
+    </ul>
+  </div>
+</div>
+{% endif %}
+
 <form method="POST" id="step2_form">
     {% csrf_token %}
 
@@ -46,7 +63,7 @@
             <label class="form-label"><i class="bi bi-person"></i> Adults Count (includes seated kids)</label>
             <div class="field-counter">
                 <button type="button" class="btn-decrement" data-field="num_adults">−</button>
-                <input type="text" id="display_num_adults" readonly value="1">
+                <input type="text" id="display_num_adults" readonly value="1" title="Number of adults (includes seated kids)">
                 <button type="button" class="btn-increment" data-field="num_adults">+</button>
             </div>
             <small class="form-text">Count everyone taking a seat in the vehicle.</small>
@@ -59,7 +76,7 @@
                 <label class="form-label"><i class="bi bi-shield-baby"></i> Baby Car Seat <span style="color: #28a745; font-weight: 600;">$10 flat fare</span></label>
                 <div class="field-counter">
                     <button type="button" class="btn-decrement" data-field="baby_car_seater">−</button>
-                    <input type="text" id="display_baby_car_seater" readonly value="0">
+                    <input type="text" id="display_baby_car_seater" readonly value="0" title="Number of baby car seats needed">
                     <button type="button" class="btn-increment" data-field="baby_car_seater">+</button>
                 </div>
                 <small class="form-text">Infant safety car seats required</small>
@@ -70,7 +87,7 @@
                 <label class="form-label"><i class="bi bi-backpack"></i> Kids (Carried)</label>
                 <div class="field-counter">
                     <button type="button" class="btn-decrement" data-field="num_kids_carried">−</button>
-                    <input type="text" id="display_num_kids_carried" readonly value="0">
+                    <input type="text" id="display_num_kids_carried" readonly value="0" title="Number of children carried (free)">
                     <button type="button" class="btn-increment" data-field="num_kids_carried">+</button>
                 </div>
                 <small class="form-text">Infants or children carried (free)</small>
@@ -81,7 +98,7 @@
                 <label class="form-label"><i class="bi bi-suitcase-lg"></i> Luggage Bags</label>
                 <div class="field-counter">
                     <button type="button" class="btn-decrement" data-field="luggage_count">−</button>
-                    <input type="text" id="display_luggage_count" readonly value="0">
+                    <input type="text" id="display_luggage_count" readonly value="0" title="Number of luggage bags">
                     <button type="button" class="btn-increment" data-field="luggage_count">+</button>
                 </div>
                 <small class="form-text">Charges will be incurred from the 6th bag onwards</small>

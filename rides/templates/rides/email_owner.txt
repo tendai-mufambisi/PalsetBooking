@@ -24,4 +24,9 @@ USD ${{ booking.total_amount }}
 
 
 
-Please call the driver/owner at {{ taxi_owner_phone }} to confirm the booking.
+{% if booking.ride_type == 'chauffeur' %}Package: {{ booking.chauffeur_package_label }}
+{% if booking.approximate_end_time %}Approx end time: {{ booking.approximate_end_time }}
+{% endif %}{% endif %}
+View in dashboard: {{ dashboard_url }}
+
+Contact owner at {{ taxi_owner_phone }} to confirm the booking.

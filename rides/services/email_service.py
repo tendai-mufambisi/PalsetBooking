@@ -6,65 +6,103 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _dashboard_url(booking):
+    base = getattr(settings, 'BASE_URL', '').rstrip('/')
+    return f"{base}/dashboard/bookings/{booking.id}/"
+
+
 class EmailService:
     @staticmethod
     def send_owner_notification(booking, payment_status: str = "UNPAID"):
-        subject = f"New ride booking: {booking.id}"
-        context = {"booking": booking, "payment_status": payment_status, "taxi_owner_phone": settings.TAXI_OWNER_PHONE}
+        ref = getattr(booking, 'reference', None) or str(booking.id)
+        ride_label = {
+            'chauffeur': 'Chauffeur Drive',
+            'long_distance': 'Long Distance',
+        }.get(getattr(booking, 'ride_type', 'city'), 'City Ride')
+        subject = f"New Booking {ref} - {ride_label}"
+
+        context = {
+            "booking": booking,
+            "payment_status": payment_status,
+            "taxi_owner_phone": settings.TAXI_OWNER_PHONE,
+            "dashboard_url": _dashboard_url(booking),
+        }
 
         text = render_to_string("rides/email_owner.txt", context)
         html = render_to_string("rides/email_owner.html", context)
 
-        # In debug mode, log the rendered email to the console for visibility
         if settings.DEBUG:
             logger.info('Sending owner email to %s: %s', settings.TAXI_OWNER_EMAIL, subject)
-            print('\n--- Owner email (text) ---\n')
-            print(text)
-            print('\n--- Owner email (html truncated) ---\n')
-            
 
         try:
-            send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [settings.TAXI_OWNER_EMAIL], html_message=html)
-            logger.info('Owner notification email sent successfully for booking %s', booking.id)
+            send_mail(
+                subject,
+                text,
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.TAXI_OWNER_EMAIL],
+                html_message=html,
+            )
+            logger.info('Owner notification sent for booking %s', booking.id)
         except Exception as e:
-            logger.error('Failed to send owner notification email for booking %s: %s', booking.id, str(e))
+            logger.error('Failed to send owner notification for booking %s: %s', booking.id, str(e))
 
     @staticmethod
     def send_customer_notification(booking, payment_status: str = "UNPAID"):
-        subject = f"Your booking: {booking.id}"
-        context = {"booking": booking, "payment_status": payment_status, "taxi_owner_phone": settings.TAXI_OWNER_PHONE}
+        if not getattr(booking, 'email', None):
+            logger.warning('No customer email for booking %s, skipping notification', booking.id)
+            return
+
+        ref = getattr(booking, 'reference', None) or str(booking.id)
+        subject = f"Booking Confirmed: {ref} - Easy Transit"
+
+        context = {
+            "booking": booking,
+            "payment_status": payment_status,
+            "taxi_owner_phone": settings.TAXI_OWNER_PHONE,
+        }
 
         text = render_to_string("rides/email_customer.txt", context)
         html = render_to_string("rides/email_customer.html", context)
 
         if settings.DEBUG:
             logger.info('Sending customer email to %s: %s', booking.email, subject)
-            print('\n--- Customer email (text) ---\n')
-            print(text)
-            print('\n--- Customer email (html truncated) ---\n')
-            print((html or '')[:2000].encode('ascii', errors='ignore').decode('ascii'))
 
         try:
-            send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
-            logger.info('Customer notification email sent successfully for booking %s', booking.id)
+            send_mail(
+                subject,
+                text,
+                settings.DEFAULT_FROM_EMAIL,
+                [booking.email],
+                html_message=html,
+            )
+            logger.info('Customer notification sent for booking %s', booking.id)
         except Exception as e:
-            logger.error('Failed to send customer notification email for booking %s: %s', booking.id, str(e))
+            logger.error('Failed to send customer notification for booking %s: %s', booking.id, str(e))
 
     @staticmethod
     def send_payment_confirmation(booking):
-        subject = f"Payment confirmed for booking: {booking.id}"
+        if not getattr(booking, 'email', None):
+            logger.warning('No customer email for booking %s, skipping payment confirmation', booking.id)
+            return
+
+        ref = getattr(booking, 'reference', None) or str(booking.id)
+        subject = f"Payment Confirmed: {ref} - Easy Transit"
+
         context = {"booking": booking}
         text = render_to_string("rides/email_payment_confirm.txt", context)
         html = render_to_string("rides/email_payment_confirm.html", context)
+
         if settings.DEBUG:
             logger.info('Sending payment confirmation to %s: %s', booking.email, subject)
-            print('\n--- Payment confirmation (text) ---\n')
-            print(text)
-            print('\n--- Payment confirmation (html truncated) ---\n')
-            
 
         try:
-            send_mail(subject, text, settings.DEFAULT_FROM_EMAIL, [booking.email], html_message=html)
-            logger.info('Payment confirmation email sent successfully for booking %s', booking.id)
+            send_mail(
+                subject,
+                text,
+                settings.DEFAULT_FROM_EMAIL,
+                [booking.email],
+                html_message=html,
+            )
+            logger.info('Payment confirmation sent for booking %s', booking.id)
         except Exception as e:
-            logger.error('Failed to send payment confirmation email for booking %s: %s', booking.id, str(e))
+            logger.error('Failed to send payment confirmation for booking %s: %s', booking.id, str(e))

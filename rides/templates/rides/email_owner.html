@@ -44,14 +44,25 @@
           <tr><td>Distance</td><td>{{ booking.distance_km }} km</td></tr>
           <tr><td>Passengers</td><td>{{ booking.num_adults }} adult(s){% if booking.num_kids_carried %}, {{ booking.num_kids_carried }} kid(s) carried{% endif %}</td></tr>
           <tr><td>Luggage</td><td>{{ booking.luggage_count }}</td></tr>
-          <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"—" }}</td></tr>
+          {% if booking.ride_type == 'chauffeur' %}
+          <tr><td>Package</td><td>{{ booking.chauffeur_package_label }}</td></tr>
+          {% if booking.approximate_end_time %}<tr><td>Approx end time</td><td>{{ booking.approximate_end_time }}</td></tr>{% endif %}
+          {% endif %}
+          <tr><td>Notes / Trip Summary</td><td>{{ booking.extra_instructions|default:"N/A" }}</td></tr>
           <tr><td>Payment status</td><td><span class="badge {% if payment_status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">{{ payment_status }}</span></td></tr>
           <tr><td style="font-size:15px;font-weight:700;color:#059652">Total to collect</td><td style="font-size:15px;font-weight:700;color:#059652">USD ${{ booking.total_amount }}</td></tr>
         </table>
-        <p style="margin-top:20px;font-size:14px;color:#1c4b56">Call the driver/owner at <strong>{{ taxi_owner_phone }}</strong> to confirm the booking.</p>
+        {% if dashboard_url %}
+        <p style="margin-top:20px;text-align:center;">
+          <a href="{{ dashboard_url }}" style="display:inline-block;background:#1c4b56;color:#fff;text-decoration:none;padding:10px 24px;border-radius:6px;font-weight:700;font-size:14px;">
+            View Booking in Dashboard &rarr;
+          </a>
+        </p>
+        {% endif %}
+        <p style="margin-top:16px;font-size:14px;color:#1c4b56">Contact the owner at <strong>{{ taxi_owner_phone }}</strong> to confirm arrangements.</p>
       </div>
       <div class="footer">
-        <p>EasyTransit &mdash; enquiries@easytransit.co.zw &mdash; {{ taxi_owner_phone }}</p>
+        <p>EasyTransit | enquiries@easytransit.co.zw | {{ taxi_owner_phone }}</p>
       </div>
     </div>
   </body>

@@ -22,7 +22,7 @@ DEFAULT_LONG_DISTANCE = {
     "THRESHOLD_KM": 80.0,
     "PER_KM": 1.40,
     "BASE_PASSENGERS": 3,
-    "EXTRA_PAX_FEE": 30.0,
+    "EXTRA_PAX_FEE": 40.0,
     "FREE_LUGGAGE_ITEMS": 5,
     "LUGGAGE_FEE": 5.0,
 }
@@ -177,10 +177,13 @@ class PricingService:
         return breakdown
 
     @classmethod
-    def is_long_distance(cls, distance_km: float) -> bool:
+    def _get_ld_threshold(cls) -> float:
         cfg = _get_long_distance_cfg() or DEFAULT_LONG_DISTANCE
-        threshold = float(cfg.get("THRESHOLD_KM", DEFAULT_LONG_DISTANCE["THRESHOLD_KM"]))
-        return float(distance_km) >= threshold
+        return float(cfg.get("THRESHOLD_KM", DEFAULT_LONG_DISTANCE["THRESHOLD_KM"]))
+
+    @classmethod
+    def is_long_distance(cls, distance_km: float) -> bool:
+        return float(distance_km) >= cls._get_ld_threshold()
 
     @classmethod
     def calculate_long_distance(cls, distance_km: float, num_adults: int = 1, luggage_count: int = 0) -> dict:
