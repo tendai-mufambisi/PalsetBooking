@@ -71,7 +71,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         ("Contact", {
             "fields": ("taxi_owner_email", "taxi_owner_phone"),
         }),
-        ("City Ride Pricing", {
+        ("EasyTransit Ride Pricing", {
             "description": (
                 "Prices for regular city rides. Distance brackets define flat fares; "
                 "above the last bracket a per-km rate applies."

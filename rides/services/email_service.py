@@ -18,7 +18,8 @@ class EmailService:
         ride_label = {
             'chauffeur': 'Chauffeur Drive',
             'long_distance': 'Long Distance',
-        }.get(getattr(booking, 'ride_type', 'city'), 'City Ride')
+            'city': 'EasyTransit Ride',
+        }.get(getattr(booking, 'ride_type', 'city'), 'EasyTransit Ride')
         subject = f"New Booking {ref} - {ride_label}"
 
         context = {

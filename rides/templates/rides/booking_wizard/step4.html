@@ -69,6 +69,45 @@
         </div>
     {% endif %}
 
+    <!-- Your Details Review -->
+    {% if step3_data %}
+    <div style="background: #f0f7ff; border-radius: 8px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #1e3a5f;">
+        <h4 style="font-size: 14px; font-weight: 700; color: #1e3a5f; margin-bottom: 12px;">
+            <i class="bi bi-person-check"></i> Your Details
+        </h4>
+        <div style="display: grid; gap: 8px; font-size: 14px;">
+            {% if step3_data.passenger_full_name %}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dce9f5; padding-bottom: 6px;">
+                <span style="color: #555;">Passenger Name:</span>
+                <strong>{% if step3_data.salutation %}{{ step3_data.salutation }} {% endif %}{{ step3_data.passenger_full_name }}</strong>
+            </div>
+            {% endif %}
+            {% if step3_data.phone %}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dce9f5; padding-bottom: 6px;">
+                <span style="color: #555;">Phone:</span>
+                <strong>{{ step3_data.phone }}</strong>
+            </div>
+            {% endif %}
+            {% if step3_data.email %}
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dce9f5; padding-bottom: 6px;">
+                <span style="color: #555;">Email:</span>
+                <strong>{{ step3_data.email }}</strong>
+            </div>
+            {% endif %}
+            {% if step3_data.extra_instructions %}
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 4px;">
+                <span style="color: #555; white-space: nowrap; margin-right: 12px;">Additional Notes:</span>
+                <span style="font-weight: 600; text-align: right; max-width: 62%; font-size: 13px; background: #fff8e1; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #f59e0b;">{{ step3_data.extra_instructions }}</span>
+            </div>
+            {% else %}
+            <div style="font-size: 13px; color: #888;">
+                <i class="bi bi-info-circle"></i> No additional notes added. <a href="{% url 'rides:booking_wizard' step=3 %}" style="color: #1e3a5f;">Go back to add notes</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Payment Method Selection -->
     <div class="form-group">
         <label class="form-label" style="margin-bottom: 16px;"><i class="bi bi-credit-card"></i> Select Payment Method *</label>
