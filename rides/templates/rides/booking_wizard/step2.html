@@ -7,16 +7,29 @@
 
 {% if is_long_distance %}
 <div style="margin-bottom:20px;padding:16px 18px;background:#fffbeb;border:2px solid #fcd34d;border-radius:10px;color:#78350f;">
-  <div style="font-weight:700;font-size:15px;margin-bottom:6px;">
+  <div style="font-weight:700;font-size:15px;margin-bottom:8px;">
     <i class="bi bi-sign-intersection-fill" style="color:#f59e0b;margin-right:6px;"></i>Long Distance Trip
   </div>
-  <div style="font-size:13px;line-height:1.6;">
-    Your route is over <strong>{{ ld_threshold_km }} km</strong> — this is a <strong>long distance</strong> booking.
-    The fare uses our flat long distance rate:
-    <ul style="margin:8px 0 0 16px;padding:0;">
-      <li>$1.40 per km (up to 3 passengers)</li>
-      <li>4th passenger and beyond: $40 each</li>
-      <li>Up to 5 bags free — extra bags $5 each</li>
+  <div style="font-size:13px;line-height:1.8;">
+    Your route is over <strong>{{ ld_threshold_km }} km</strong> — this will be quoted as a <strong>long distance</strong> booking.
+    <ul style="margin:8px 0 4px 16px;padding:0;">
+      <li>Quote is for <strong>up to 4 passengers</strong></li>
+      <li>For <strong>5 passengers and above</strong>, please enquire directly:
+        <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;">
+          <a href="https://wa.me/263789423154" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:5px;background:#25d366;color:white;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">
+            <i class="bi bi-whatsapp"></i> +263789423154
+          </a>
+          <a href="mailto:easytransitteam@gmail.com"
+             style="display:inline-flex;align-items:center;gap:5px;background:#1e3a5f;color:white;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">
+            <i class="bi bi-envelope"></i> easytransitteam@gmail.com
+          </a>
+          <a href="mailto:enquiries@easytransit.co.zw"
+             style="display:inline-flex;align-items:center;gap:5px;background:#1e3a5f;color:white;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">
+            <i class="bi bi-envelope"></i> enquiries@easytransit.co.zw
+          </a>
+        </div>
+      </li>
     </ul>
   </div>
 </div>
