@@ -447,12 +447,14 @@ class DashboardSettingsView(View):
         site_settings = SiteSettings.get_settings()
         brackets = site_settings.pricing_brackets or DEFAULT_PRICING['BRACKETS']
         last_bracket_max = max((float(b.get('max', 0)) for b in brackets), default=35) if brackets else 35
+        chauffeur_packages = site_settings.get_chauffeur_packages()
         return render(request, 'dashboard/settings.html', {
             'site_settings': site_settings,
             'django_email': settings.TAXI_OWNER_EMAIL,
             'django_phone': settings.TAXI_OWNER_PHONE,
             'pricing_brackets': brackets,
             'last_bracket_max': last_bracket_max,
+            'chauffeur_packages': chauffeur_packages,
             'ld_default_threshold': DEFAULT_LONG_DISTANCE['THRESHOLD_KM'],
             'ld_default_per_km': DEFAULT_LONG_DISTANCE['PER_KM'],
             'ld_default_base_pax': DEFAULT_LONG_DISTANCE['BASE_PASSENGERS'],
@@ -505,6 +507,31 @@ class DashboardSettingsView(View):
                 messages.success(request, 'Long distance pricing updated successfully.')
             except (ValueError, TypeError) as e:
                 messages.error(request, f'Invalid long distance pricing value: {e}')
+
+        elif form_type == 'chauffeur':
+            try:
+                hours_list = request.POST.getlist('pkg_hours')
+                price_list = request.POST.getlist('pkg_price')
+                km_list = request.POST.getlist('pkg_km_limit')
+                start_list = request.POST.getlist('pkg_window_start')
+                end_list = request.POST.getlist('pkg_window_end')
+                pax_list = request.POST.getlist('pkg_max_passengers')
+                packages = []
+                for h, p, k, ws, we, mx in zip(hours_list, price_list, km_list, start_list, end_list, pax_list):
+                    if h and p and k:
+                        packages.append({
+                            "hours": int(h),
+                            "price": float(p),
+                            "km_limit": int(k),
+                            "window_start": ws.strip() or "07:30",
+                            "window_end": we.strip() or "20:00",
+                            "max_passengers": int(mx) if mx else 4,
+                        })
+                site_settings.chauffeur_packages = packages
+                site_settings.save()
+                messages.success(request, 'Chauffeur Drive packages updated successfully.')
+            except (ValueError, TypeError) as e:
+                messages.error(request, f'Invalid chauffeur package value: {e}')
 
         else:
             email = request.POST.get('taxi_owner_email', '').strip()

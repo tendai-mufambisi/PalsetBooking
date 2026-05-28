@@ -180,6 +180,59 @@
     </div>
   </div>
 
+  <!-- Chauffeur Drive Packages -->
+  <div class="dash-card mb-3">
+    <div class="dash-card-header">
+      <i class="bi bi-car-front-fill me-2" style="color:#c9a84c"></i>Chauffeur Drive Packages
+    </div>
+    <div class="dash-card-body">
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;font-size:12px;color:#92400e;margin-bottom:18px">
+        <i class="bi bi-info-circle me-2"></i>
+        Each package defines the duration, flat price, included km, service window, and max passengers. Changes apply immediately to new bookings.
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="chauffeur">
+
+        <div style="overflow-x:auto;margin-bottom:16px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;min-width:640px">
+            <thead>
+              <tr style="background:#f9fafb">
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Hours</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Price ($)</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Km Included</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Window Start</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Window End</th>
+                <th style="padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:1px solid #e5e7eb">Max Pax</th>
+                <th style="padding:8px 10px;border-bottom:1px solid #e5e7eb"></th>
+              </tr>
+            </thead>
+            <tbody id="chauffeurBody">
+              {% for pkg in chauffeur_packages %}
+              <tr class="pkg-row">
+                <td style="padding:6px 8px"><input type="number" name="pkg_hours" value="{{ pkg.hours }}" min="1" max="24" class="form-ctrl" style="width:70px"></td>
+                <td style="padding:6px 8px"><input type="number" name="pkg_price" value="{{ pkg.price }}" step="0.01" min="0" class="form-ctrl" style="width:90px"></td>
+                <td style="padding:6px 8px"><input type="number" name="pkg_km_limit" value="{{ pkg.km_limit }}" min="1" class="form-ctrl" style="width:80px"></td>
+                <td style="padding:6px 8px"><input type="time" name="pkg_window_start" value="{{ pkg.window_start }}" class="form-ctrl" style="width:100px"></td>
+                <td style="padding:6px 8px"><input type="time" name="pkg_window_end" value="{{ pkg.window_end }}" class="form-ctrl" style="width:100px"></td>
+                <td style="padding:6px 8px"><input type="number" name="pkg_max_passengers" value="{{ pkg.max_passengers }}" min="1" max="20" class="form-ctrl" style="width:70px"></td>
+                <td style="padding:6px 8px"><button type="button" onclick="this.closest('tr').remove()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <button type="button" id="addPkg" style="margin-top:8px;background:#fefce8;color:#854d0e;border:1px dashed #fcd34d;border-radius:6px;padding:5px 14px;font-size:12px;cursor:pointer">+ Add package</button>
+        </div>
+
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:16px">
+          <strong>Window Start / End</strong> — earliest and latest the booking can start for this package (24-hr format, e.g. 07:30 / 20:00).
+        </div>
+
+        <button type="submit" class="btn-green"><i class="bi bi-floppy-fill me-2"></i>Save Chauffeur Packages</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Account Security -->
   <div class="dash-card mb-3">
     <div class="dash-card-header">
@@ -236,6 +289,21 @@
   }
 
   document.getElementById('bracketBody')?.addEventListener('input', updateAboveKmLabel);
+
+  document.getElementById('addPkg')?.addEventListener('click', function () {
+    const row = document.createElement('tr');
+    row.className = 'pkg-row';
+    row.innerHTML = `
+      <td style="padding:6px 8px"><input type="number" name="pkg_hours" min="1" max="24" class="form-ctrl" style="width:70px" placeholder="hrs"></td>
+      <td style="padding:6px 8px"><input type="number" name="pkg_price" step="0.01" min="0" class="form-ctrl" style="width:90px" placeholder="$"></td>
+      <td style="padding:6px 8px"><input type="number" name="pkg_km_limit" min="1" class="form-ctrl" style="width:80px" placeholder="km"></td>
+      <td style="padding:6px 8px"><input type="time" name="pkg_window_start" value="07:30" class="form-ctrl" style="width:100px"></td>
+      <td style="padding:6px 8px"><input type="time" name="pkg_window_end" value="20:00" class="form-ctrl" style="width:100px"></td>
+      <td style="padding:6px 8px"><input type="number" name="pkg_max_passengers" value="4" min="1" max="20" class="form-ctrl" style="width:70px"></td>
+      <td style="padding:6px 8px"><button type="button" onclick="this.closest('tr').remove()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button></td>
+    `;
+    document.getElementById('chauffeurBody').appendChild(row);
+  });
 
   document.getElementById('addBracket')?.addEventListener('click', function () {
     const row = document.createElement('tr');
