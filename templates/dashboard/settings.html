@@ -76,9 +76,9 @@
             <div style="font-size:11px;color:#9ca3af;margin-top:4px">Trips shorter than this are charged at the first bracket price.</div>
           </div>
           <div class="col-sm-6">
-            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Rate above 35 km ($/km)</label>
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Rate above <span id="aboveKmLabel">{{ last_bracket_max|floatformat:0 }}</span> km ($/km)</label>
             <input type="number" name="pricing_above_35_per_km" value="{{ site_settings.pricing_above_35_per_km }}" step="0.01" min="0" class="form-ctrl">
-            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Per-km charge on top of the last bracket price for trips over 35 km.</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Per-km charge for trips beyond the last bracket (above <span id="aboveKmHint">{{ last_bracket_max|floatformat:0 }}</span> km).</div>
           </div>
         </div>
 
@@ -223,14 +223,28 @@
 
 {% block extra_js %}
 <script>
+  function updateAboveKmLabel() {
+    const maxInputs = document.querySelectorAll('#bracketBody input[name="bracket_max"]');
+    let highest = 0;
+    maxInputs.forEach(input => {
+      const v = parseFloat(input.value) || 0;
+      if (v > highest) highest = v;
+    });
+    const display = highest > 0 ? Math.round(highest) : '—';
+    document.getElementById('aboveKmLabel').textContent = display;
+    document.getElementById('aboveKmHint').textContent = display;
+  }
+
+  document.getElementById('bracketBody')?.addEventListener('input', updateAboveKmLabel);
+
   document.getElementById('addBracket')?.addEventListener('click', function () {
     const row = document.createElement('tr');
     row.className = 'bracket-row';
     row.innerHTML = `
       <td style="padding:6px 10px"><input type="number" name="bracket_min" step="0.1" min="0" class="form-ctrl" style="width:90px"></td>
-      <td style="padding:6px 10px"><input type="number" name="bracket_max" step="0.1" min="0" class="form-ctrl" style="width:90px"></td>
+      <td style="padding:6px 10px"><input type="number" name="bracket_max" step="0.1" min="0" class="form-ctrl" style="width:90px" oninput="updateAboveKmLabel()"></td>
       <td style="padding:6px 10px"><input type="number" name="bracket_price" step="0.01" min="0" class="form-ctrl" style="width:100px"></td>
-      <td style="padding:6px 10px"><button type="button" onclick="this.closest('tr').remove()" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button></td>
+      <td style="padding:6px 10px"><button type="button" onclick="this.closest('tr').remove(); updateAboveKmLabel();" style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">✕</button></td>
     `;
     document.getElementById('bracketBody').appendChild(row);
   });

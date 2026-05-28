@@ -446,11 +446,13 @@ class DashboardSettingsView(View):
         from rides.services.pricing import DEFAULT_PRICING, DEFAULT_LONG_DISTANCE
         site_settings = SiteSettings.get_settings()
         brackets = site_settings.pricing_brackets or DEFAULT_PRICING['BRACKETS']
+        last_bracket_max = max((float(b.get('max', 0)) for b in brackets), default=35) if brackets else 35
         return render(request, 'dashboard/settings.html', {
             'site_settings': site_settings,
             'django_email': settings.TAXI_OWNER_EMAIL,
             'django_phone': settings.TAXI_OWNER_PHONE,
             'pricing_brackets': brackets,
+            'last_bracket_max': last_bracket_max,
             'ld_default_threshold': DEFAULT_LONG_DISTANCE['THRESHOLD_KM'],
             'ld_default_per_km': DEFAULT_LONG_DISTANCE['PER_KM'],
             'ld_default_base_pax': DEFAULT_LONG_DISTANCE['BASE_PASSENGERS'],
