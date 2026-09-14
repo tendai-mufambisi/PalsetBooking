@@ -1,0 +1,16 @@
+{% comment %}
+Contact fields — shared by step 2 and the edit modal.
+{% endcomment %}
+
+<div class="form-group">
+    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.phone label="Phone number" icon="bi-telephone" hint="The driver uses this to reach you on the day." only %}
+</div>
+
+<div class="form-group">
+    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.email label="Email address" icon="bi-envelope" hint="Your confirmation and booking-management link are sent here." only %}
+</div>
+
+<div class="form-group" style="margin-bottom:0;">
+    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.extra_instructions label="Anything else we should know? (optional)" only %}
+    <small class="form-text" id="char_count">0 / 500 characters</small>
+</div>

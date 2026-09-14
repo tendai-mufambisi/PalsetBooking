@@ -37,7 +37,35 @@ def _reject_past_pickup(pickup_date, pickup_time, label='pickup'):
         )
 
 
-class Step1PickupDropoffForm(forms.Form):
+class FloatingLabelMixin:
+    """Prepare a form's widgets for the wizard's floating labels.
+
+    The label starts inside the field and lifts out of the way once the field is
+    focused or filled. The CSS keys that off `:placeholder-shown`, so every text
+    widget needs a non-empty placeholder — done here rather than in the template
+    so the labels are already in the right place on the very first paint.
+
+    Any genuine example text ("e.g. outside Gate 2") would otherwise defeat
+    that, so it is stashed in `data-hint` and shown only while the field has
+    focus. Checkboxes, radios, selects and hidden inputs are left alone; they
+    have no placeholder state and their labels are pinned by CSS instead.
+    """
+
+    SKIP_WIDGETS = (forms.HiddenInput, forms.CheckboxInput, forms.RadioSelect, forms.Select)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            widget = field.widget
+            if isinstance(widget, self.SKIP_WIDGETS):
+                continue
+            hint = widget.attrs.get('placeholder')
+            if hint and hint.strip():
+                widget.attrs['data-hint'] = hint
+            widget.attrs['placeholder'] = ' '
+
+
+class Step1PickupDropoffForm(FloatingLabelMixin, forms.Form):
     """Step 1: Pickup & Dropoff Locations with auto-geolocation."""
     
     pickup_address = forms.CharField(
@@ -308,7 +336,7 @@ class Step1PickupDropoffForm(forms.Form):
             cleaned[field] = None if field.endswith(('latitude', 'longitude', 'km')) else ''
 
 
-class Step2PassengersLuggageForm(forms.Form):
+class Step2PassengersLuggageForm(FloatingLabelMixin, forms.Form):
     """Step 2: Number of seated passengers, kids carried, and luggage."""
     
     num_adults = forms.IntegerField(
@@ -345,10 +373,13 @@ class Step2PassengersLuggageForm(forms.Form):
     salutation = forms.CharField(
         max_length=32,
         required=False,
-        widget=forms.Select(choices=[
-            ('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss'), ('Ms', 'Ms'),
-            ('Dr', 'Dr'), ('Professor', 'Professor'), ('Rev', 'Rev'), ('Hon', 'Hon'),
-        ])
+        widget=forms.Select(
+            choices=[
+                ('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss'), ('Ms', 'Ms'),
+                ('Dr', 'Dr'), ('Professor', 'Professor'), ('Rev', 'Rev'), ('Hon', 'Hon'),
+            ],
+            attrs={'class': 'form-select'},
+        )
     )
     passenger_full_name = forms.CharField(
         max_length=256,
@@ -411,7 +442,7 @@ class Step2PassengersLuggageForm(forms.Form):
         return cleaned
 
 
-class Step3ContactExtraForm(forms.Form):
+class Step3ContactExtraForm(FloatingLabelMixin, forms.Form):
     """Step 3: Contact information and extra instructions."""
     
     phone = forms.CharField(

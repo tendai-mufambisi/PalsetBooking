@@ -10,10 +10,24 @@
     <style>
         :root {
             --primary-color: #10b981;
+            --primary-dark: #059669;
+            --primary-deep: #047857;
+            --primary-soft: #ecfdf5;
+            --primary-ring: rgba(16, 185, 129, 0.18);
             --success-color: #10b981;
             --danger-color: #dc3545;
-            --light-bg: #f8f9fa;
-            --border-light: #dee2e6;
+            --light-bg: #f8fafc;
+            --border-light: #e2e8f0;
+            --ink: #0f172a;
+            --ink-soft: #64748b;
+            --radius: 10px;
+            /* One comfortable reading column, centred on a full-width page */
+            --measure: 820px;
+            --gutter: 24px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+            --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 18px 50px rgba(15, 23, 42, 0.18);
         }
 
         * {
@@ -24,126 +38,160 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            /* Flat white page: the form is the page, not a card floating on it */
+            background: #fff;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            color: var(--ink);
         }
 
-        .wizard-container {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-            max-width: 600px;
-            width: 100%;
-            overflow: hidden;
-        }
-
-        .wizard-header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .wizard-header h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .wizard-header p {
-            font-size: 14px;
-            opacity: 0.9;
-            margin: 0;
-        }
-
-        .progress-bar-container {
-            padding: 20px;
-            background: var(--light-bg);
+        /* --- Sticky bar -----------------------------------------------------
+           Brand row and progress travel together inside one sticky element, so
+           neither has to know the other's height. */
+        .app-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #fff;
             border-bottom: 1px solid var(--border-light);
         }
 
-        .progress-steps {
+        .app-bar-inner {
+            max-width: var(--measure);
+            margin: 0 auto;
+            padding: 12px var(--gutter);
             display: flex;
+            align-items: center;
             justify-content: space-between;
+            gap: 14px;
+        }
+
+        .app-brand {
+            display: flex;
             align-items: center;
             gap: 10px;
+            font-weight: 700;
+            font-size: 16px;
+            letter-spacing: -0.2px;
+            color: var(--ink);
         }
 
-        .progress-step {
-            flex: 1;
-            text-align: center;
-            position: relative;
-        }
+        .app-brand img { height: 30px; object-fit: contain; }
+        .app-brand > i { font-size: 21px; color: var(--primary-dark); }
 
-        .progress-step-circle {
-            width: 36px;
-            height: 36px;
-            margin: 0 auto 8px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid var(--border-light);
-            display: flex;
+        .app-home {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #666;
-            transition: all 0.3s ease;
-        }
-
-        .progress-step.active .progress-step-circle {
-            background: var(--primary-color);
-            border-color: var(--primary-color);
-            color: white;
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
-        }
-
-        .progress-step.completed .progress-step-circle {
-            background: var(--success-color);
-            border-color: var(--success-color);
-            color: white;
-        }
-
-        .progress-step-label {
-            font-size: 12px;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .progress-step.active .progress-step-label {
-            color: var(--primary-color);
+            gap: 7px;
+            border: 1px solid var(--border-light);
+            border-radius: 999px;
+            padding: 7px 15px;
+            font-size: 13px;
             font-weight: 600;
+            color: var(--primary-deep);
+            text-decoration: none;
+            transition: background .2s ease, border-color .2s ease;
         }
 
-        .progress-step.completed .progress-step-label {
-            color: var(--success-color);
+        .app-home:hover { background: var(--primary-soft); border-color: var(--primary-color); }
+
+        .wizard-container {
+            max-width: var(--measure);
+            margin: 0 auto;
+            padding: 0 var(--gutter);
+            background: #fff;
+        }
+
+        /* Only step 1 introduces the form; on later steps it is just noise. */
+        .page-intro { padding: 30px 0 2px; }
+
+        .page-intro h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.6px;
+            margin-bottom: 6px;
+        }
+
+        .page-intro p {
+            font-size: 15px;
+            color: var(--ink-soft);
+            margin: 0;
+        }
+
+        /* --- Progress ------------------------------------------------------ */
+        .progress-bar-container {
+            max-width: var(--measure);
+            margin: 0 auto;
+            padding: 0 var(--gutter) 13px;
+        }
+
+        .progress-meta {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .progress-count {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary-deep);
+            letter-spacing: .2px;
+            white-space: nowrap;
+        }
+
+        .progress-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink-soft);
+            text-align: right;
+        }
+
+        .progress-track {
+            height: 6px;
+            border-radius: 999px;
+            background: #e6f6ef;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-deep));
+            width: 0;
+            transition: width .6s cubic-bezier(.22,.61,.36,1);
         }
 
         .wizard-body {
-            padding: 40px 30px;
+            padding: 26px 0 52px;
+        }
+
+        .step-heading {
+            font-size: 21px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 22px;
+            color: var(--ink);
         }
 
         .form-control, .form-select {
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius);
+            padding: 11px 13px;
             font-size: 14px;
-            transition: border-color 0.3s ease;
+            transition: border-color .2s ease, box-shadow .2s ease;
         }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+            box-shadow: 0 0 0 4px var(--primary-ring);
+            outline: none;
         }
 
         .form-label {
             font-weight: 600;
-            color: #333;
-            margin-bottom: 8px;
+            color: #334155;
+            margin-bottom: 7px;
             font-size: 14px;
         }
 
@@ -153,17 +201,425 @@
 
         .form-text {
             font-size: 13px;
-            color: #666;
+            color: var(--ink-soft);
             margin-top: 5px;
         }
 
-        /* Slim collapsible rows for the optional parts of step 1, so the form
+        /* --- Floating labels ------------------------------------------------
+           The label starts inside the field and lifts to the top-left once the
+           field is focused or filled. That removes a whole stacked label row
+           per field, so every step opens shorter.
+
+           The resting/floated switch is pure CSS off `:placeholder-shown`;
+           FloatingLabelMixin guarantees every text widget carries a blank
+           placeholder so the state is correct on first paint. Fields with no
+           empty state of their own — selects, dates and times, which always
+           render something — are pinned floated with .ff-static. */
+        .ff {
+            position: relative;
+            display: block;
+        }
+
+        .ff > .form-control,
+        .ff > .form-select {
+            width: 100%;
+            height: 58px;
+            /* 16px keeps iOS from zooming the page on focus */
+            font-size: 16px;
+            padding: 25px 14px 8px;
+        }
+
+        /* Leave room for the select's own chevron */
+        .ff > .form-select { padding-right: 38px; }
+
+        .ff > textarea.form-control {
+            height: auto;
+            min-height: 112px;
+            padding-top: 27px;
+            line-height: 1.45;
+            resize: vertical;
+        }
+
+        .ff > .ff-label {
+            position: absolute;
+            left: 14px;
+            top: 18px;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.1;
+            color: var(--ink-soft);
+            pointer-events: none;
+            transform-origin: left top;
+            transition: transform .18s cubic-bezier(.22,.61,.36,1), color .18s ease;
+            max-width: calc(100% - 28px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Filled, but not focused */
+        .ff > .form-control:not(:placeholder-shown) ~ .ff-label,
+        .ff-static > .ff-label {
+            transform: translateY(-11px) scale(.72);
+        }
+
+        /* Focused: lift and pick up the accent colour */
+        .ff > .form-control:focus ~ .ff-label,
+        .ff > .form-select:focus ~ .ff-label {
+            transform: translateY(-11px) scale(.72);
+            color: var(--primary-dark);
+        }
+
+        /* A leading icon sits inside the field and the label clears it */
+        .ff-icon > .form-control,
+        .ff-icon > .form-select { padding-left: 44px; }
+        .ff-icon > .ff-label { left: 44px; max-width: calc(100% - 58px); }
+
+        .ff-lead {
+            position: absolute;
+            left: 15px;
+            top: 19px;
+            font-size: 17px;
+            line-height: 1;
+            color: #94a3b8;
+            pointer-events: none;
+            transition: color .18s ease;
+        }
+
+        .ff > .form-control:focus ~ .ff-lead,
+        .ff > .form-select:focus ~ .ff-lead { color: var(--primary-color); }
+
+        .ff-error > .form-control,
+        .ff-error > .form-select { border-color: #fca5a5; }
+        .ff-error > .ff-label { color: #b91c1c; }
+
+        /* Date and time pickers show their own format text, which would collide
+           with a resting label, so they never rest. */
+        .ff > input[type="date"],
+        .ff > input[type="time"] { color: var(--ink); }
+
+        /* --- Fluid focus border --------------------------------------------
+           A gradient panel sits BEHIND the field and is opened outward from the
+           point the field was clicked; the opaque input covers all of it except
+           the 3px that sticks out, which reads as the border. Drawing it under
+           the input rather than masking a ring over the top means that if
+           anything about the effect fails to paint, the worst case is a plain
+           field - never a coloured block sitting on the customer's text.
+
+           --ff-x is written by the pointer handler at the bottom of this page;
+           keyboard focus falls back to the centre. */
+        .ff { --ff-x: 50%; }
+
+        /* Layer order inside a field: gradient (0) < input (1) < label and
+           icon (2). The label MUST sit above the input, which is opaque. */
+        .ff > .form-control,
+        .ff > .form-select {
+            position: relative;
+            z-index: 1;
+            background-color: #fff;
+            /* Keeps the white fill inside the border, so the gradient shows
+               through once the border itself goes transparent on focus. */
+            background-clip: padding-box;
+        }
+
+        .ff > .ff-label,
+        .ff > .ff-lead { z-index: 2; }
+
+        .ff::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            z-index: 0;
+            border-radius: calc(var(--radius) + 2px);
+            background: linear-gradient(115deg,
+                var(--primary-deep) 0%, #34d399 25%, #a7f3d0 40%,
+                #34d399 55%, var(--primary-color) 75%, var(--primary-deep) 100%);
+            background-size: 300% 100%;
+            pointer-events: none;
+            opacity: 0;
+            clip-path: inset(0 calc(100% - var(--ff-x)) 0 var(--ff-x) round calc(var(--radius) + 2px));
+            transition: clip-path .42s cubic-bezier(.22,.61,.36,1), opacity .18s ease;
+        }
+
+        .ff:focus-within::after {
+            opacity: 1;
+            clip-path: inset(0 round calc(var(--radius) + 2px));
+            animation: ff-trace 2.6s linear .42s infinite;
+        }
+
+        .ff:focus-within {
+            box-shadow: 0 0 0 5px var(--primary-ring), 0 10px 24px -8px rgba(16, 185, 129, .45);
+            border-radius: var(--radius);
+            transition: box-shadow .3s ease;
+        }
+
+        /* Hand the border over to the gradient behind it */
+        .ff:focus-within > .form-control,
+        .ff:focus-within > .form-select { border-color: transparent; box-shadow: none; }
+
+        @keyframes ff-trace {
+            from { background-position: 0% 50%; }
+            to   { background-position: -300% 50%; }
+        }
+
+        /* --- Checkboxes and radios ------------------------------------------
+           Replaced wholesale so the check and the dot can be drawn on rather
+           than appearing instantly. */
+        .wizard-container input[type="checkbox"],
+        .wizard-container input[type="radio"] {
+            -webkit-appearance: none;
+            appearance: none;
+            position: relative;
+            flex: 0 0 auto;
+            width: 22px;
+            height: 22px;
+            margin: 0;
+            border: 2px solid #cbd5e1;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+        }
+
+        .wizard-container input[type="checkbox"] { border-radius: 7px; }
+        .wizard-container input[type="radio"] { border-radius: 50%; }
+
+        .wizard-container input[type="checkbox"]:hover,
+        .wizard-container input[type="radio"]:hover { border-color: var(--primary-color); }
+
+        .wizard-container input[type="checkbox"]:focus-visible,
+        .wizard-container input[type="radio"]:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px var(--primary-ring);
+        }
+
+        .wizard-container input[type="checkbox"]:checked,
+        .wizard-container input[type="radio"]:checked {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            animation: control-pop .32s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        /* The tick is a rotated corner that scales on from nothing */
+        .wizard-container input[type="checkbox"]::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 11px;
+            border: solid #fff;
+            border-width: 0 2.5px 2.5px 0;
+            opacity: 0;
+            transform: rotate(45deg) scale(.4);
+            transition: transform .26s cubic-bezier(.34,1.56,.64,1) .04s, opacity .12s ease;
+        }
+
+        .wizard-container input[type="checkbox"]:checked::after {
+            opacity: 1;
+            transform: rotate(45deg) scale(1);
+        }
+
+        .wizard-container input[type="radio"]::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: #fff;
+            transform: scale(0);
+            transition: transform .26s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .wizard-container input[type="radio"]:checked::after { transform: scale(1); }
+
+        @keyframes control-pop {
+            0%   { transform: scale(1); }
+            45%  { transform: scale(.88); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- Morphing buttons ------------------------------------------------
+           A submitting button collapses to a circle with a spinner, and where
+           the outcome is known in-page it opens into a tick before moving on.
+           The width is pinned in JS first, because a flex-sized button has no
+           width to animate from. */
+        .btn-grow { flex: 1; }
+
+        .btn.is-morphing {
+            flex: 0 0 auto;
+            /* Keeps the circle centred when the buttons stack on a phone */
+            align-self: center;
+            padding: 0;
+            border-radius: 999px;
+            overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            /* The hover lift is already excluded while disabled, so nothing
+               here needs to fight the tick's pop animation. */
+            transition: width .38s cubic-bezier(.65,0,.35,1),
+                        border-radius .38s cubic-bezier(.65,0,.35,1),
+                        background-color .3s ease,
+                        box-shadow .3s ease;
+        }
+
+        .btn.is-morphing:disabled { background: var(--primary-color); cursor: progress; }
+
+        .btn.is-done:disabled {
+            background: var(--primary-deep);
+            cursor: default;
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, .18);
+            animation: control-pop .42s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .btn-morph-spinner {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2.5px solid rgba(255, 255, 255, .35);
+            border-top-color: #fff;
+            animation: spin .7s linear infinite;
+        }
+
+        .btn-morph-check {
+            width: 24px;
+            height: 24px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .btn-morph-check path {
+            stroke-dasharray: 26;
+            stroke-dashoffset: 26;
+            animation: draw-check .38s cubic-bezier(.65,0,.35,1) .06s forwards;
+        }
+
+        @keyframes draw-check {
+            to { stroke-dashoffset: 0; }
+        }
+
+        .section-block {
+            margin-top: 28px;
+            padding-top: 22px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .section-sub {
+            font-size: 13px;
+            color: var(--ink-soft);
+            margin: 0 0 16px;
+        }
+
+        /* --- Trip type cards ----------------------------------------------- */
+        .trip-type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .trip-type-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 12px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            font-family: inherit;
+            transition: transform .25s cubic-bezier(.22,.61,.36,1), border-color .2s ease, box-shadow .25s ease, background .2s ease;
+        }
+
+        .trip-type-card:hover {
+            border-color: #6ee7b7;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .trip-type-card .tt-icon {
+            font-size: 26px;
+            color: var(--primary-dark);
+            line-height: 1;
+            transition: transform .25s cubic-bezier(.22,.61,.36,1);
+        }
+
+        .trip-type-card .tt-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .trip-type-card .tt-sub {
+            font-size: 12px;
+            color: var(--ink-soft);
+            line-height: 1.4;
+        }
+
+        .trip-type-card .tt-check {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(.5);
+            transition: opacity .2s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .trip-type-card.is-selected {
+            border-color: var(--primary-color);
+            background: var(--primary-soft);
+            box-shadow: 0 0 0 4px var(--primary-ring), var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .trip-type-card.is-selected .tt-icon { transform: scale(1.12); }
+        .trip-type-card.is-selected .tt-check { opacity: 1; transform: scale(1); }
+
+        /* --- Reveal animation for conditional panels ------------------------ */
+        .reveal-panel {
+            display: none;
+        }
+
+        .reveal-panel.is-shown {
+            display: block;
+            animation: reveal-in .4s cubic-bezier(.22,.61,.36,1) both;
+        }
+
+        @keyframes reveal-in {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Slim collapsible rows for the optional parts of a step, so the form
            opens short and only grows when the customer needs it to. */
         .option-row {
             border: 1px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: var(--radius);
             margin-bottom: 10px;
             background: white;
+            transition: border-color .2s ease, background .2s ease;
         }
 
         .option-row.is-open {
@@ -176,7 +632,7 @@
             align-items: center;
             gap: 10px;
             width: 100%;
-            padding: 12px 14px;
+            padding: 13px 14px;
             margin: 0;
             background: none;
             border: none;
@@ -185,16 +641,12 @@
             font-family: inherit;
             font-weight: 600;
             font-size: 14px;
-            color: #333;
+            color: #334155;
         }
 
         .option-row-head > i:first-child {
             color: var(--primary-color);
             font-size: 16px;
-        }
-
-        .option-row.is-open .option-row-head > i:first-child {
-            color: #10b981;
         }
 
         .option-row-label {
@@ -204,16 +656,12 @@
         .option-row-hint {
             font-weight: 400;
             font-size: 12px;
-            color: #6b7280;
+            color: var(--ink-soft);
         }
 
-        .option-row-head input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin: 0;
-            flex: 0 0 auto;
-            cursor: pointer;
-        }
+        /* Size comes from the shared control styles below, which the drawn-on
+           tick is measured against. */
+        .option-row-head input[type="checkbox"] { cursor: pointer; }
 
         .option-row-body {
             padding: 14px;
@@ -226,16 +674,16 @@
 
         .option-row-note {
             font-size: 12px;
-            color: #666;
+            color: var(--ink-soft);
             margin-bottom: 12px;
         }
 
         .btn {
-            border-radius: 6px;
+            border-radius: var(--radius);
             font-weight: 600;
-            padding: 10px 24px;
+            padding: 12px 24px;
             font-size: 14px;
-            transition: all 0.3s ease;
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
             border: none;
             cursor: pointer;
         }
@@ -243,28 +691,31 @@
         .btn-primary {
             background: var(--primary-color);
             color: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28);
         }
 
-        .btn-primary:hover {
-            background: #0056b3;
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 123, 255, 0.3);
+            box-shadow: 0 8px 18px rgba(16, 185, 129, 0.34);
         }
 
         .btn-primary:disabled {
-            background: #ccc;
+            background: #cbd5e1;
+            box-shadow: none;
             cursor: not-allowed;
             transform: none;
         }
 
         .btn-secondary {
             background: white;
-            color: var(--primary-color);
+            color: var(--primary-dark);
             border: 1px solid var(--border-light);
         }
 
         .btn-secondary:hover {
             background: var(--light-bg);
+            border-color: #cbd5e1;
         }
 
         .btn-group-wizard {
@@ -276,11 +727,30 @@
             border-top: 1px solid var(--border-light);
         }
 
+        /* Quiet secondary action beneath the main button row */
+        .wizard-footnote {
+            margin-top: 14px;
+            text-align: center;
+        }
+
+        .link-quiet {
+            background: none;
+            border: none;
+            padding: 4px;
+            font-family: inherit;
+            font-size: 13px;
+            color: var(--ink-soft);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .link-quiet:hover { color: var(--primary-dark); }
+
         .error-message {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            border-radius: 6px;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius);
             padding: 12px;
             margin-bottom: 20px;
             font-size: 14px;
@@ -290,60 +760,73 @@
             background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
-            border-radius: 6px;
+            border-radius: var(--radius);
             padding: 12px;
             margin-bottom: 20px;
             font-size: 14px;
         }
 
         .info-box {
-            background: #e7f3ff;
+            background: var(--primary-soft);
             border-left: 4px solid var(--primary-color);
             padding: 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             margin-bottom: 20px;
             font-size: 13px;
-            color: #004085;
+            color: #065f46;
         }
 
         .payment-option {
             background: white;
             border: 2px solid var(--border-light);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
+            border-radius: var(--radius);
+            padding: 15px 16px;
+            margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
         }
 
         .payment-option:hover {
-            border-color: var(--primary-color);
-            background: #f8f9fa;
-        }
-
-        .payment-option input[type="radio"]:checked + label {
-            color: var(--primary-color);
-            font-weight: 600;
-        }
-
-        .payment-option input[type="radio"]:checked {
-            border-color: var(--primary-color);
+            border-color: #6ee7b7;
+            background: var(--light-bg);
         }
 
         .payment-option.selected {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            background: var(--primary-soft);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-ring);
+        }
+
+        /* --- Address field with inline locate button ------------------------ */
+        .field-with-action {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .field-with-action .form-control { flex: 1; min-width: 0; }
+
+        .icon-btn {
+            flex: 0 0 auto;
+            width: 46px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius);
+            background: white;
+            color: var(--primary-dark);
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .2s ease, border-color .2s ease, color .2s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--primary-soft);
             border-color: var(--primary-color);
         }
 
-        .map-container {
-            width: 100%;
-            height: 300px;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            border: 1px solid var(--border-light);
-            background: #f0f0f0;
-        }
+        .icon-btn:disabled { opacity: .6; cursor: wait; }
 
         .location-btn {
             background: white;
@@ -352,24 +835,25 @@
             padding: 8px 12px;
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all .2s ease;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            color: var(--primary-color);
+            color: var(--primary-dark);
             font-weight: 600;
         }
 
         .location-btn:hover {
-            background: #f8f9fa;
+            background: var(--light-bg);
             border-color: var(--primary-color);
         }
 
         .fare-summary {
-            background: var(--light-bg);
-            padding: 20px;
-            border-radius: 8px;
+            background: #fff;
+            padding: 18px 0;
             margin-bottom: 20px;
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
         }
 
         .fare-row {
@@ -381,48 +865,182 @@
         }
 
         .fare-row.total {
-            border-top: 2px solid white;
+            border-top: 1px solid var(--border-light);
             padding-top: 12px;
+            margin-bottom: 0;
             font-weight: 700;
-            font-size: 16px;
-            color: var(--primary-color);
+            font-size: 17px;
+            color: var(--primary-deep);
+        }
+
+        /* --- Modal sheet -----------------------------------------------------
+               Shared by the review step's edit sheet and the payment step's
+               cash-or-card question, so there is one dialog treatment, not two. */
+        .wz-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, .55);
+            z-index: 1100;
+            padding: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        .wz-modal.is-open { display: flex; }
+        .wz-modal-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 560px;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: modal-in .28s cubic-bezier(.22,.61,.36,1) both;
+        }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(.97) translateY(8px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .wz-modal-head {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .wz-modal-head h4 { margin: 0; font-size: 16px; font-weight: 700; }
+        .wz-modal-head p { margin: 3px 0 0; font-size: 12px; color: var(--ink-soft); }
+        .wz-modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            line-height: 1;
+            color: var(--ink-soft);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .wz-modal-close:hover { background: var(--light-bg); color: var(--ink); }
+        .wz-modal-body { padding: 14px 18px; overflow-y: auto; flex: 1; }
+        .wz-modal-foot {
+            padding: 14px 18px;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            background: var(--light-bg);
+        }
+
+        /* --- Counter rows ----------------------------------------------------
+           Five stacked label/counter/hint blocks ran to roughly 750px. Putting
+           the stepper on the same line as its label turns each one into a
+           single ~60px row, so the whole group fits on one screen. */
+        .count-list {
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .count-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border-light);
+            transition: background-color .25s ease;
+        }
+
+        .count-row:last-child { border-bottom: none; }
+
+        /* A row that is actually in use reads at a glance */
+        .count-row.is-set { background: var(--primary-soft); }
+
+        .count-row-text { flex: 1; min-width: 0; }
+
+        .count-row-title {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        .count-row-title > i {
+            color: var(--primary-dark);
+            font-size: 15px;
+            flex: 0 0 auto;
+        }
+
+        .count-row-sub {
+            font-size: 12px;
+            color: var(--ink-soft);
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+
+        .count-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--primary-deep);
+            background: #d1fae5;
+            border-radius: 999px;
+            padding: 2px 8px;
+            white-space: nowrap;
         }
 
         .field-counter {
             display: flex;
             align-items: center;
             gap: 12px;
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius);
+            padding: 6px;
             width: fit-content;
         }
 
+        /* Tighter stepper inside a row */
+        .count-row .field-counter {
+            flex: 0 0 auto;
+            gap: 2px;
+            padding: 3px;
+            background: #fff;
+        }
+
+        .count-row .field-counter button { width: 30px; height: 30px; font-size: 15px; }
+        .count-row .field-counter input { width: 30px; font-size: 15px; }
+
         .field-counter button {
-            background: white;
+            background: var(--light-bg);
             border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
+            width: 34px;
+            height: 34px;
+            border-radius: 7px;
             cursor: pointer;
             font-weight: bold;
-            color: var(--primary-color);
-            transition: all 0.2s ease;
+            font-size: 16px;
+            color: var(--primary-dark);
+            transition: background .2s ease, transform .15s ease;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .field-counter button:hover {
-            background: var(--light-bg);
+            background: var(--primary-soft);
+            transform: scale(1.06);
         }
 
         .field-counter input {
             width: 40px;
             text-align: center;
             border: none;
-            font-weight: 600;
-            font-size: 14px;
+            font-weight: 700;
+            font-size: 15px;
+            background: transparent;
         }
 
         .loading-spinner {
@@ -441,83 +1059,87 @@
         }
 
         .text-muted {
-            color: #666 !important;
+            color: var(--ink-soft) !important;
             font-size: 13px;
         }
 
         @media (max-width: 576px) {
-            .wizard-body {
-                padding: 25px 15px;
-            }
+            :root { --gutter: 16px; }
 
-            .wizard-header h1 {
-                font-size: 20px;
-            }
+            .wizard-body { padding: 22px 0 44px; }
 
-            .progress-step-label {
-                display: none;
-            }
+            .page-intro { padding: 22px 0 2px; }
+            .page-intro h1 { font-size: 23px; }
+            .page-intro p { font-size: 14px; }
+
+            .app-brand { font-size: 15px; }
+            .app-brand img { height: 26px; }
+
+            .progress-meta { flex-direction: column; gap: 2px; align-items: flex-start; }
+            .progress-name { text-align: left; }
+
+            .trip-type-grid { grid-template-columns: 1fr; }
 
             .btn-group-wizard {
-                flex-direction: column;
+                flex-direction: column-reverse;
             }
 
             .btn {
                 width: 100%;
             }
         }
+
+        /* Honour an explicit request for less motion. */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: .001ms !important;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="wizard-container">
-        <!-- Top Nav -->
-        <div style="background:#0a8f63; padding:10px 20px; display:flex; align-items:center; justify-content:space-between;">
-            <div style="display:flex; align-items:center; gap:10px;">
+    <header class="app-bar">
+        <div class="app-bar-inner">
+            <span class="app-brand">
                 {% if logo_url %}
-                    <img src="{{ logo_url }}" alt="Easy Transit" style="height:36px; object-fit:contain;">
+                    <img src="{{ logo_url }}" alt="Easy Transit">
                 {% else %}
-                    <i class="bi bi-car-front-fill" style="font-size:22px; color:white;"></i>
+                    <i class="bi bi-car-front-fill"></i>
                 {% endif %}
-                <span style="color:white; font-weight:700; font-size:15px;">Easy Transit</span>
-            </div>
-            <a href="https://easytransit.co.zw" target="_blank" rel="noopener"
-               style="display:inline-flex; align-items:center; gap:6px; background:white; color:#0a8f63; font-size:13px; font-weight:700; padding:7px 16px; border-radius:6px; text-decoration:none;">
-                <i class="bi bi-house-fill"></i> Home
+                Easy Transit
+            </span>
+            <a class="app-home" href="https://easytransit.co.zw" target="_blank" rel="noopener">
+                <i class="bi bi-house"></i> Home
             </a>
         </div>
 
-        <!-- Header -->
-        <div class="wizard-header">
+        {% comment %}
+        Says where you are in words, not just dots. Rides along with the brand
+        row so it stays visible while the customer scrolls a long step.
+        {% endcomment %}
+        {% if show_progress %}
+        <div class="progress-bar-container">
+            <div class="progress-meta">
+                <span class="progress-count">Step {{ step }} of {{ total_steps }}</span>
+                <span class="progress-name">{% block step_name %}{% endblock %}</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress_fill" data-step="{{ step }}" data-total="{{ total_steps }}"></div>
+            </div>
+        </div>
+        {% endif %}
+    </header>
+
+    <main class="wizard-container">
+        {% if show_banner %}
+        <div class="page-intro">
             <h1>Book a Ride</h1>
             <p>Fast, safe, and affordable</p>
         </div>
-
-        <!-- Progress Bar -->
-        <div class="progress-bar-container">
-            <div class="progress-steps">
-                <div class="progress-step {% if step == 1 %}active{% elif step > 1 %}completed{% endif %}">
-                    <div class="progress-step-circle">1</div>
-                    <div class="progress-step-label">Location</div>
-                </div>
-                <div class="progress-step {% if step == 2 %}active{% elif step > 2 %}completed{% endif %}">
-                    <div class="progress-step-circle">2</div>
-                    <div class="progress-step-label">Passengers</div>
-                </div>
-                <div class="progress-step {% if step == 3 %}active{% elif step > 3 %}completed{% endif %}">
-                    <div class="progress-step-circle">3</div>
-                    <div class="progress-step-label">Contact</div>
-                </div>
-                <div class="progress-step {% if step == 4 %}active{% elif step > 4 %}completed{% endif %}">
-                    <div class="progress-step-circle">4</div>
-                    <div class="progress-step-label">Payment</div>
-                </div>
-                <div class="progress-step {% if step == 5 %}active{% endif %}">
-                    <div class="progress-step-circle"><i class="bi bi-check"></i></div>
-                    <div class="progress-step-label">Confirm</div>
-                </div>
-            </div>
-        </div>
+        {% endif %}
 
         <!-- Main Content -->
         <div class="wizard-body">
@@ -530,25 +1152,96 @@
 
             {% block content %}{% endblock %}
         </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Floating labels: an example hint would sit where the resting label is,
+        // so it is held back until the field actually has focus. Exposed so
+        // fields built later (the stops editor) can be wired the same way.
+        window.applyFloatingHints = function (root) {
+            (root || document).querySelectorAll('.ff > .form-control[data-hint]').forEach(function (field) {
+                if (field.dataset.hintBound) return;
+                field.dataset.hintBound = '1';
+                field.addEventListener('focus', function () {
+                    field.setAttribute('placeholder', field.dataset.hint);
+                });
+                field.addEventListener('blur', function () {
+                    field.setAttribute('placeholder', ' ');
+                });
+            });
+        };
+        window.applyFloatingHints(document);
+
+        // Fluid focus border: remember where the field was clicked so the
+        // gradient ring can open outward from that point. Delegated, so fields
+        // built later (the stops editor) are covered without re-binding.
+        document.addEventListener('pointerdown', function (e) {
+            const input = e.target.closest('.form-control, .form-select');
+            if (!input) return;
+            const ff = input.parentElement;
+            if (!ff || !ff.classList.contains('ff')) return;
+            const rect = ff.getBoundingClientRect();
+            if (!rect.width) return;
+            const x = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+            ff.style.setProperty('--ff-x', (x / rect.width * 100).toFixed(2) + '%');
+        });
+
+        // Morphing buttons: collapse to a spinning circle while work is in
+        // flight, and open into a tick when the outcome is known in-page.
+        // The width is pinned first because a flex-sized button has no width
+        // to animate away from.
+        window.morphButton = function (btn) {
+            const original = btn.innerHTML;
+            const wasDisabled = btn.disabled;
+
+            return {
+                loading: function () {
+                    const rect = btn.getBoundingClientRect();
+                    btn.style.width = rect.width + 'px';
+                    btn.style.height = rect.height + 'px';
+                    void btn.offsetWidth; // commit the explicit width first
+                    btn.classList.add('is-morphing');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="btn-morph-spinner"></span>';
+                    btn.style.width = rect.height + 'px';
+                },
+                success: function () {
+                    btn.classList.add('is-done');
+                    btn.innerHTML = '<svg class="btn-morph-check" viewBox="0 0 24 24" aria-hidden="true">' +
+                                    '<path d="M5 13l4 4L19 7"></path></svg>';
+                },
+                reset: function () {
+                    btn.classList.remove('is-morphing', 'is-done');
+                    btn.style.width = '';
+                    btn.style.height = '';
+                    btn.innerHTML = original;
+                    btn.disabled = wasDisabled;
+                },
+            };
+        };
+
+        // Fill the track after paint so the width animates in.
+        (function () {
+            const fill = document.getElementById('progress_fill');
+            if (!fill) return;
+            const step = parseInt(fill.dataset.step, 10) || 1;
+            const total = parseInt(fill.dataset.total, 10) || 1;
+            requestAnimationFrame(function () {
+                fill.style.width = Math.round((step / total) * 100) + '%';
+            });
+        })();
+    </script>
     {% if GOOGLE_MAPS_CLIENT_KEY %}
         <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_CLIENT_KEY }}&libraries=places"></script>
     {% else %}
         <script>
             console.error('ERROR: Google Maps API key not configured!');
-            console.error('Please set GOOGLE_MAPS_CLIENT_KEY in your environment variables or Django settings.');
             document.addEventListener('DOMContentLoaded', function() {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'error-message';
                 errorDiv.style.cssText = 'position: fixed; top: 20px; left: 20px; right: 20px; z-index: 9999; max-width: 500px; margin: 0;';
-                errorDiv.innerHTML = `
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Configuration Error:</strong> Google Maps API key is not configured. 
-                    Please set GOOGLE_MAPS_CLIENT_KEY environment variable.
-                    Contact your administrator for assistance.
-                `;
+                errorDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <strong>Configuration Error:</strong> Google Maps API key is not configured. Contact your administrator for assistance.';
                 document.body.insertBefore(errorDiv, document.body.firstChild);
             });
         </script>

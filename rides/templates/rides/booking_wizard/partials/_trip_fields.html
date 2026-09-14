@@ -1,0 +1,238 @@
+{% comment %}
+Trip fields — shared by step 1 and the review page's edit modal.
+
+Rendered at most once per page, so the ids below stay stable and the
+accompanying _trip_fields_js.html can address them directly.
+{% endcomment %}
+
+<!-- Trip type: the first and only decision on this screen until it is made -->
+<div class="trip-type-grid">
+    <button type="button" class="trip-type-card" id="trip_type_regular" data-airport="0" aria-pressed="false">
+        <span class="tt-check"><i class="bi bi-check-lg"></i></span>
+        <i class="bi bi-geo-alt-fill tt-icon"></i>
+        <span class="tt-title">Regular pickup</span>
+        <span class="tt-sub">Home, work, anywhere in town</span>
+    </button>
+    <button type="button" class="trip-type-card" id="trip_type_airport" data-airport="1" aria-pressed="false">
+        <span class="tt-check"><i class="bi bi-check-lg"></i></span>
+        <i class="bi bi-airplane-fill tt-icon"></i>
+        <span class="tt-title">Airport pickup</span>
+        <span class="tt-sub">We track your flight arrival</span>
+    </button>
+</div>
+
+<!-- Backs the cards above. The form and all server-side validation still key
+     off this single boolean, so nothing downstream had to change. -->
+<div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">
+    {{ trip_form.pickup_is_airport }}
+</div>
+
+<p id="trip_type_prompt" class="section-sub" style="margin-top:14px;">
+    Choose one to continue &mdash; we&rsquo;ll only ask for what that trip needs.
+</p>
+
+<!-- Everything below stays out of the way until a trip type is chosen -->
+<div id="trip_fields_panel" class="reveal-panel">
+
+    <!-- Airport-only: which flight, and which side of the airport -->
+    <div id="airport_fields" class="reveal-panel">
+        <div class="form-group">
+            <label class="form-label">Which part of the airport are we collecting you from?</label>
+            <div style="display:grid;gap:8px;margin-top:6px;">
+                {% for choice in trip_form.pickup_airport_terminal %}
+                <label style="display:flex;align-items:center;gap:10px;padding:13px 14px;border:1px solid #d1d5db;border-radius:10px;cursor:pointer;margin:0;">
+                    {{ choice.tag }}
+                    <span>{{ choice.choice_label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            <small class="form-text text-muted">An airport name on its own doesn&rsquo;t tell the driver which side to wait at.</small>
+            {% if trip_form.pickup_airport_terminal.errors %}
+                <div class="error-message" style="margin-top:8px;">
+                    {% for error in trip_form.pickup_airport_terminal.errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.arrival_airline label="Airline" icon="bi-airplane" only %}
+        </div>
+        <div class="form-group">
+            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.arrival_flight_number label="Flight number" icon="bi-ticket-perforated" only %}
+        </div>
+        <div style="display:flex; gap:12px;">
+            <div class="form-group" style="flex:1">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.arrival_date label="Arrival date" static=1 only %}
+            </div>
+            <div class="form-group" style="flex:1">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.arrival_time label="Arrival time" static=1 only %}
+            </div>
+        </div>
+
+        <button type="button" id="more_flight_details_btn" class="location-btn" style="margin-bottom:20px;">
+            <i class="bi bi-plus-circle"></i> Add more flight details
+        </button>
+
+        <div id="more_flight_fields" style="display:none;margin-bottom:20px;padding:14px 16px;background:var(--light-bg);border:1px solid var(--border-light);border-radius:10px;">
+            <div style="font-size:13px;color:#475569;margin-bottom:14px;">
+                Useful if you are connecting through another airport, or if your flight may still change.
+                You can also correct these details later from the link in your confirmation email.
+            </div>
+            <div class="form-group">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.flight_departure_airport label="Departing from" only %}
+            </div>
+            <div class="form-group">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.flight_connection_details label="Connecting flight" only %}
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.flight_notes label="Anything else about your flight" only %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Pickup: the locate button shares the row, so this one is laid out here
+         rather than through _field.html -->
+    <div class="form-group">
+        <div class="field-with-action">
+            <div class="ff ff-icon{% if trip_form.pickup_address.errors %} ff-error{% endif %}" style="flex:1; min-width:0;">
+                {{ trip_form.pickup_address }}
+                <i class="bi bi-geo-alt ff-lead"></i>
+                <label for="pickup_address" class="ff-label">Pickup location</label>
+            </div>
+            <button type="button" class="icon-btn" id="use_current_location"
+                    title="Use my current location" aria-label="Use my current location">
+                <i class="bi bi-crosshair" id="use_current_location_icon"></i>
+            </button>
+        </div>
+        {% if trip_form.pickup_address.errors %}
+            <div class="error-message" style="margin-top:8px;">
+                {% for error in trip_form.pickup_address.errors %}{{ error }}{% endfor %}
+            </div>
+        {% endif %}
+    </div>
+    <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="{{ step1_data.pickup_latitude|default:'' }}">
+    <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="{{ step1_data.pickup_longitude|default:'' }}">
+
+    <!-- Dropoff -->
+    <div class="form-group">
+        {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.dropoff_address label="Drop-off location" icon="bi-pin-map" only %}
+    </div>
+    <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="{{ step1_data.dropoff_latitude|default:'' }}">
+    <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="{{ step1_data.dropoff_longitude|default:'' }}">
+    <input type="hidden" id="distance_km" name="distance_km" value="{{ step1_data.distance_km|default:'' }}">
+
+    <!-- Regular-only: when to collect -->
+    <div id="pickup_schedule_fields" class="reveal-panel">
+        <div style="display:flex; gap:12px;">
+            <div class="form-group" style="flex:1">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.pickup_date label="Pickup date" static=1 only %}
+            </div>
+            <div class="form-group" style="flex:1">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.pickup_time label="Pickup time" static=1 only %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Long-distance trip alert (hidden until JS measures the route) -->
+    <div id="long_distance_alert" style="display:none;margin-bottom:20px;padding:14px 16px;background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;color:#92400e;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">
+            <i class="bi bi-sign-intersection-fill" style="color:#f59e0b;margin-right:6px;"></i>This looks like a Long Distance trip
+        </div>
+        <div style="font-size:13px;">
+            Your route is <strong><span id="ld_distance_display">-</span> km</strong> &mdash; trips of
+            <strong id="ld_threshold_display">80</strong> km or more are priced at the long distance flat rate
+            ($1.40/km, up to 3 passengers). You can continue booking normally.
+        </div>
+    </div>
+
+    <!-- Optional extras, collapsed so the step opens short -->
+    <div class="option-row" id="points_option">
+        <button type="button" class="option-row-head" id="points_toggle" aria-expanded="false" aria-controls="point_detail_fields">
+            <i class="bi bi-signpost-split"></i>
+            <span class="option-row-label">Exact pickup &amp; drop-off points <span class="option-row-hint">optional</span></span>
+            <i class="bi bi-chevron-down" id="points_chevron"></i>
+        </button>
+        <div id="point_detail_fields" class="option-row-body" style="display:none;">
+            <div class="option-row-note">
+                Big places have many entrances &mdash; tell us where to wait, e.g. &ldquo;outside Gate 2, by the coffee kiosk&rdquo;.
+            </div>
+            <div class="form-group">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.pickup_point_detail label="Exact pickup point" only %}
+            </div>
+            <div class="form-group">
+                {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.dropoff_point_detail label="Exact drop-off point" only %}
+            </div>
+        </div>
+    </div>
+
+    <div class="option-row" id="return_option">
+        <label class="option-row-head" for="is_return_trip">
+            <i class="bi bi-arrow-left-right"></i>
+            <span class="option-row-label">Return trip <span class="option-row-hint">one booking, there and back</span></span>
+            {{ trip_form.is_return_trip }}
+        </label>
+
+        <div id="return_fields" class="option-row-body" style="display:none;">
+            <div style="display:flex;gap:12px;">
+                <div class="form-group" style="flex:1">
+                    {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_date label="Return date" static=1 only %}
+                </div>
+                <div class="form-group" style="flex:1">
+                    {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_time label="Return time" static=1 only %}
+                </div>
+            </div>
+            <div style="padding-top:14px;border-top:1px dashed #86efac;">
+                <label for="return_use_different_points" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin:0;">
+                    {{ trip_form.return_use_different_points }}
+                    <span>
+                        <span style="font-weight:700;color:#065f46;display:block;">Collect me somewhere else on the way back</span>
+                        <span style="font-size:13px;color:#047857;">
+                            By default we simply reverse the trip. Tick this if the return journey starts
+                            or ends somewhere different.
+                        </span>
+                    </span>
+                </label>
+
+                <div id="return_route_fields" style="display:none;margin-top:16px;">
+                    <div class="form-group">
+                        {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_pickup_address label="Return pickup location" icon="bi-geo-alt" only %}
+                        <div style="margin-top:12px;">
+                            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_pickup_point_detail label="Exact meeting point (optional)" only %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_dropoff_address label="Return drop-off location" icon="bi-pin-map" only %}
+                        <div style="margin-top:12px;">
+                            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_dropoff_point_detail label="Exact drop-off point (optional)" only %}
+                        </div>
+                    </div>
+                    <div id="return_distance_note" style="display:none;font-size:13px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;">
+                        Return journey measured at <strong><span id="return_distance_display">-</span> km</strong> &mdash;
+                        this leg is priced on its own route.
+                    </div>
+                </div>
+            </div>
+
+            {{ trip_form.return_pickup_latitude }}
+            {{ trip_form.return_pickup_longitude }}
+            {{ trip_form.return_dropoff_latitude }}
+            {{ trip_form.return_dropoff_longitude }}
+            {{ trip_form.return_distance_km }}
+
+            <div style="font-size:12px;color:#047857;margin-top:10px;">
+                The return leg is charged the same as the outbound trip{% if return_discount_percent %},
+                less your {{ return_discount_percent|floatformat:"-2" }}% round-trip discount{% endif %}.
+                A return on a different route is charged on that route instead.
+            </div>
+            {% if trip_form.return_date.errors or trip_form.return_time.errors %}
+            <div class="error-message" style="margin-top:8px;">
+                {% for error in trip_form.return_date.errors %}{{ error }}{% endfor %}
+                {% for error in trip_form.return_time.errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Past date/time warning -->
+    <div id="schedule_error" class="error-message" style="display:none;margin:12px 0;font-weight:600;"></div>
+</div>

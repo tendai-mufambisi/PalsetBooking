@@ -1,0 +1,24 @@
+{% comment %}
+One floating-label field: the widget, its label, an optional leading icon,
+optional helper text and any errors.
+
+    {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.arrival_airline label="Airline" only %}
+
+    field   bound form field (required)
+    label   the text that rests inside the field and floats on focus (required)
+    icon    bootstrap-icons class, e.g. "bi-geo-alt", shown inside the field
+    hint    helper text rendered under the field
+    static  truthy for widgets with no empty state (selects, dates, times) so
+            the label stays floated instead of colliding with their own text
+{% endcomment %}
+<div class="ff{% if static %} ff-static{% endif %}{% if icon %} ff-icon{% endif %}{% if field.errors %} ff-error{% endif %}">
+    {{ field }}
+    {% if icon %}<i class="bi {{ icon }} ff-lead"></i>{% endif %}
+    <label for="{{ field.id_for_label }}" class="ff-label">{{ label }}</label>
+</div>
+{% if hint %}<small class="form-text">{{ hint }}</small>{% endif %}
+{% if field.errors %}
+    <div class="error-message" style="margin-top:8px;">
+        {% for error in field.errors %}{{ error }}{% endfor %}
+    </div>
+{% endif %}
