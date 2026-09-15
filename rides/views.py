@@ -554,6 +554,7 @@ class MultiStepBookingWizardView(View):
             'step2_data': step2,
             'step3_data': step3,
             'trip_form': Step1PickupDropoffForm(initial=step1),
+            'trip_type_chosen': True,
             'people_form': Step2PassengersLuggageForm(initial=step2),
             'contact_form': Step3ContactExtraForm(initial=step3),
         })
@@ -650,7 +651,10 @@ class MultiStepBookingWizardView(View):
         # Allow callers to force-start a new booking by passing ?reset=1 (or true/yes)
         if step == 1:
             reset_param = (request.GET.get('reset') or '').lower()
-            if reset_param in ('1', 'true', 'yes'):
+            # /booking/ is the entry point, so it starts a clean booking. Going
+            # back to /booking/step/1/ from step 2 still restores the answers.
+            entering = bool(request.resolver_match) and                 request.resolver_match.url_name == 'booking_wizard_start'
+            if entering or reset_param in ('1', 'true', 'yes'):
                 # Clear wizard state so the form shows empty values
                 self.clear_wizard_session()
                 wizard_data = {}
@@ -667,6 +671,8 @@ class MultiStepBookingWizardView(View):
             context['form'] = Step1PickupDropoffForm(initial=wizard_data.get('step1', {}))
             # Pass step1 saved values so template can populate hidden coords
             context['step1_data'] = wizard_data.get('step1', {})
+            # Neither trip-type card is preselected until step 1 has been saved
+            context['trip_type_chosen'] = 'step1' in wizard_data
             return render(request, 'rides/booking_wizard/step1.html', context)
 
         elif step == 2:
@@ -781,6 +787,8 @@ class MultiStepBookingWizardView(View):
             context = self.base_context(request, step)
             context['form'] = form
             context['step1_data'] = wizard_data.get('step1', {})
+            # They got far enough to submit, so a card was already picked
+            context['trip_type_chosen'] = True
             return render(request, 'rides/booking_wizard/step1.html', context)
 
         elif step == 2:

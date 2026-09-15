@@ -43,9 +43,11 @@ keep the customer from reaching a rejection.
         if (scheduleFields) scheduleFields.classList.toggle('is-shown', chosen && !isAirport);
     }
 
-    // A type counts as chosen once the customer picks a card, or when we are
-    // re-opening a booking that already has trip details saved.
-    let typeChosen = !!(airportCheckbox && airportCheckbox.checked) || val('pickup_address').trim().length > 0;
+    // Nothing is preselected: the customer picks a card first. This is set
+    // server-side from whether step 1 was actually saved, rather than guessed
+    // from the address box having text in it - which browser autofill, or a
+    // half-finished attempt, would both trip.
+    let typeChosen = {{ trip_type_chosen|yesno:"true,false" }};
 
     cards.forEach((card) => {
         card.addEventListener('click', () => {

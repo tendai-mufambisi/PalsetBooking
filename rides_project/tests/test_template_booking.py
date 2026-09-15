@@ -4,6 +4,7 @@ These replace two older tests that pointed at `rides:home`, the single-page
 booking form that was removed when the wizard took over.
 """
 
+import re
 from datetime import timedelta
 
 import pytest
@@ -338,3 +339,48 @@ def test_cash_and_card_both_reach_the_booking(monkeypatch, client):
         booking = RideBooking.objects.first()
         assert booking.payment_option == expected, (sent, booking.payment_option)
     print('CASH + CARD OK')
+
+
+def _chosen(body):
+    """What the page tells the browser about a preselected trip type."""
+    return re.search(r'let typeChosen = (\w+);', body).group(1)
+
+@pytest.mark.django_db
+def test_nothing_preselected(monkeypatch, client):
+    monkeypatch.setattr('rides.services.distance.DistanceService.get_distance_km',
+                        lambda o, d, use_cache=True: 14.0)
+
+    # 1. Brand new visitor
+    b = client.get(reverse('rides:booking_wizard_start')).content.decode()
+    assert _chosen(b) == 'false', 'fresh form must not preselect a card'
+    assert 'Choose one to continue' in b
+
+    # 2. Complete step 1, so the session now holds a trip
+    pickup = _future()
+    client.post(reverse('rides:booking_wizard', kwargs={'step': 1}), dict(
+        pickup_address='Start', dropoff_address='End',
+        pickup_latitude=-17.8, pickup_longitude=31.0,
+        dropoff_latitude=-17.9, dropoff_longitude=31.1,
+        distance_km=14.0, pickup_date=pickup.date().isoformat(), pickup_time='10:00'))
+
+    # Going back to step 1 in-flow keeps the answer
+    b = client.get(reverse('rides:booking_wizard', kwargs={'step': 1})).content.decode()
+    assert _chosen(b) == 'true', 'Back from step 2 should keep the chosen card'
+    assert 'value="Start"' in b
+
+    # 3. Re-entering at /booking/ starts clean - this was the reported bug
+    b = client.get(reverse('rides:booking_wizard_start')).content.decode()
+    assert _chosen(b) == 'false', '/booking/ must start a fresh booking'
+    assert 'value="Start"' not in b, 'stale address should be cleared too'
+
+@pytest.mark.django_db
+def test_rejected_step1_keeps_the_card(client):
+    """A past pickup is rejected; the customer should not lose their choice."""
+    past = timezone.localtime() - timedelta(days=1)
+    resp = client.post(reverse('rides:booking_wizard', kwargs={'step': 1}), dict(
+        pickup_address='Start', dropoff_address='End',
+        pickup_latitude=-17.8, pickup_longitude=31.0,
+        dropoff_latitude=-17.9, dropoff_longitude=31.1,
+        distance_km=14.0, pickup_date=past.date().isoformat(), pickup_time='10:00'))
+    assert resp.status_code == 200
+    assert _chosen(resp.content.decode()) == 'true'
