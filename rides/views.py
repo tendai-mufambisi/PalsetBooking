@@ -25,7 +25,7 @@ from typing import Optional
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View, TemplateView
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.middleware.csrf import get_token
 from django.conf import settings
 from django.utils import timezone
@@ -40,6 +40,7 @@ import datetime
 from .forms import (
     Step1PickupDropoffForm,
     Step2PassengersLuggageForm,
+    ChauffeurPassengersForm,
     Step3ContactExtraForm,
     Step4FarePaymentForm,
     Step5ConfirmationForm,
@@ -356,18 +357,33 @@ class MultiStepBookingWizardView(View):
     Multi-step booking wizard that uses Django sessions to preserve state.
     
     Flow:
-    - Step 1 (GET): Show pickup/dropoff form
+    - Step 1 (GET): Show the trip: route, schedule, flight and stops
     - Step 1 (POST): Validate locations, save to session, redirect to Step 2
-    - Step 2 (GET): Show passengers/luggage form
+    - Step 2 (GET): Show passenger counts and luggage
     - Step 2 (POST): Validate and save, redirect to Step 3
-    - Step 3 (GET): Show contact form
+    - Step 3 (GET): Show contact details and the name for the driver's placard
     - Step 3 (POST): Validate and save, redirect to Step 4
-    - Step 4 (GET): Show fare preview & payment method selection
-    - Step 4 (POST): Create booking + payment, redirect to Step 5 or payment gateway
-    - Step 5 (GET): Show confirmation (display-only)
+    - Step 4 (GET): Show fare breakdown and the full review, editable via modal
+    - Step 5 (GET): Show the total and the payment choices, nothing else
+    - Step 5 (POST): Create booking + payment, redirect to Step 6 or payment gateway
+    - Step 6 (GET): Show confirmation (display-only)
+
+    Each screen owns one subject, and the session keys follow it: 'step1' is the
+    trip, 'step2' the people, 'step3' the contact details.
     """
 
-    VALID_STEPS = [1, 2, 3, 4, 5]
+    VALID_STEPS = [1, 2, 3, 4, 5, 6]
+    TOTAL_STEPS = 5  # Steps 1-5 collect input; step 6 is the confirmation page
+
+    # One source of truth for the progress rail: (number, heading, rail label).
+    # The short label has to survive five columns on a narrow screen.
+    STEP_LABELS = (
+        (1, 'My trip details', 'Trip'),
+        (2, 'Passengers & luggage', 'Guests'),
+        (3, 'Contact details', 'Contact'),
+        (4, 'Check your booking', 'Review'),
+        (5, 'Payment', 'Pay'),
+    )
     SESSION_KEY_PREFIX = 'booking_wizard'
 
     def get_session_key(self, key: str) -> str:
@@ -426,6 +442,238 @@ class MultiStepBookingWizardView(View):
                 del self.request.session[session_key]
         self.request.session.modified = True
 
+    def base_context(self, request, step):
+        """Context every wizard screen needs.
+
+        Built in one place so an error re-render can never ship a thinner
+        context than the happy path and quietly drop half a form.
+        """
+        # A completed step can be reopened; the current and later ones cannot.
+        rail = [{
+            'number': number,
+            'label': label,
+            'short': short,
+            'state': 'done' if number < step else ('current' if number == step else 'todo'),
+        } for number, label, short in self.STEP_LABELS]
+
+        spans = max(self.TOTAL_STEPS - 1, 1)
+        heading = next((l for n, l, _ in self.STEP_LABELS if n == step), '')
+
+        return {
+            'step': step,
+            'total_steps': self.TOTAL_STEPS,
+            'show_progress': step <= self.TOTAL_STEPS,
+            'wizard_rail': rail,
+            'step_heading': heading,
+            # Lets the shell play the exit transition before a Back navigation,
+            # without every step template having to hand over its own target.
+            'prev_step': step - 1 if step > 1 else None,
+            # How far along the rail the fill reaches, 0-1, as a scaleX factor
+            'progress_ratio': '%.4f' % (max(step - 1, 0) / spans),
+            # The form only introduces itself once; after step 1 it is noise.
+            'show_banner': step == 1,
+            'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
+            'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
+            'TAXI_OWNER_EMAIL': settings.TAXI_OWNER_EMAIL,
+            'csrf_token': get_token(request),
+            'logo_url': _logo_url(),
+            'ld_threshold_km': PricingService._get_ld_threshold(),
+            'ld_cfg': PricingService.get_long_distance_cfg(),
+            'booking_limits': PricingService.get_booking_limits(),
+            'stop_tiers': PricingService.get_stop_tiers(),
+            'night_cfg': PricingService.get_night_cfg(),
+            'hand_luggage_cfg': PricingService.get_hand_luggage_cfg(),
+            'return_discount_percent': PricingService.get_return_discount_percent(),
+            'money_transfer_recipient': PricingService.get_money_transfer_recipient(),
+        }
+
+    @staticmethod
+    def coords_present(step1):
+        """True when both ends of the outbound trip have usable coordinates."""
+        def ok(value):
+            try:
+                return value is not None and str(value) != '' and float(value) == float(value)
+            except Exception:
+                return False
+
+        return all(ok(step1.get(key)) for key in (
+            'pickup_latitude', 'pickup_longitude', 'dropoff_latitude', 'dropoff_longitude',
+        ))
+
+    def fare_context(self, wizard_data):
+        """Price the booking as it currently stands in the session.
+
+        Shared by the review step, the payment step and the booking-creation
+        POST, so all three always quote the same number. Returns context keys
+        only - the caller decides what to render.
+        """
+        step1 = wizard_data.get('step1', {})
+        step2 = wizard_data.get('step2', {})
+
+        try:
+            distance_km = float(step1.get('distance_km', 0))
+            if distance_km == 0:
+                distance_km = DistanceService.get_distance_km(
+                    (step1.get('pickup_latitude'), step1.get('pickup_longitude')),
+                    (step1.get('dropoff_latitude'), step1.get('dropoff_longitude')),
+                )
+                step1['distance_km'] = distance_km
+
+                # Keep the session copy JSON-serializable
+                def iso(value):
+                    return value.isoformat() if value is not None and hasattr(value, 'isoformat') else value
+
+                session_step1 = dict(step1)
+                for key in ('pickup_date', 'pickup_time', 'arrival_date', 'arrival_time'):
+                    session_step1[key] = iso(session_step1.get(key))
+                self.request.session[self.get_session_key('step1')] = session_step1
+                self.request.session.modified = True
+
+            fare_breakdown = _calculate_fare(
+                distance_km=distance_km,
+                num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
+                baby_car_seater=step2.get('baby_car_seater', 0),
+                num_kids_carried=step2.get('num_kids_carried', 0),
+                luggage_count=step2.get('luggage_count', 0),
+                hand_luggage_count=step2.get('hand_luggage_count', 0),
+                pickup_time=step1.get('pickup_time'),
+                stops=step1.get('stops', []),
+                is_return_trip=step1.get('is_return_trip', False),
+                return_time=step1.get('return_time'),
+                return_distance_km=_return_leg_distance(step1),
+            )
+            return {
+                'fare_breakdown': fare_breakdown,
+                'estimated_fare': fare_breakdown['total'],
+                'ride_type': fare_breakdown.get('ride_type', 'city'),
+                'paynow_rule': PricingService.get_paynow_rule(),
+                'paynow_allowed': PricingService.paynow_allowed(fare_breakdown['total']),
+            }
+        except Exception as exc:
+            logger.exception('Fare calculation failed')
+            return {
+                'fare_error': str(exc),
+                'estimated_fare': 'Unable to calculate',
+                'paynow_rule': PricingService.get_paynow_rule(),
+                'paynow_allowed': False,
+            }
+
+    def payment_context(self, request, wizard_data, **overrides):
+        """Context for the payment step - the total and how to pay it."""
+        step1 = wizard_data.get('step1', {})
+        distance_km = float(step1.get('distance_km') or 0)
+
+        context = self.base_context(request, 5)
+        context.update({
+            'step1_data': step1,
+            'step2_data': wizard_data.get('step2', {}),
+            'step3_data': wizard_data.get('step3', {}),
+            'form': Step4FarePaymentForm(),
+            # Repeated here because it changes what the customer is agreeing to
+            # pay; it is deliberately not shown on the screens in between.
+            'is_long_distance': PricingService.is_long_distance(distance_km) if distance_km > 0 else False,
+        })
+        context.update(self.fare_context(wizard_data))
+        context.update(overrides)
+        return context
+
+    def review_context(self, request, wizard_data, **overrides):
+        """Context for the review screen, including the edit modal's forms.
+
+        The modal re-renders every wizard field, so it needs each step's form
+        bound to the saved answers.
+        """
+        step1 = wizard_data.get('step1', {})
+        step2 = wizard_data.get('step2', {})
+        step3 = wizard_data.get('step3', {})
+
+        context = self.base_context(request, 4)
+        context.update({
+            'step1_data': step1,
+            'step2_data': step2,
+            'step3_data': step3,
+            'trip_form': Step1PickupDropoffForm(initial=step1),
+            'trip_type_chosen': True,
+            'people_form': Step2PassengersLuggageForm(initial=step2),
+            'contact_form': Step3ContactExtraForm(initial=step3),
+        })
+        context.update(overrides)
+        return context
+
+    @staticmethod
+    def build_step1_payload(cleaned):
+        """Flatten a validated step-1 form into the session's step1 dict.
+
+        Shared by the wizard's own step 1 and the review page's edit modal, so
+        the two can never disagree about what a saved trip looks like. Dates and
+        times are stored as ISO strings to keep the session JSON-serializable.
+        """
+        def iso(value):
+            return value.isoformat() if value is not None and hasattr(value, 'isoformat') else value
+
+        return {
+            'pickup_address': cleaned['pickup_address'],
+            'pickup_latitude': cleaned['pickup_latitude'],
+            'pickup_longitude': cleaned['pickup_longitude'],
+            'dropoff_address': cleaned['dropoff_address'],
+            'dropoff_latitude': cleaned['dropoff_latitude'],
+            'dropoff_longitude': cleaned['dropoff_longitude'],
+            'distance_km': cleaned.get('distance_km') or 0,
+            'pickup_date': iso(cleaned.get('pickup_date')),
+            'pickup_time': iso(cleaned.get('pickup_time')),
+            'pickup_point_detail': cleaned.get('pickup_point_detail') or '',
+            'dropoff_point_detail': cleaned.get('dropoff_point_detail') or '',
+            'pickup_is_airport': bool(cleaned.get('pickup_is_airport')),
+            'pickup_airport_terminal': cleaned.get('pickup_airport_terminal') or '',
+            'arrival_airline': cleaned.get('arrival_airline'),
+            'arrival_flight_number': cleaned.get('arrival_flight_number'),
+            'arrival_date': iso(cleaned.get('arrival_date')),
+            'arrival_time': iso(cleaned.get('arrival_time')),
+            'flight_departure_airport': cleaned.get('flight_departure_airport') or '',
+            'flight_connection_details': cleaned.get('flight_connection_details') or '',
+            'flight_notes': cleaned.get('flight_notes') or '',
+            'is_return_trip': bool(cleaned.get('is_return_trip')),
+            'return_date': iso(cleaned.get('return_date')),
+            'return_time': iso(cleaned.get('return_time')),
+            'return_use_different_points': bool(cleaned.get('return_use_different_points')),
+            'return_pickup_address': cleaned.get('return_pickup_address') or '',
+            'return_pickup_latitude': cleaned.get('return_pickup_latitude'),
+            'return_pickup_longitude': cleaned.get('return_pickup_longitude'),
+            'return_pickup_point_detail': cleaned.get('return_pickup_point_detail') or '',
+            'return_dropoff_address': cleaned.get('return_dropoff_address') or '',
+            'return_dropoff_latitude': cleaned.get('return_dropoff_latitude'),
+            'return_dropoff_longitude': cleaned.get('return_dropoff_longitude'),
+            'return_dropoff_point_detail': cleaned.get('return_dropoff_point_detail') or '',
+            'return_distance_km': cleaned.get('return_distance_km'),
+            # Stops belong to the route, so they travel with the trip data.
+            'stops': cleaned.get('stops') or [],
+            'stops_json': json.dumps(cleaned.get('stops') or []),
+        }
+
+    @staticmethod
+    def build_people_payload(cleaned, post_data):
+        """Flatten a validated step-2 form into the session's step2 dict."""
+        return {
+            'num_adults': merged_adult_count(cleaned['num_adults'], post_data.get('num_kids_seated', 0)),
+            'num_kids_seated': 0,
+            'baby_car_seater': cleaned['baby_car_seater'],
+            'num_kids_carried': cleaned['num_kids_carried'],
+            'luggage_count': cleaned['luggage_count'],
+            'hand_luggage_count': cleaned.get('hand_luggage_count') or 0,
+            'passengers_json': post_data.get('passengers_json') or '[]',
+        }
+
+    @staticmethod
+    def build_contact_payload(cleaned):
+        """Flatten a validated contact form into the session's step3 dict."""
+        return {
+            'phone': cleaned['phone'],
+            'email': cleaned['email'],
+            'extra_instructions': cleaned['extra_instructions'],
+            'salutation': cleaned.get('salutation'),
+            'passenger_full_name': cleaned.get('passenger_full_name'),
+        }
+
     def get(self, request, step=1):
         """Render the form for the current step."""
         step = int(step)
@@ -433,21 +681,7 @@ class MultiStepBookingWizardView(View):
         if step not in self.VALID_STEPS:
             return redirect('rides:booking_wizard_start')
 
-        # Build context with CSRF token and Google Maps API key
-        context = {
-            'step': step,
-            'total_steps': 4,  # Steps 1-4 have forms; Step 5 is confirmation
-            'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-            'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-            'csrf_token': get_token(request),
-            'logo_url': _logo_url(),
-            'ld_threshold_km': PricingService._get_ld_threshold(),
-            'booking_limits': PricingService.get_booking_limits(),
-            'stop_tiers': PricingService.get_stop_tiers(),
-            'night_cfg': PricingService.get_night_cfg(),
-            'hand_luggage_cfg': PricingService.get_hand_luggage_cfg(),
-            'return_discount_percent': PricingService.get_return_discount_percent(),
-        }
+        context = self.base_context(request, step)
 
         # Restore previous step data from session if user navigates back
         wizard_data = self.get_wizard_data()
@@ -455,7 +689,10 @@ class MultiStepBookingWizardView(View):
         # Allow callers to force-start a new booking by passing ?reset=1 (or true/yes)
         if step == 1:
             reset_param = (request.GET.get('reset') or '').lower()
-            if reset_param in ('1', 'true', 'yes'):
+            # /booking/ is the entry point, so it starts a clean booking. Going
+            # back to /booking/step/1/ from step 2 still restores the answers.
+            entering = bool(request.resolver_match) and                 request.resolver_match.url_name == 'booking_wizard_start'
+            if entering or reset_param in ('1', 'true', 'yes'):
                 # Clear wizard state so the form shows empty values
                 self.clear_wizard_session()
                 wizard_data = {}
@@ -469,12 +706,11 @@ class MultiStepBookingWizardView(View):
                     wizard_data = {}
 
         if step == 1:
-            form = Step1PickupDropoffForm(
-                initial=wizard_data.get('step1', {})
-            )
-            context['form'] = form
+            context['form'] = Step1PickupDropoffForm(initial=wizard_data.get('step1', {}))
             # Pass step1 saved values so template can populate hidden coords
             context['step1_data'] = wizard_data.get('step1', {})
+            # Neither trip-type card is preselected until step 1 has been saved
+            context['trip_type_chosen'] = 'step1' in wizard_data
             return render(request, 'rides/booking_wizard/step1.html', context)
 
         elif step == 2:
@@ -482,105 +718,43 @@ class MultiStepBookingWizardView(View):
             if 'step1' not in wizard_data:
                 return redirect('rides:booking_wizard', step=1)
 
-            form = Step2PassengersLuggageForm(
-                initial=wizard_data.get('step2', {})
-            )
-            step1 = wizard_data['step1']
-            distance_km = float(step1.get('distance_km') or 0)
-            context['form'] = form
-            context['step1_data'] = step1
+            context['people_form'] = Step2PassengersLuggageForm(initial=wizard_data.get('step2', {}))
+            context['step1_data'] = wizard_data['step1']
             context['step2_data'] = wizard_data.get('step2', {})
-            context['is_long_distance'] = PricingService.is_long_distance(distance_km) if distance_km > 0 else False
-            context['ld_threshold_km'] = PricingService._get_ld_threshold()
             return render(request, 'rides/booking_wizard/step2.html', context)
 
         elif step == 3:
             if 'step2' not in wizard_data:
                 return redirect('rides:booking_wizard', step=2)
 
-            form = Step3ContactExtraForm(
-                initial=wizard_data.get('step3', {})
-            )
-            context['form'] = form
+            context['contact_form'] = Step3ContactExtraForm(initial=wizard_data.get('step3', {}))
             context['step1_data'] = wizard_data.get('step1', {})
-            context['step2_data'] = wizard_data.get('step2', {})
             return render(request, 'rides/booking_wizard/step3.html', context)
 
         elif step == 4:
             if 'step3' not in wizard_data:
                 return redirect('rides:booking_wizard', step=3)
 
-            # Calculate fare based on Step 1 & 2 data
-            step1 = wizard_data.get('step1', {})
-            step2 = wizard_data.get('step2', {})
-
-            # Ensure coordinates are present and valid; if not, send user back to step 1
-            def _coords_valid(val):
-                try:
-                    return val is not None and str(val) != '' and float(val) == float(val)
-                except Exception:
-                    return False
-
-            p_lat = step1.get('pickup_latitude')
-            p_lng = step1.get('pickup_longitude')
-            d_lat = step1.get('dropoff_latitude')
-            d_lng = step1.get('dropoff_longitude')
-
-            if not (_coords_valid(p_lat) and _coords_valid(p_lng) and _coords_valid(d_lat) and _coords_valid(d_lng)):
-                from django.urls import reverse
+            # Without coordinates there is nothing to price
+            if not self.coords_present(wizard_data.get('step1', {})):
                 return redirect(reverse('rides:booking_wizard', kwargs={'step': 1}) + '?missing_coords=1')
 
-            try:
-                distance_km = float(step1.get('distance_km', 0))
-                if distance_km == 0:
-                    # Calculate distance from coordinates
-                    distance_km = DistanceService.get_distance_km(
-                        (step1.get('pickup_latitude'), step1.get('pickup_longitude')),
-                        (step1.get('dropoff_latitude'), step1.get('dropoff_longitude')),
-                    )
-                    step1['distance_km'] = distance_km
-                    # Ensure session-stored step1 is JSON-serializable (convert dates/times)
-                    def _iso_date(d):
-                        return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
-                    session_step1 = dict(step1)
-                    session_step1['pickup_date'] = _iso_date(session_step1.get('pickup_date'))
-                    session_step1['pickup_time'] = _iso_date(session_step1.get('pickup_time'))
-                    session_step1['arrival_date'] = _iso_date(session_step1.get('arrival_date'))
-                    session_step1['arrival_time'] = _iso_date(session_step1.get('arrival_time'))
-                    self.request.session[self.get_session_key('step1')] = session_step1
-                    self.request.session.modified = True
-
-                fare_breakdown = _calculate_fare(
-                    distance_km=distance_km,
-                    num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
-                    baby_car_seater=step2.get('baby_car_seater', 0),
-                    num_kids_carried=step2.get('num_kids_carried', 0),
-                    luggage_count=step2.get('luggage_count', 0),
-                    hand_luggage_count=step2.get('hand_luggage_count', 0),
-                    pickup_time=step1.get('pickup_time'),
-                    stops=step2.get('stops', []),
-                    is_return_trip=step1.get('is_return_trip', False),
-                    return_time=step1.get('return_time'),
-                    return_distance_km=_return_leg_distance(step1),
-                )
-                context['fare_breakdown'] = fare_breakdown
-                context['estimated_fare'] = fare_breakdown['total']
-                context['ride_type'] = fare_breakdown.get('ride_type', 'city')
-                context['paynow_rule'] = PricingService.get_paynow_rule()
-                context['paynow_allowed'] = PricingService.paynow_allowed(fare_breakdown['total'])
-            except Exception as e:
-                logger.exception('Fare calculation failed')
-                context['fare_error'] = str(e)
-                context['estimated_fare'] = 'Unable to calculate'
-
-            form = Step4FarePaymentForm()
-            context['form'] = form
-            context['step1_data'] = step1
-            context['step2_data'] = step2
-            context['step3_data'] = wizard_data.get('step3', {})
+            context = self.review_context(request, wizard_data)
+            context.update(self.fare_context(wizard_data))
+            context['step1_data'] = wizard_data.get('step1', {})
             return render(request, 'rides/booking_wizard/step4.html', context)
 
         elif step == 5:
+            if 'step3' not in wizard_data:
+                return redirect('rides:booking_wizard', step=3)
+
+            if not self.coords_present(wizard_data.get('step1', {})):
+                return redirect(reverse('rides:booking_wizard', kwargs={'step': 1}) + '?missing_coords=1')
+
+            return render(request, 'rides/booking_wizard/step5.html',
+                          self.payment_context(request, wizard_data))
+
+        elif step == 6:
             # Confirmation page (read-only summary)
             if not all(k in wizard_data for k in ['step1', 'step2', 'step3']):
                 return redirect('rides:booking_wizard', step=1)
@@ -632,7 +806,7 @@ class MultiStepBookingWizardView(View):
             context['booking'] = booking
             context['eta_minutes'] = eta_minutes
             context['whatsapp_message'] = whatsapp_message
-            return render(request, 'rides/booking_wizard/step5.html', context)
+            return render(request, 'rides/booking_wizard/step6.html', context)
 
         return redirect('rides:booking_wizard_start')
 
@@ -648,125 +822,57 @@ class MultiStepBookingWizardView(View):
         if step == 1:
             form = Step1PickupDropoffForm(request.POST)
             if form.is_valid():
-                # Save to session and progress
-                # Store date/time as ISO strings to keep session JSON-serializable
-                def _iso_date(d):
-                    return d.isoformat() if d is not None and hasattr(d, 'isoformat') else d
-                self.request.session[self.get_session_key('step1')] = {
-                    'pickup_address': form.cleaned_data['pickup_address'],
-                    'pickup_latitude': form.cleaned_data['pickup_latitude'],
-                    'pickup_longitude': form.cleaned_data['pickup_longitude'],
-                    'dropoff_address': form.cleaned_data['dropoff_address'],
-                    'dropoff_latitude': form.cleaned_data['dropoff_latitude'],
-                    'dropoff_longitude': form.cleaned_data['dropoff_longitude'],
-                    'distance_km': form.cleaned_data.get('distance_km') or 0,
-                    'pickup_date': _iso_date(form.cleaned_data.get('pickup_date')),
-                    'pickup_time': _iso_date(form.cleaned_data.get('pickup_time')),
-                    'pickup_point_detail': form.cleaned_data.get('pickup_point_detail') or '',
-                    'dropoff_point_detail': form.cleaned_data.get('dropoff_point_detail') or '',
-                    'pickup_is_airport': bool(form.cleaned_data.get('pickup_is_airport')),
-                    'pickup_airport_terminal': form.cleaned_data.get('pickup_airport_terminal') or '',
-                    'arrival_airline': form.cleaned_data.get('arrival_airline'),
-                    'arrival_flight_number': form.cleaned_data.get('arrival_flight_number'),
-                    'arrival_date': _iso_date(form.cleaned_data.get('arrival_date')),
-                    'arrival_time': _iso_date(form.cleaned_data.get('arrival_time')),
-                    'flight_departure_airport': form.cleaned_data.get('flight_departure_airport') or '',
-                    'flight_connection_details': form.cleaned_data.get('flight_connection_details') or '',
-                    'flight_notes': form.cleaned_data.get('flight_notes') or '',
-                    'is_return_trip': bool(form.cleaned_data.get('is_return_trip')),
-                    'return_date': _iso_date(form.cleaned_data.get('return_date')),
-                    'return_time': _iso_date(form.cleaned_data.get('return_time')),
-                    'return_use_different_points': bool(form.cleaned_data.get('return_use_different_points')),
-                    'return_pickup_address': form.cleaned_data.get('return_pickup_address') or '',
-                    'return_pickup_latitude': form.cleaned_data.get('return_pickup_latitude'),
-                    'return_pickup_longitude': form.cleaned_data.get('return_pickup_longitude'),
-                    'return_pickup_point_detail': form.cleaned_data.get('return_pickup_point_detail') or '',
-                    'return_dropoff_address': form.cleaned_data.get('return_dropoff_address') or '',
-                    'return_dropoff_latitude': form.cleaned_data.get('return_dropoff_latitude'),
-                    'return_dropoff_longitude': form.cleaned_data.get('return_dropoff_longitude'),
-                    'return_dropoff_point_detail': form.cleaned_data.get('return_dropoff_point_detail') or '',
-                    'return_distance_km': form.cleaned_data.get('return_distance_km'),
-                }
+                self.request.session[self.get_session_key('step1')] = self.build_step1_payload(form.cleaned_data)
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=2)
-            else:
-                context = {
-                    'form': form,
-                    'step': step,
-                    'total_steps': 4,
-                    'return_discount_percent': PricingService.get_return_discount_percent(),
-                    'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-                    'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-                }
-                return render(request, 'rides/booking_wizard/step1.html', context)
+
+            context = self.base_context(request, step)
+            context['form'] = form
+            context['step1_data'] = wizard_data.get('step1', {})
+            # They got far enough to submit, so a card was already picked
+            context['trip_type_chosen'] = True
+            return render(request, 'rides/booking_wizard/step1.html', context)
 
         elif step == 2:
             if 'step1' not in wizard_data:
                 return redirect('rides:booking_wizard', step=1)
 
-            form = Step2PassengersLuggageForm(request.POST)
-            if form.is_valid():
-                # persist passenger counts and optional passengers JSON from client
-                passengers_json = request.POST.get('passengers_json') or request.POST.get('passengersJson') or '[]'
-                # update step2 counts
-                self.request.session[self.get_session_key('step2')] = {
-                    'num_adults': merged_adult_count(form.cleaned_data['num_adults'], request.POST.get('num_kids_seated', 0)),
-                    'num_kids_seated': 0,
-                    'baby_car_seater': form.cleaned_data['baby_car_seater'],
-                    'num_kids_carried': form.cleaned_data['num_kids_carried'],
-                    'luggage_count': form.cleaned_data['luggage_count'],
-                    'hand_luggage_count': form.cleaned_data.get('hand_luggage_count') or 0,
-                    'stops': form.cleaned_data.get('stops') or [],
-                    'stops_json': json.dumps(form.cleaned_data.get('stops') or []),
-                    'passengers_json': passengers_json,
-                    'salutation': form.cleaned_data.get('salutation'),
-                    'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
-                }
+            people_form = Step2PassengersLuggageForm(request.POST)
+            if people_form.is_valid():
+                self.request.session[self.get_session_key('step2')] = self.build_people_payload(
+                    people_form.cleaned_data, request.POST
+                )
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=3)
-            else:
-                context = {
-                    'form': form,
-                    'step': step,
-                    'total_steps': 4,
-                    'step1_data': wizard_data.get('step1', {}),
-                    'step2_data': wizard_data.get('step2', {}),
-                    'booking_limits': PricingService.get_booking_limits(),
-                    'stop_tiers': PricingService.get_stop_tiers(),
-                    'hand_luggage_cfg': PricingService.get_hand_luggage_cfg(),
-                    'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-                    'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-                }
-                return render(request, 'rides/booking_wizard/step2.html', context)
+
+            context = self.base_context(request, step)
+            context.update({
+                'people_form': people_form,
+                'step1_data': wizard_data.get('step1', {}),
+                'step2_data': wizard_data.get('step2', {}),
+            })
+            return render(request, 'rides/booking_wizard/step2.html', context)
 
         elif step == 3:
             if 'step2' not in wizard_data:
                 return redirect('rides:booking_wizard', step=2)
 
-            form = Step3ContactExtraForm(request.POST)
-            if form.is_valid():
-                self.request.session[self.get_session_key('step3')] = {
-                    'phone': form.cleaned_data['phone'],
-                    'email': form.cleaned_data['email'],
-                    'extra_instructions': form.cleaned_data['extra_instructions'],
-                    'salutation': form.cleaned_data.get('salutation'),
-                    'passenger_full_name': form.cleaned_data.get('passenger_full_name'),
-                }
+            contact_form = Step3ContactExtraForm(request.POST)
+            if contact_form.is_valid():
+                self.request.session[self.get_session_key('step3')] = self.build_contact_payload(
+                    contact_form.cleaned_data
+                )
                 self.request.session.modified = True
                 return redirect('rides:booking_wizard', step=4)
-            else:
-                context = {
-                    'form': form,
-                    'step': step,
-                    'total_steps': 4,
-                    'step1_data': wizard_data.get('step1', {}),
-                    'step2_data': wizard_data.get('step2', {}),
-                    'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-                    'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-                }
-                return render(request, 'rides/booking_wizard/step3.html', context)
 
-        elif step == 4:
+            context = self.base_context(request, step)
+            context.update({
+                'contact_form': contact_form,
+                'step1_data': wizard_data.get('step1', {}),
+            })
+            return render(request, 'rides/booking_wizard/step3.html', context)
+
+        elif step == 5:
             if 'step3' not in wizard_data:
                 return redirect('rides:booking_wizard', step=3)
 
@@ -796,7 +902,7 @@ class MultiStepBookingWizardView(View):
                         luggage_count=step2.get('luggage_count', 0),
                         hand_luggage_count=step2.get('hand_luggage_count', 0),
                         pickup_time=step1.get('pickup_time'),
-                        stops=step2.get('stops', []),
+                        stops=step1.get('stops', []),
                         is_return_trip=step1.get('is_return_trip', False),
                         return_time=step1.get('return_time'),
                         return_distance_km=return_distance_km,
@@ -804,31 +910,17 @@ class MultiStepBookingWizardView(View):
 
                     # Paynow carries high fees on small amounts, so it is only offered
                     # at or above the configured minimum. Re-checked here because the
-                    # step 4 radio can be re-enabled client-side.
+                    # payment radio can be re-enabled client-side.
                     if payment_method == RideBooking.PAYMENT_PAYNOW and not PricingService.paynow_allowed(fare_breakdown['total']):
                         paynow_rule = PricingService.get_paynow_rule()
-                        context = {
-                            'form': form,
-                            'step': step,
-                            'total_steps': 4,
-                            'step1_data': step1,
-                            'step2_data': step2,
-                            'step3_data': step3,
-                            'fare_breakdown': fare_breakdown,
-                            'estimated_fare': fare_breakdown['total'],
-                            'ride_type': fare_breakdown.get('ride_type', 'city'),
-                            'paynow_rule': paynow_rule,
-                            'paynow_allowed': False,
-                            'error_message': paynow_rule['NOTE'],
-                            'booking_limits': PricingService.get_booking_limits(),
-                            'stop_tiers': PricingService.get_stop_tiers(),
-                            'night_cfg': PricingService.get_night_cfg(),
-                            'return_discount_percent': PricingService.get_return_discount_percent(),
-                            'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-                            'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-                            'logo_url': _logo_url(),
-                        }
-                        return render(request, 'rides/booking_wizard/step4.html', context)
+                        context = self.payment_context(
+                            request, wizard_data,
+                            form=form,
+                            paynow_rule=paynow_rule,
+                            paynow_allowed=False,
+                            error_message=paynow_rule['NOTE'],
+                        )
+                        return render(request, 'rides/booking_wizard/step5.html', context)
 
                     with transaction.atomic():
                         booking = RideBooking.objects.create(
@@ -875,9 +967,11 @@ class MultiStepBookingWizardView(View):
                             flight_departure_airport=step1.get('flight_departure_airport') or '',
                             flight_connection_details=step1.get('flight_connection_details') or '',
                             flight_notes=step1.get('flight_notes') or '',
-                            salutation=step2.get('salutation'),
-                            passenger_full_name=step2.get('passenger_full_name'),
+                            salutation=step3.get('salutation'),
+                            passenger_full_name=step3.get('passenger_full_name'),
                             payment_option=payment_method,
+                            paylink_card_name=form.cleaned_data.get('paylink_card_name') or '',
+                            paylink_email=form.cleaned_data.get('paylink_email') or '',
                             price_breakdown=fare_breakdown,
                             total_amount=Decimal(str(fare_breakdown['total'])),
                             ride_type=fare_breakdown.get('ride_type', RideBooking.RIDE_TYPE_CITY),
@@ -922,7 +1016,7 @@ class MultiStepBookingWizardView(View):
                             EmailService.send_customer_notification(booking, payment_status=payment_label)
 
                             # Go to confirmation
-                            return redirect('rides:booking_wizard', step=5)
+                            return redirect('rides:booking_wizard', step=6)
 
                         else:
                             # Paynow flow
@@ -987,51 +1081,184 @@ class MultiStepBookingWizardView(View):
 
                 except Exception as e:
                     logger.exception('Booking creation failed')
-                    context = {
-                        'step': step,
-                        'error': f'Failed to create booking: {e}',
-                        'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-                        'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-                    }
-                    return render(request, 'rides/booking_wizard/step4.html', context)
+                    context = self.payment_context(
+                        request, wizard_data,
+                        form=form,
+                        error_message=f'Failed to create booking: {e}',
+                    )
+                    return render(request, 'rides/booking_wizard/step5.html', context)
 
             else:
-                # Form invalid - but still calculate fare for display
-                step1 = wizard_data.get('step1', {})
-                step2 = wizard_data.get('step2', {})
-                try:
-                    distance_km = float(step1.get('distance_km', 0))
-                    if distance_km == 0:
-                        distance_km = DistanceService.get_distance_km(
-                            (step1.get('pickup_latitude'), step1.get('pickup_longitude')),
-                            (step1.get('dropoff_latitude'), step1.get('dropoff_longitude')),
-                        )
-                    fare_breakdown = _calculate_fare(
-                        distance_km=distance_km,
-                        num_adults=merged_adult_count(step2.get('num_adults', 1), step2.get('num_kids_seated', 0)),
-                        baby_car_seater=step2.get('baby_car_seater', 0),
-                        num_kids_carried=step2.get('num_kids_carried', 0),
-                        luggage_count=step2.get('luggage_count', 0),
-                    )
-                    context_extra = {'fare_breakdown': fare_breakdown, 'ride_type': fare_breakdown.get('ride_type', 'city')}
-                except Exception as e:
-                    logger.exception('Fare calculation failed on re-render')
-                    context_extra = {'fare_error': str(e), 'estimated_fare': 'Unable to calculate'}
-                
-                context = {
-                    'form': form,
-                    'step': step,
-                    'total_steps': 4,
-                    'step1_data': step1,
-                    'step2_data': step2,
-                    'step3_data': wizard_data.get('step3', {}),
-                    'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
-                    'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
-                    **context_extra,
-                }
-                return render(request, 'rides/booking_wizard/step4.html', context)
+                # No payment method chosen - redraw the page. payment_context
+                # re-prices from the session, so the total cannot drift from
+                # the one the customer was just looking at.
+                context = self.payment_context(request, wizard_data, form=form)
+                return render(request, 'rides/booking_wizard/step5.html', context)
 
         return redirect('rides:booking_wizard_start')
+
+
+class BookingWizardEditView(MultiStepBookingWizardView):
+    """Saves edits made from the review page's single Edit modal.
+
+    The modal submits every wizard field at once, so each step's form can be
+    bound and validated in full rather than in fragments. That keeps one set of
+    rules — the wizard's own — instead of a second, looser path to the same
+    session data. The page reloads afterwards, which re-prices the booking.
+    """
+
+    def get(self, request, *args, **kwargs):
+        # Nothing to render here; the modal lives on the review page.
+        return redirect('rides:booking_wizard', step=4)
+
+    def post(self, request, *args, **kwargs):
+        wizard_data = self.get_wizard_data()
+        if 'step3' not in wizard_data:
+            return JsonResponse({'ok': False, 'errors': {'__all__': ['Your booking session has expired. Please start again.']}}, status=400)
+
+        trip_form = Step1PickupDropoffForm(request.POST)
+        people_form = Step2PassengersLuggageForm(request.POST)
+        contact_form = Step3ContactExtraForm(request.POST)
+
+        forms = (trip_form, people_form, contact_form)
+        if not all(f.is_valid() for f in forms):
+            errors = {}
+            for form in forms:
+                for field, messages in form.errors.items():
+                    errors.setdefault(field, []).extend(messages)
+            return JsonResponse({'ok': False, 'errors': errors}, status=400)
+
+        self.request.session[self.get_session_key('step1')] = self.build_step1_payload(trip_form.cleaned_data)
+        self.request.session[self.get_session_key('step2')] = self.build_people_payload(
+            people_form.cleaned_data, request.POST
+        )
+        self.request.session[self.get_session_key('step3')] = self.build_contact_payload(contact_form.cleaned_data)
+        self.request.session.modified = True
+
+        return JsonResponse({'ok': True})
+
+
+class DevFillWizardView(MultiStepBookingWizardView):
+    """Development shortcut: fill the wizard session and jump to a step.
+
+    Reaching the payment step normally means working through the address
+    lookups and every field before it, which is a slow way to iterate on a
+    later screen. This drops a plausible booking into the session and
+    redirects wherever you ask.
+
+    It builds that booking by running the real wizard forms over fixture data
+    and calling the same build_*_payload helpers the wizard uses, so it cannot
+    drift away from validation: if a new field becomes required and the
+    fixture does not supply it, this fails loudly instead of seeding a session
+    the wizard would reject.
+
+    Gated on settings.ENABLE_DEV_FILL, which follows DEBUG and can also be
+    switched on explicitly (ENABLE_DEV_FILL=True) for a local environment that
+    runs with DEBUG off. A 404 everywhere else.
+
+        /booking/dev-fill/                  jump to the review step
+        /booking/dev-fill/?step=5           jump to payment
+        /booking/dev-fill/?type=airport     seed a flight instead
+        /booking/dev-fill/?stops=2&return=1 add stops and a return leg
+        /booking/dev-fill/?km=120           force a long-distance fare
+    """
+
+    def get(self, request, *args, **kwargs):
+        if not getattr(settings, 'ENABLE_DEV_FILL', False):
+            raise Http404('Not available')
+
+        step = self._int(request, 'step', default=4, low=1, high=self.TOTAL_STEPS)
+        distance_km = self._int(request, 'km', default=14, low=1, high=2000)
+        stop_count = self._int(request, 'stops', default=0, low=0, high=5)
+        is_airport = request.GET.get('type', 'regular').lower() == 'airport'
+        wants_return = request.GET.get('return') in ('1', 'true', 'yes')
+
+        # Far enough ahead that the past-pickup guard never trips
+        outbound = timezone.localtime() + datetime.timedelta(days=3)
+        back = outbound + datetime.timedelta(days=2)
+
+        trip = {
+            'pickup_address': 'Robert Gabriel Mugabe International Airport, Harare'
+                              if is_airport else '5 Josiah Chinamano Ave, Harare',
+            'dropoff_address': '12 Borrowdale Rd, Harare',
+            'pickup_latitude': -17.9318, 'pickup_longitude': 31.0928,
+            'dropoff_latitude': -17.7840, 'dropoff_longitude': 31.0810,
+            'distance_km': distance_km,
+            'pickup_is_airport': 'on' if is_airport else '',
+        }
+        if is_airport:
+            trip.update({
+                'arrival_airline': 'Airlink',
+                'arrival_flight_number': '4Z110',
+                'arrival_date': outbound.date().isoformat(),
+                'arrival_time': '14:20',
+            })
+            terminals = PricingService.get_airport_terminals()
+            if terminals:
+                trip['pickup_airport_terminal'] = terminals[0]
+        else:
+            trip.update({
+                'pickup_date': outbound.date().isoformat(),
+                'pickup_time': '09:30',
+            })
+        if wants_return:
+            trip.update({
+                'is_return_trip': 'on',
+                'return_date': back.date().isoformat(),
+                'return_time': '16:45',
+            })
+
+        # Stops belong to the route, so they ride along with the trip form
+        trip['stops_json'] = json.dumps(
+            [{'description': 'Dev stop %d' % (i + 1), 'minutes': 10} for i in range(stop_count)]
+        )
+
+        people = {
+            'num_adults': 2, 'baby_car_seater': 0, 'num_kids_carried': 0,
+            'luggage_count': 2, 'hand_luggage_count': 1,
+        }
+        contact = {
+            'salutation': 'Ms',
+            'passenger_full_name': 'Dev Tester',
+            'phone': '+263 77 000 0000',
+            'email': 'dev@example.com',
+            'extra_instructions': 'Seeded by dev-fill.',
+        }
+
+        forms = [
+            ('step 1', Step1PickupDropoffForm(trip)),
+            ('step 2', Step2PassengersLuggageForm(people)),
+            ('step 3', Step3ContactExtraForm(contact)),
+        ]
+        for label, form in forms:
+            if not form.is_valid():
+                return JsonResponse(
+                    {'ok': False,
+                     'where': label,
+                     'hint': 'dev-fill fixture no longer satisfies this form',
+                     'errors': form.errors},
+                    status=500, json_dumps_params={'indent': 2},
+                )
+
+        trip_form, people_form, contact_form = (f for _, f in forms)
+        self.clear_wizard_session()
+        session = self.request.session
+        session[self.get_session_key('step1')] = self.build_step1_payload(trip_form.cleaned_data)
+        session[self.get_session_key('step2')] = self.build_people_payload(
+            people_form.cleaned_data, people
+        )
+        session[self.get_session_key('step3')] = self.build_contact_payload(contact_form.cleaned_data)
+        session.modified = True
+
+        logger.info('dev-fill seeded the wizard session and jumped to step %s', step)
+        return redirect('rides:booking_wizard', step=step)
+
+    @staticmethod
+    def _int(request, name, default, low, high):
+        try:
+            return max(low, min(high, int(request.GET.get(name, default))))
+        except (TypeError, ValueError):
+            return default
 
 
 # ============================================================================
@@ -1182,7 +1409,7 @@ class ChauffeurBookingWizardView(View):
                 (p for p in packages if int(p.get('hours', 0)) == int(selected_hours or 0)),
                 None,
             )
-            form = Step2PassengersLuggageForm(initial=wizard_data.get('step3', {}))
+            form = ChauffeurPassengersForm(initial=wizard_data.get('step3', {}))
             context.update({
                 'form': form,
                 'step1_data': wizard_data.get('step1', {}),
@@ -1344,7 +1571,7 @@ class ChauffeurBookingWizardView(View):
             if 'step2' not in wizard_data:
                 return redirect('rides:chauffeur_wizard', step=2)
 
-            form = Step2PassengersLuggageForm(request.POST)
+            form = ChauffeurPassengersForm(request.POST)
             packages = PricingService.get_chauffeur_packages()
             selected_hours = wizard_data['step1'].get('chauffeur_hours')
             selected_package = next(

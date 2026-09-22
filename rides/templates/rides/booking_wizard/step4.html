@@ -1,9 +1,106 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
-{% block title %}Step 4: Fare & Payment - Book a Ride{% endblock %}
+{% block title %}Check your booking - Book a Ride{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-panel {
+        background: #fff;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .review-panel-head {
+        background: #fff;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .review-panel-head h4 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+    .review-panel-head p { margin: 3px 0 0; font-size: 12px; color: var(--ink-soft); }
+    .edit-open-btn {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: white;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-deep);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
+    }
+    .edit-open-btn:hover { background: var(--primary-soft); transform: translateY(-1px); }
+
+    .review-section { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+    .review-section:last-child { border-bottom: none; }
+    .review-section-head {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary-deep);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        margin-bottom: 8px;
+    }
+    .review-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        font-size: 14px;
+        padding: 5px 0;
+    }
+    .review-row span { color: var(--ink-soft); flex-shrink: 0; }
+    .review-row strong { text-align: right; color: var(--ink); font-weight: 600; }
+    .review-note-text {
+        font-size: 13px;
+        background: #fff8e1;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border-left: 3px solid #f59e0b;
+        max-width: 62%;
+    }
+    .review-empty { font-size: 13px; color: #94a3b8; padding: 3px 0; }
+    .review-note { margin-top: 8px; font-size: 13px; padding: 8px 12px; border-radius: 6px; }
+    .review-note-night { background: #eef2ff; border-left: 3px solid #6366f1; color: #3730a3; }
+
+    .acc { border: 1px solid var(--border-light); border-radius: var(--radius); margin-bottom: 10px; }
+    .acc.is-open { border-color: #86efac; }
+    .acc-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px;
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        text-align: left;
+        cursor: pointer;
+    }
+    .acc-head > i:first-child { color: var(--primary-color); }
+    .acc-head .acc-label { flex: 1; }
+    .acc-body { padding: 4px 14px 16px; border-top: 1px solid var(--border-light); }
+    .acc-body > .section-block:first-child { margin-top: 18px; }
+
+    /* Google's suggestion dropdown must clear the modal. */
+    .pac-container { z-index: 1300 !important; }
+</style>
+{% endblock %}
 
 {% block content %}
-<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">Review and choose payment</h2>
+<h2 class="step-heading">Check your booking</h2>
 
 {% if error_message %}
     <div class="error-message">
@@ -12,489 +109,334 @@
     </div>
 {% endif %}
 
-<form method="POST" id="step4_form">
-    {% csrf_token %}
+{% include "rides/booking_wizard/partials/_fare_breakdown.html" %}
 
-    <!-- Fare Breakdown Summary -->
-    {% if fare_breakdown %}
-        <div class="fare-summary">
-            <h4 style="margin-bottom: 16px; font-size: 16px; color: #333;">Fare Details</h4>
-
-            <div class="fare-row">
-                <span><i class="bi bi-map"></i> Distance:</span>
-                <strong>{{ fare_breakdown.distance_km|floatformat:1 }} km</strong>
-            </div>
-
-            <div class="fare-row">
-                <span><i class="bi bi-person"></i> Base Distance Fare:</span>
-                <strong>${{ fare_breakdown.base_distance_price|floatformat:2 }}</strong>
-            </div>
-
-            {% if fare_breakdown.extra_adults > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-people"></i> Extra Adults ({{ fare_breakdown.extra_adults }} @ $10 each):</span>
-                    <strong>${{ fare_breakdown.extra_adults_fee|floatformat:2 }}</strong>
-                </div>
-            {% endif %}
-
-            {% if fare_breakdown.baby_car_seater > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-shield-baby"></i> Baby Car Seater ({{ fare_breakdown.baby_car_seater }} @ $10 each):</span>
-                    <strong>${{ fare_breakdown.baby_car_seater_fee|floatformat:2 }}</strong>
-                </div>
-            {% endif %}
-
-            {% if fare_breakdown.luggage_count > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-suitcase-lg"></i> Luggage ({{ fare_breakdown.luggage_count }} bags @ $3 each after 5 free):</span>
-                    <strong>${{ fare_breakdown.luggage_fee|floatformat:2 }}</strong>
-                </div>
-                {% if fare_breakdown.luggage_free > 0 %}
-                    <div class="fare-row" style="font-size: 12px; color: #666; margin-left: 20px;">
-                        <span>Free bags included: {{ fare_breakdown.luggage_free }}</span>
-                        <span>Chargeable bags: {{ fare_breakdown.luggage_chargeable }}</span>
-                    </div>
-                {% endif %}
-            {% endif %}
-
-            {% if fare_breakdown.hand_luggage_count > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-handbag"></i> Hand Luggage ({{ fare_breakdown.hand_luggage_count }} item{{ fare_breakdown.hand_luggage_count|pluralize }}):</span>
-                    <strong>{% if fare_breakdown.hand_luggage_fee > 0 %}${{ fare_breakdown.hand_luggage_fee|floatformat:2 }}{% else %}Free{% endif %}</strong>
-                </div>
-                {% if fare_breakdown.hand_luggage_chargeable > 0 %}
-                    <div class="fare-row" style="font-size: 12px; color: #666; margin-left: 20px;">
-                        <span>Free items included: {{ fare_breakdown.hand_luggage_free }}</span>
-                        <span>Chargeable items: {{ fare_breakdown.hand_luggage_chargeable }}</span>
-                    </div>
-                {% endif %}
-            {% endif %}
-
-            {% if fare_breakdown.stops_count > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-signpost-split"></i> Stops along the way ({{ fare_breakdown.stops_count }}):</span>
-                    <strong>${{ fare_breakdown.stops_fee|floatformat:2 }}</strong>
-                </div>
-                {% for stop in fare_breakdown.stops %}
-                    <div class="fare-row" style="font-size: 12px; color: #666; margin-left: 20px;">
-                        <span>{{ forloop.counter }}. {{ stop.description|default:"Stop" }} &mdash; up to {{ stop.minutes }} min</span>
-                        <span>{% if stop.fee > 0 %}${{ stop.fee|floatformat:2 }}{% else %}Free{% endif %}</span>
-                    </div>
-                {% endfor %}
-            {% endif %}
-
-            {% if fare_breakdown.night_surcharge > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-moon-stars"></i> Night pickup surcharge:</span>
-                    <strong>${{ fare_breakdown.night_surcharge|floatformat:2 }}</strong>
-                </div>
-                <div class="fare-row" style="font-size: 12px; color: #666; margin-left: 20px;">
-                    <span>Applies to pickups between {{ night_cfg.START|time:"H:i" }} and {{ night_cfg.END|time:"H:i" }}</span>
-                </div>
-            {% endif %}
-
-            {% if fare_breakdown.is_return_trip %}
-                <div class="fare-row">
-                    <span><i class="bi bi-arrow-left-right"></i> Return leg{% if fare_breakdown.return_uses_own_route %} on its own route ({{ fare_breakdown.return_distance_km|floatformat:1 }} km){% endif %}{% if fare_breakdown.return_discount_percent %} (less {{ fare_breakdown.return_discount_percent|floatformat:"-2" }}%){% endif %}:</span>
-                    <strong>${{ fare_breakdown.return_leg_fee|floatformat:2 }}</strong>
-                </div>
-                {% if fare_breakdown.return_night_surcharge > 0 %}
-                <div class="fare-row">
-                    <span><i class="bi bi-moon-stars"></i> Night return surcharge:</span>
-                    <strong>${{ fare_breakdown.return_night_surcharge|floatformat:2 }}</strong>
-                </div>
-                {% endif %}
-            {% endif %}
-
-            <div class="fare-row total">
-                <span>Total Estimated Fare:</span>
-                <strong>${{ fare_breakdown.total|floatformat:2 }}</strong>
-            </div>
-        </div>
-    {% else %}
-        <div class="error-message">
-            <i class="bi bi-exclamation-triangle"></i>
-            Unable to calculate fare at this time.
-        </div>
-    {% endif %}
-
-    <!-- Full Booking Review -->
-    <div class="review-panel">
-        <div class="review-panel-head">
+<!-- Full Booking Review -->
+<div class="review-panel">
+    <div class="review-panel-head">
+        <div>
             <h4><i class="bi bi-clipboard-check"></i> Check your booking</h4>
-            <p>Please make sure everything below is right before you confirm.</p>
+            <p>Make sure everything below is right before you confirm.</p>
         </div>
-
-        <!-- Trip -->
-        <div class="review-section">
-            <div class="review-section-head">
-                <span><i class="bi bi-geo-alt"></i> Trip</span>
-                <a href="{% url 'rides:booking_wizard' step=1 %}">Edit</a>
-            </div>
-            <div class="review-row"><span>Pickup</span><strong>{{ step1_data.pickup_address }}</strong></div>
-            {% if step1_data.pickup_point_detail %}
-            <div class="review-row"><span>Exact pickup point</span><strong>{{ step1_data.pickup_point_detail }}</strong></div>
-            {% endif %}
-            <div class="review-row"><span>Dropoff</span><strong>{{ step1_data.dropoff_address }}</strong></div>
-            {% if step1_data.dropoff_point_detail %}
-            <div class="review-row"><span>Exact drop-off point</span><strong>{{ step1_data.dropoff_point_detail }}</strong></div>
-            {% endif %}
-            <div class="review-row">
-                <span>Pickup date &amp; time</span>
-                <strong>{{ step1_data.pickup_date }} at {{ step1_data.pickup_time }}</strong>
-            </div>
-            {% if step1_data.pickup_is_airport %}
-            <div class="review-row"><span>Airport pickup</span><strong>Yes</strong></div>
-            {% if step1_data.pickup_airport_terminal %}
-            <div class="review-row"><span>Collection point</span><strong>{{ step1_data.pickup_airport_terminal }}</strong></div>
-            {% endif %}
-            <div class="review-row">
-                <span>Flight</span>
-                <strong>{{ step1_data.arrival_airline }} {{ step1_data.arrival_flight_number }}</strong>
-            </div>
-            <div class="review-row">
-                <span>Arrival</span>
-                <strong>{{ step1_data.arrival_date }} at {{ step1_data.arrival_time }}</strong>
-            </div>
-            {% if step1_data.flight_departure_airport %}
-            <div class="review-row"><span>Departing from</span><strong>{{ step1_data.flight_departure_airport }}</strong></div>
-            {% endif %}
-            {% if step1_data.flight_connection_details %}
-            <div class="review-row"><span>Connection</span><strong>{{ step1_data.flight_connection_details }}</strong></div>
-            {% endif %}
-            {% if step1_data.flight_notes %}
-            <div class="review-row"><span>Flight notes</span><strong>{{ step1_data.flight_notes }}</strong></div>
-            {% endif %}
-            {% endif %}
-            {% if step1_data.is_return_trip %}
-            <div class="review-row">
-                <span>Return trip</span>
-                <strong>{{ step1_data.return_date }} at {{ step1_data.return_time }}</strong>
-            </div>
-            {% if step1_data.return_use_different_points %}
-            <div class="review-row">
-                <span>Return pickup</span>
-                <strong>{{ step1_data.return_pickup_address }}{% if step1_data.return_pickup_point_detail %} &mdash; {{ step1_data.return_pickup_point_detail }}{% endif %}</strong>
-            </div>
-            <div class="review-row">
-                <span>Return dropoff</span>
-                <strong>{{ step1_data.return_dropoff_address }}{% if step1_data.return_dropoff_point_detail %} &mdash; {{ step1_data.return_dropoff_point_detail }}{% endif %}</strong>
-            </div>
-            {% if fare_breakdown.return_distance_km %}
-            <div class="review-row">
-                <span>Return distance</span>
-                <strong>{{ fare_breakdown.return_distance_km|floatformat:1 }} km</strong>
-            </div>
-            {% endif %}
-            {% else %}
-            <div class="review-row"><span>Return route</span><strong>Same trip in reverse</strong></div>
-            {% endif %}
-            {% else %}
-            <div class="review-row"><span>Return trip</span><strong>No &mdash; one way only</strong></div>
-            {% endif %}
-            {% if fare_breakdown.is_night_pickup %}
-            <div class="review-note review-note-night">
-                <i class="bi bi-moon-stars"></i>
-                This is a night pickup ({{ night_cfg.START|time:"H:i" }}&ndash;{{ night_cfg.END|time:"H:i" }}), so a
-                ${{ fare_breakdown.night_surcharge|floatformat:2 }} surcharge applies.
-            </div>
-            {% endif %}
-            {% if fare_breakdown.is_night_return %}
-            <div class="review-note review-note-night">
-                <i class="bi bi-moon-stars"></i>
-                Your return is also a night pickup, so a further
-                ${{ fare_breakdown.return_night_surcharge|floatformat:2 }} surcharge applies.
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Passengers & luggage -->
-        <div class="review-section">
-            <div class="review-section-head">
-                <span><i class="bi bi-people"></i> Passengers &amp; luggage</span>
-                <a href="{% url 'rides:booking_wizard' step=2 %}">Edit</a>
-            </div>
-            <div class="review-row">
-                <span>Passengers seated</span>
-                <strong>{{ step2_data.num_adults|default:1 }}</strong>
-            </div>
-            {% if step2_data.num_kids_carried %}
-            <div class="review-row"><span>Kids carried</span><strong>{{ step2_data.num_kids_carried }}</strong></div>
-            {% endif %}
-            {% if step2_data.baby_car_seater %}
-            <div class="review-row"><span>Baby car seats</span><strong>{{ step2_data.baby_car_seater }}</strong></div>
-            {% endif %}
-            <div class="review-row"><span>Luggage bags</span><strong>{{ step2_data.luggage_count|default:0 }}</strong></div>
-            <div class="review-row"><span>Hand luggage</span><strong>{{ step2_data.hand_luggage_count|default:0 }}</strong></div>
-            <div class="review-row">
-                <span>Booked by</span>
-                <strong>{% if step2_data.salutation %}{{ step2_data.salutation }} {% endif %}{{ step2_data.passenger_full_name }}</strong>
-            </div>
-        </div>
-
-        <!-- Stops -->
-        <div class="review-section">
-            <div class="review-section-head">
-                <span><i class="bi bi-signpost-split"></i> Stops along the way</span>
-                <a href="{% url 'rides:booking_wizard' step=2 %}">Edit</a>
-            </div>
-            {% if fare_breakdown.stops %}
-                {% for stop in fare_breakdown.stops %}
-                <div class="review-row">
-                    <span>{{ forloop.counter }}. {{ stop.description|default:"Stop" }}</span>
-                    <strong>up to {{ stop.minutes }} min &mdash; {% if stop.fee > 0 %}${{ stop.fee|floatformat:2 }}{% else %}Free{% endif %}</strong>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div class="review-empty">No stops added &mdash; the driver will go straight to your dropoff.</div>
-            {% endif %}
-        </div>
-
-        <!-- Contact -->
-        <div class="review-section">
-            <div class="review-section-head">
-                <span><i class="bi bi-person-check"></i> Contact details</span>
-                <a href="{% url 'rides:booking_wizard' step=3 %}">Edit</a>
-            </div>
-            <div class="review-row"><span>Phone</span><strong>{{ step3_data.phone }}</strong></div>
-            <div class="review-row"><span>Email</span><strong>{{ step3_data.email }}</strong></div>
-            {% if step3_data.extra_instructions %}
-            <div class="review-row">
-                <span>Additional notes</span>
-                <strong class="review-note-text">{{ step3_data.extra_instructions }}</strong>
-            </div>
-            {% else %}
-            <div class="review-empty">No additional notes added.</div>
-            {% endif %}
-        </div>
+        <button type="button" class="edit-open-btn" id="open_edit_modal">
+            <i class="bi bi-pencil"></i> Edit
+        </button>
     </div>
 
-    <style>
-        .review-panel {
-            background: #fff;
-            border: 1px solid #dbe6f0;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-        .review-panel-head {
-            background: #f0f7ff;
-            padding: 14px 16px;
-            border-bottom: 1px solid #dbe6f0;
-        }
-        .review-panel-head h4 {
-            margin: 0;
-            font-size: 15px;
-            font-weight: 700;
-            color: #1e3a5f;
-        }
-        .review-panel-head p {
-            margin: 4px 0 0;
-            font-size: 12px;
-            color: #64748b;
-        }
-        .review-section { padding: 12px 16px; border-bottom: 1px solid #eef2f7; }
-        .review-section:last-child { border-bottom: none; }
-        .review-section-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .review-section-head span {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1e3a5f;
-            text-transform: uppercase;
-            letter-spacing: .3px;
-        }
-        .review-section-head a {
-            font-size: 12px;
-            font-weight: 600;
-            color: #2563eb;
-            text-decoration: none;
-            background: #eff6ff;
-            padding: 3px 12px;
-            border-radius: 12px;
-        }
-        .review-section-head a:hover { background: #dbeafe; }
-        .review-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 14px;
-            font-size: 14px;
-            padding: 5px 0;
-        }
-        .review-row span { color: #64748b; flex-shrink: 0; }
-        .review-row strong { text-align: right; color: #0f172a; font-weight: 600; }
-        .review-note-text {
-            font-size: 13px;
-            background: #fff8e1;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border-left: 3px solid #f59e0b;
-            max-width: 62%;
-        }
-        .review-empty { font-size: 13px; color: #94a3b8; padding: 3px 0; }
-        .review-note {
-            margin-top: 8px;
-            font-size: 13px;
-            padding: 8px 12px;
-            border-radius: 6px;
-        }
-        .review-note-night {
-            background: #eef2ff;
-            border-left: 3px solid #6366f1;
-            color: #3730a3;
-        }
-    </style>
-
-    <!-- Payment Method Selection -->
-    <div class="form-group">
-        <label class="form-label" style="margin-bottom: 16px;"><i class="bi bi-credit-card"></i> Select Payment Method *</label>
-
-        <div class="payment-option">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="payment_method" value="POA" required>
-                <span>
-                    <strong>Pay on Arrival (Cash)</strong>
-                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
-                        Pay with cash when the driver arrives
-                    </div>
-                </span>
-            </label>
+    <!-- Trip -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-geo-alt"></i> Trip</div>
+        <div class="review-row"><span>Pickup</span><strong>{{ step1_data.pickup_address }}</strong></div>
+        {% if step1_data.pickup_point_detail %}
+        <div class="review-row"><span>Exact pickup point</span><strong>{{ step1_data.pickup_point_detail }}</strong></div>
+        {% endif %}
+        <div class="review-row"><span>Dropoff</span><strong>{{ step1_data.dropoff_address }}</strong></div>
+        {% if step1_data.dropoff_point_detail %}
+        <div class="review-row"><span>Exact drop-off point</span><strong>{{ step1_data.dropoff_point_detail }}</strong></div>
+        {% endif %}
+        <div class="review-row">
+            <span>Pickup date &amp; time</span>
+            <strong>{{ step1_data.pickup_date }} at {{ step1_data.pickup_time }}</strong>
         </div>
-
-        <div class="payment-option">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="payment_method" value="pos_card" required>
-                <span>
-                    <strong>Pay on Arrival (POS/CARD payment)</strong>
-                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
-                        Use your card when the driver arrives
-                    </div>
-                </span>
-            </label>
+        {% if step1_data.pickup_is_airport %}
+        <div class="review-row"><span>Airport pickup</span><strong>Yes</strong></div>
+        {% if step1_data.pickup_airport_terminal %}
+        <div class="review-row"><span>Collection point</span><strong>{{ step1_data.pickup_airport_terminal }}</strong></div>
+        {% endif %}
+        <div class="review-row">
+            <span>Flight</span>
+            <strong>{{ step1_data.arrival_airline }} {{ step1_data.arrival_flight_number }}</strong>
         </div>
-
-        <div class="payment-option">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="payment_method" value="money_transfer" required>
-                <span>
-                    <strong>Pay Via Money Transfer Agency</strong>
-                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
-                        Services such as Mukuru, Western Union, Worldremit, or Ecocash
-                    </div>
-                </span>
-            </label>
+        <div class="review-row">
+            <span>Arrival</span>
+            <strong>{{ step1_data.arrival_date }} at {{ step1_data.arrival_time }}</strong>
         </div>
-
-        <div class="payment-option">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="payment_method" value="paylink" required>
-                <span>
-                    <strong>Paylink</strong>
-                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
-                        Request payment link on +263789423154
-                    </div>
-                </span>
-            </label>
+        {% if step1_data.flight_departure_airport %}
+        <div class="review-row"><span>Departing from</span><strong>{{ step1_data.flight_departure_airport }}</strong></div>
+        {% endif %}
+        {% if step1_data.flight_connection_details %}
+        <div class="review-row"><span>Connection</span><strong>{{ step1_data.flight_connection_details }}</strong></div>
+        {% endif %}
+        {% if step1_data.flight_notes %}
+        <div class="review-row"><span>Flight notes</span><strong>{{ step1_data.flight_notes }}</strong></div>
+        {% endif %}
+        {% endif %}
+        {% if step1_data.is_return_trip %}
+        <div class="review-row">
+            <span>Return trip</span>
+            <strong>{{ step1_data.return_date }} at {{ step1_data.return_time }}</strong>
         </div>
+        {% if step1_data.return_use_different_points %}
+        <div class="review-row">
+            <span>Return pickup</span>
+            <strong>{{ step1_data.return_pickup_address }}{% if step1_data.return_pickup_point_detail %} &mdash; {{ step1_data.return_pickup_point_detail }}{% endif %}</strong>
+        </div>
+        <div class="review-row">
+            <span>Return dropoff</span>
+            <strong>{{ step1_data.return_dropoff_address }}{% if step1_data.return_dropoff_point_detail %} &mdash; {{ step1_data.return_dropoff_point_detail }}{% endif %}</strong>
+        </div>
+        {% if fare_breakdown.return_distance_km %}
+        <div class="review-row">
+            <span>Return distance</span>
+            <strong>{{ fare_breakdown.return_distance_km|floatformat:1 }} km</strong>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="review-row"><span>Return route</span><strong>Same trip in reverse</strong></div>
+        {% endif %}
+        {% else %}
+        <div class="review-row"><span>Return trip</span><strong>No &mdash; one way only</strong></div>
+        {% endif %}
+        {% if fare_breakdown.is_night_pickup %}
+        <div class="review-note review-note-night">
+            <i class="bi bi-moon-stars"></i>
+            This is a night pickup ({{ night_cfg.START|time:"H:i" }}&ndash;{{ night_cfg.END|time:"H:i" }}), so a
+            ${{ fare_breakdown.night_surcharge|floatformat:2 }} surcharge applies.
+        </div>
+        {% endif %}
+        {% if fare_breakdown.is_night_return %}
+        <div class="review-note review-note-night">
+            <i class="bi bi-moon-stars"></i>
+            Your return is also a night pickup, so a further
+            ${{ fare_breakdown.return_night_surcharge|floatformat:2 }} surcharge applies.
+        </div>
+        {% endif %}
+    </div>
 
-        {% if paynow_allowed %}
-        <div class="payment-option">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; margin-bottom: 0;">
-                <input type="radio" name="payment_method" value="PAYNOW" required>
-                <span>
-                    <strong>Pay Online (Paynow)</strong>
-                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
-                        Secure online payment via Paynow
-                    </div>
-                </span>
-            </label>
+    <!-- Passengers & luggage -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-people"></i> Passengers &amp; luggage</div>
+        <div class="review-row"><span>Passengers seated</span><strong>{{ step2_data.num_adults|default:1 }}</strong></div>
+        {% if step2_data.num_kids_carried %}
+        <div class="review-row"><span>Kids carried</span><strong>{{ step2_data.num_kids_carried }}</strong></div>
+        {% endif %}
+        {% if step2_data.baby_car_seater %}
+        <div class="review-row"><span>Baby car seats</span><strong>{{ step2_data.baby_car_seater }}</strong></div>
+        {% endif %}
+        <div class="review-row"><span>Luggage bags</span><strong>{{ step2_data.luggage_count|default:0 }}</strong></div>
+        <div class="review-row"><span>Hand luggage</span><strong>{{ step2_data.hand_luggage_count|default:0 }}</strong></div>
+    </div>
+
+    <!-- Stops -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-signpost-split"></i> Stops along the way</div>
+        {% if fare_breakdown.stops %}
+            {% for stop in fare_breakdown.stops %}
+            <div class="review-row">
+                <span>{{ forloop.counter }}. {{ stop.description|default:"Stop" }}</span>
+                <strong>up to {{ stop.minutes }} min &mdash; {% if stop.fee > 0 %}${{ stop.fee|floatformat:2 }}{% else %}Free{% endif %}</strong>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="review-empty">No stops added &mdash; the driver will go straight to your dropoff.</div>
+        {% endif %}
+    </div>
+
+    <!-- Contact -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-person-check"></i> Contact details</div>
+        <div class="review-row">
+            <span>Name on the placard</span>
+            <strong>{% if step3_data.salutation %}{{ step3_data.salutation }} {% endif %}{{ step3_data.passenger_full_name }}</strong>
+        </div>
+        <div class="review-row"><span>Phone</span><strong>{{ step3_data.phone }}</strong></div>
+        <div class="review-row"><span>Email</span><strong>{{ step3_data.email }}</strong></div>
+        {% if step3_data.extra_instructions %}
+        <div class="review-row">
+            <span>Additional notes</span>
+            <strong class="review-note-text">{{ step3_data.extra_instructions }}</strong>
         </div>
         {% else %}
-        <div class="payment-option" style="opacity: .6; cursor: not-allowed; background: #f9fafb;">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: not-allowed; margin-bottom: 0;">
-                <input type="radio" name="payment_method" value="PAYNOW" disabled>
-                <span>
-                    <strong>Pay Online (Paynow) — not available for this amount</strong>
-                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
-                        Available on bookings of ${{ paynow_rule.MIN_AMOUNT|floatformat:0 }} and above
-                    </div>
-                </span>
-            </label>
-        </div>
-        <div class="info-box" style="background: #eff6ff; border-left: 4px solid #2563eb;">
-            <i class="bi bi-info-circle"></i>
-            {{ paynow_rule.NOTE }}
-        </div>
+        <div class="review-empty">No additional notes added.</div>
         {% endif %}
+    </div>
+</div>
 
-        {% if form.payment_method.errors %}
-            <div class="error-message" style="margin-top: 8px;">
-                {% for error in form.payment_method.errors %}{{ error }}{% endfor %}
+{% comment %}
+No form here - step 3 only confirms what was already captured, so moving on is
+a plain link to the payment step rather than a submission.
+{% endcomment %}
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+    <a class="btn btn-primary btn-grow" href="{% url 'rides:booking_wizard' step=5 %}"
+       style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
+        Continue to payment <i class="bi bi-arrow-right"></i>
+    </a>
+</div>
+
+<!-- Edit modal: one place to change anything, without losing your place -->
+<!-- ------------------------------------------------------------------ -->
+<div class="wz-modal" id="edit_modal" role="dialog" aria-modal="true" aria-labelledby="edit_modal_title">
+    <div class="wz-modal-card">
+        <div class="wz-modal-head">
+            <div>
+                <h4 id="edit_modal_title">Edit your booking</h4>
+                <p>Open a section, change what you need, then save.</p>
             </div>
-        {% endif %}
-    </div>
+            <button type="button" class="wz-modal-close" id="close_edit_modal" aria-label="Close">&times;</button>
+        </div>
 
-    <!-- Payment Contact Info -->
-    <div class="info-box" style="background: #fff9e6; border-left: 4px solid #ff9800;">
-        <i class="bi bi-telephone"></i>
-        <strong>For payment details &amp; special requests:</strong>
-        <div style="margin-top: 8px; font-weight: 600; color: #ff6600;">
-            📞 +263789423154
+        <form id="edit_form" class="wz-modal-body">
+            {% csrf_token %}
+
+            <div class="error-message" id="edit_errors" style="display:none;"></div>
+
+            <div class="acc" data-acc>
+                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
+                    <i class="bi bi-geo-alt"></i>
+                    <span class="acc-label">Trip &amp; schedule</span>
+                    <i class="bi bi-chevron-down" data-acc-chevron></i>
+                </button>
+                <div class="acc-body" style="display:none;">
+                    {% include "rides/booking_wizard/partials/_trip_fields.html" %}
+                </div>
+            </div>
+
+            <div class="acc" data-acc>
+                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
+                    <i class="bi bi-people"></i>
+                    <span class="acc-label">Passengers &amp; luggage</span>
+                    <i class="bi bi-chevron-down" data-acc-chevron></i>
+                </button>
+                <div class="acc-body" style="display:none;">
+                    {% include "rides/booking_wizard/partials/_people_fields.html" %}
+                </div>
+            </div>
+
+            <div class="acc" data-acc>
+                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
+                    <i class="bi bi-person-check"></i>
+                    <span class="acc-label">Contact details</span>
+                    <i class="bi bi-chevron-down" data-acc-chevron></i>
+                </button>
+                <div class="acc-body" style="display:none;">
+                    {% include "rides/booking_wizard/partials/_contact_fields.html" %}
+                </div>
+            </div>
+        </form>
+
+        <div class="wz-modal-foot">
+            <button type="button" class="btn btn-secondary" id="cancel_edit">Cancel</button>
+            <button type="submit" form="edit_form" class="btn btn-primary" id="save_edit">Save changes</button>
         </div>
     </div>
+</div>
 
-    <!-- Terms & Conditions -->
-    <div class="info-box">
-        <i class="bi bi-check-circle"></i>
-        By booking, you agree to our Terms of Service and accept the estimated fare shown above
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="btn-group-wizard">
-        <button type="button" class="btn btn-secondary" id="prev_btn" style="flex: 1;">
-            <i class="bi bi-arrow-left"></i> Back
-        </button>
-        <button type="submit" class="btn btn-primary" id="confirm_btn" style="flex: 1;">
-            Confirm Booking <i class="bi bi-check-lg"></i>
-        </button>
-    </div>
-</form>
+{% include "rides/booking_wizard/partials/_trip_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_people_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_stops_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_contact_fields_js.html" %}
 
 <script>
-    // Payment method selection styling
-    const paymentOptions = document.querySelectorAll('.payment-option');
-    const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+(function () {
+    'use strict';
 
-    paymentRadios.forEach((radio, index) => {
-        radio.addEventListener('change', () => {
-            paymentOptions.forEach(opt => opt.classList.remove('selected'));
-            if (radio.checked) {
-                paymentOptions[index].classList.add('selected');
-            }
-        });
-
-        // Initialize selected state
-        if (radio.checked) {
-            paymentOptions[index].classList.add('selected');
-        }
-    });
-
-    // Back button
-    document.getElementById('prev_btn').addEventListener('click', (e) => {
+    document.getElementById('prev_btn').addEventListener('click', function (e) {
         e.preventDefault();
         window.location.href = '{% url "rides:booking_wizard" step=3 %}';
     });
 
-    // Confirm button with loading state
-    const confirmBtn = document.getElementById('confirm_btn');
-    document.getElementById('step4_form').addEventListener('submit', () => {
-        confirmBtn.disabled = true;
-        confirmBtn.innerHTML = '<span class="loading-spinner" style="display: inline-block; margin-right: 8px;"></span> Processing...';
+    /* --- Edit modal -------------------------------------------------------- */
+    const modal = document.getElementById('edit_modal');
+    const openBtn = document.getElementById('open_edit_modal');
+    const closeBtn = document.getElementById('close_edit_modal');
+    const cancelBtn = document.getElementById('cancel_edit');
+    const saveBtn = document.getElementById('save_edit');
+    const editForm = document.getElementById('edit_form');
+    const errorBox = document.getElementById('edit_errors');
+
+    function openModal() {
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
     });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+
+    // Accordion sections
+    document.querySelectorAll('[data-acc]').forEach(function (acc) {
+        const head = acc.querySelector('[data-acc-toggle]');
+        const body = acc.querySelector('.acc-body');
+        const chevron = acc.querySelector('[data-acc-chevron]');
+        head.addEventListener('click', function () {
+            const open = body.style.display !== 'block';
+            body.style.display = open ? 'block' : 'none';
+            head.setAttribute('aria-expanded', open ? 'true' : 'false');
+            acc.classList.toggle('is-open', open);
+            if (chevron) chevron.className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+        });
+    });
+
+    // The trip fields report their own validity; a trip that would be rejected
+    // server-side cannot be saved here either.
+    let tripValid = true;
+    window.onTripValidityChange = function (isValid) {
+        tripValid = isValid;
+        saveBtn.disabled = !isValid;
+        saveBtn.title = isValid ? '' : 'Some trip details still need fixing';
+    };
+
+    function showErrors(errors) {
+        const messages = [];
+        Object.keys(errors || {}).forEach(function (field) {
+            (errors[field] || []).forEach(function (msg) { messages.push(msg); });
+        });
+        errorBox.innerHTML = messages.length
+            ? '<i class="bi bi-exclamation-triangle"></i> ' + messages.join('<br>')
+            : '<i class="bi bi-exclamation-triangle"></i> We could not save those changes. Please check the fields above.';
+        errorBox.style.display = 'block';
+        errorBox.scrollIntoView({ block: 'nearest' });
+    }
+
+    editForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!tripValid) return;
+
+        errorBox.style.display = 'none';
+
+        // Saving happens in-page, so this button gets the full arc: shrink to a
+        // spinner, open into a tick once the server has taken the changes, then
+        // reload to show the new fare.
+        const morph = window.morphButton(saveBtn);
+        morph.loading();
+
+        fetch('{% url "rides:booking_wizard_edit" %}', {
+            method: 'POST',
+            body: new FormData(editForm),
+            credentials: 'same-origin',
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    morph.success();
+                    // Long enough for the tick to finish drawing. The review page
+                    // re-prices on every load, so a reload is the single source
+                    // of truth for the new fare.
+                    setTimeout(function () { window.location.reload(); }, 700);
+                    return;
+                }
+                showErrors(data.errors);
+                morph.reset();
+            })
+            .catch(function () {
+                showErrors(null);
+                morph.reset();
+            });
+    });
+})();
 </script>
 {% endblock %}

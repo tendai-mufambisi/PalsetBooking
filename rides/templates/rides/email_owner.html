@@ -77,6 +77,15 @@
           <tr><td>Night pickup surcharge</td><td>${{ booking.price_breakdown.night_surcharge|floatformat:2 }}</td></tr>
           {% endif %}
           <tr><td>Payment method</td><td>{{ booking.get_payment_option_display }}</td></tr>
+          {% if booking.payment_option == 'paylink' %}
+          <tr><td colspan="2" style="padding:0">
+            <div style="margin:6px 0;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e3a8a;font-size:14px;line-height:1.7">
+              <strong>Action needed &mdash; send this customer a payment link.</strong><br>
+              Card holder: <strong>{{ booking.paylink_card_name|default:"Not given" }}</strong><br>
+              Send the link to: <strong>{{ booking.paylink_email|default:booking.email }}</strong>
+            </div>
+          </td></tr>
+          {% endif %}
           {% if booking.ride_type == 'chauffeur' %}
           <tr><td>Package</td><td>{{ booking.chauffeur_package_label }}</td></tr>
           {% if booking.approximate_end_time %}<tr><td>Approx end time</td><td>{{ booking.approximate_end_time }}</td></tr>{% endif %}

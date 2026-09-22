@@ -24,6 +24,16 @@
           <input type="text" name="taxi_owner_phone" value="{{ site_settings.taxi_owner_phone }}" class="form-ctrl" placeholder="+263789423154">
           <div style="font-size:11px;color:#9ca3af;margin-top:5px">Used for WhatsApp share button on booking confirmation. Default: <code>{{ django_phone }}</code></div>
         </div>
+        <div class="mb-3">
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Money Transfer Recipient</label>
+          <input type="text" name="money_transfer_recipient_name" value="{{ site_settings.money_transfer_recipient_name }}" class="form-ctrl" placeholder="Leonard Zambwi">
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Shown to customers who choose to pay by money transfer.</div>
+        </div>
+        <div class="mb-3">
+          <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Money Transfer Number</label>
+          <input type="text" name="money_transfer_recipient_phone" value="{{ site_settings.money_transfer_recipient_phone }}" class="form-ctrl" placeholder="+263772491982">
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">The number the transfer should be sent to.</div>
+        </div>
         <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 14px;font-size:12px;color:#92400e;margin-bottom:18px">
           <i class="bi bi-info-circle me-2"></i>
           These settings override the environment defaults for the active session. To make them permanent, update the <code>TAXI_OWNER_EMAIL</code> and <code>TAXI_OWNER_PHONE</code> environment variables on the server.

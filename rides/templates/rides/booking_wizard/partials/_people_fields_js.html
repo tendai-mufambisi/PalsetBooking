@@ -1,0 +1,83 @@
+{% comment %}
+Behaviour for _people_fields.html — the passenger and luggage counters.
+{% endcomment %}
+<script>
+(function () {
+    'use strict';
+
+    const el = (id) => document.getElementById(id);
+
+    /* --- Counters ---------------------------------------------------------- */
+
+    // A configured limit of 0 (the default) means "no maximum".
+    const noLimit = Number.MAX_SAFE_INTEGER;
+    const FIELDS = {
+        num_adults:         { min: 1, max: {{ booking_limits.MAX_PASSENGERS|default:0 }} || noLimit },
+        baby_car_seater:    { min: 0, max: noLimit },
+        num_kids_carried:   { min: 0, max: noLimit },
+        luggage_count:      { min: 0, max: {{ booking_limits.MAX_LUGGAGE|default:0 }} || noLimit },
+        hand_luggage_count: { min: 0, max: {{ booking_limits.MAX_HAND_LUGGAGE|default:0 }} || noLimit },
+    };
+
+    function paint(field, value) {
+        if (el(field)) el(field).value = value;
+        if (el('display_' + field)) el('display_' + field).value = value;
+
+        // Tint the row once it is in use, so a filled-in choice is obvious
+        // without reading every number.
+        const row = document.querySelector('[data-count-row="' + field + '"]');
+        if (row) row.classList.toggle('is-set', value > FIELDS[field].min);
+    }
+
+    function initCounters() {
+        Object.keys(FIELDS).forEach((field) => {
+            const stored = parseInt((el(field) || {}).value, 10);
+            paint(field, isNaN(stored) ? FIELDS[field].min : Math.max(stored, FIELDS[field].min));
+        });
+    }
+
+    // The child options are folded away by default. Open them when the booking
+    // already uses one, so editing never hides a choice the customer made.
+    function initChildrenSection() {
+        const toggle = el('children_toggle');
+        const fields = el('children_fields');
+        if (!toggle || !fields) return;
+
+        const setOpen = (open) => {
+            fields.style.display = open ? 'block' : 'none';
+            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (el('children_option')) el('children_option').classList.toggle('is-open', open);
+            if (el('children_chevron')) {
+                el('children_chevron').className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+            }
+        };
+
+        setOpen(['baby_car_seater', 'num_kids_carried'].some(
+            (field) => (parseInt((el(field) || {}).value, 10) || 0) > 0
+        ));
+
+        toggle.addEventListener('click', () => setOpen(fields.style.display !== 'block'));
+    }
+
+    function step(field, delta) {
+        const spec = FIELDS[field];
+        if (!spec) return;
+        const current = parseInt((el(field) || {}).value, 10) || 0;
+        const next = current + delta;
+        if (next < spec.min || next > spec.max) return;
+        paint(field, next);
+    }
+
+    document.querySelectorAll('.btn-increment').forEach((btn) => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); step(btn.dataset.field, 1); });
+    });
+    document.querySelectorAll('.btn-decrement').forEach((btn) => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); step(btn.dataset.field, -1); });
+    });
+
+    window.addEventListener('load', () => {
+        initCounters();
+        initChildrenSection();
+    });
+})();
+</script>

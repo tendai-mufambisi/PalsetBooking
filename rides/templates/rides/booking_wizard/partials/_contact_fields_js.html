@@ -1,0 +1,20 @@
+{% comment %}
+Behaviour for _contact_fields.html — the notes character counter.
+{% endcomment %}
+<script>
+(function () {
+    'use strict';
+
+    const input = document.getElementById('extra_instructions');
+    const counter = document.getElementById('char_count');
+    if (!input || !counter) return;
+
+    function update() {
+        counter.textContent = (input.value || '').length + ' / 500 characters';
+    }
+
+    input.addEventListener('input', update);
+    input.addEventListener('change', update);
+    window.addEventListener('load', update);
+})();
+</script>

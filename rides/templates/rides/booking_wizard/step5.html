@@ -1,270 +1,630 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
-{% block title %}Confirmation - Book a Ride{% endblock %}
+{% block title %}Payment - Book a Ride{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* --- The number, up front ------------------------------------------- */
+    .pay-total {
+        text-align: center;
+        padding: 26px 20px 24px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        background: var(--primary-soft);
+        margin-bottom: 14px;
+    }
+    .pay-total-label {
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+        color: var(--primary-deep);
+    }
+    .pay-total-amount {
+        font-size: 44px;
+        font-weight: 700;
+        letter-spacing: -1.5px;
+        line-height: 1.1;
+        margin: 6px 0 4px;
+        color: var(--ink);
+    }
+    .pay-total-meta { font-size: 13px; color: var(--ink-soft); }
+
+    .pay-disclosure {
+        display: block;
+        width: 100%;
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary-deep);
+        padding: 6px;
+        cursor: pointer;
+        text-align: center;
+    }
+    .pay-disclosure:hover { text-decoration: underline; }
+    #fare_detail { margin-top: 10px; }
+
+    /* --- Method cards ---------------------------------------------------- */
+    .pay-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .pay-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 16px 16px 15px;
+        margin: 0;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        background: #fff;
+        cursor: pointer;
+        transition: border-color .2s ease, background .2s ease, transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s ease;
+    }
+
+    .pay-card:hover { border-color: #6ee7b7; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .pay-card:focus-within { box-shadow: 0 0 0 4px var(--primary-ring); }
+
+    .pay-card.is-selected {
+        border-color: var(--primary-color);
+        background: var(--primary-soft);
+    }
+
+    /* Native control stays for keyboard and assistive tech, visually replaced
+       by the card itself. */
+    .pay-radio {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        pointer-events: none;
+    }
+
+    .pay-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--light-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 19px;
+        color: var(--primary-deep);
+        margin-bottom: 4px;
+        transition: background .2s ease, color .2s ease;
+    }
+    .pay-card.is-selected .pay-icon { background: var(--primary-color); color: #fff; }
+
+    .pay-name { font-size: 15px; font-weight: 700; color: var(--ink); }
+    .pay-note { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
+
+    .pay-tick {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: #fff;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transform: scale(.4);
+        transition: opacity .2s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .pay-card.is-selected .pay-tick { opacity: 1; transform: scale(1); }
+
+    .pay-card.is-disabled {
+        opacity: .55;
+        cursor: not-allowed;
+        background: var(--light-bg);
+    }
+    .pay-card.is-disabled:hover { transform: none; box-shadow: none; border-color: var(--border-light); }
+
+    /* --- Cash or card ----------------------------------------------------
+       Asked in a dialog the moment "pay on arrival" is picked. It used to be a
+       panel under the grid, where it was easy to walk straight past. */
+    .pay-chosen {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: var(--primary-color);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 700;
+        width: fit-content;
+        animation: control-pop .34s cubic-bezier(.34,1.56,.64,1);
+    }
+    .pay-chosen .pay-change {
+        font-weight: 600;
+        opacity: .85;
+        text-decoration: underline;
+    }
+
+    /* Who a money transfer actually goes to, on the card that offers it. */
+    .pay-recipient {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        margin-top: 8px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: var(--light-bg);
+        border: 1px dashed var(--border-light);
+        font-size: 12.5px;
+        color: var(--ink);
+        line-height: 1.45;
+    }
+    .pay-card.is-selected .pay-recipient { background: #fff; border-color: var(--primary-color); }
+    .pay-recipient-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .4px;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+    }
+
+    .pay-choice {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+        padding: 16px;
+        margin: 0 0 10px;
+        border: 2px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        background: #fff;
+        cursor: pointer;
+        text-align: left;
+        transition: border-color .2s ease, background .2s ease, transform .15s ease;
+    }
+    .pay-choice:last-child { margin-bottom: 0; }
+    .pay-choice:hover { border-color: var(--primary-color); background: var(--primary-soft); transform: translateY(-1px); }
+    .pay-choice:focus-within { box-shadow: 0 0 0 4px var(--primary-ring); }
+    .pay-choice.is-selected { border-color: var(--primary-color); background: var(--primary-soft); }
+
+    .pay-choice-icon {
+        flex: 0 0 auto;
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        background: var(--primary-soft);
+        color: var(--primary-deep);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+    .pay-choice.is-selected .pay-choice-icon { background: var(--primary-color); color: #fff; }
+
+    .pay-choice-text { flex: 1; min-width: 0; }
+    .pay-choice-name { display: block; font-size: 16px; font-weight: 700; color: var(--ink); }
+    .pay-choice-note { display: block; font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+    .pay-choice-go { color: #cbd5e1; font-size: 16px; }
+
+    @media (max-width: 576px) {
+        .pay-grid { grid-template-columns: 1fr; }
+        .pay-total-amount { font-size: 38px; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div style="text-align: center; padding: 20px;;">
-    <div style="font-size: 48px; color: #10b981; margin-bottom: 16px;">
-        <i class="bi bi-check-circle-fill"></i>
-    </div>
-    <h2 style="font-size: 24px; color: #333; margin-bottom: 8px;">Booking Confirmed!</h2>
-    <p style="font-size: 16px; color: #666; margin-bottom: 24px;">
-        Your ride has been successfully booked
-    </p>
-</div>
+<h2 class="step-heading">How would you like to pay?</h2>
 
-{% if booking %}
-    <!-- Booking Summary Card -->
-    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
-        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #333;">
-            <i class="bi bi-info-circle"></i> Booking Summary
-        </h3>
-
-        <div style="display: grid; gap: 12px; font-size: 14px;">
-            <!-- Booking ID -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Booking ID:</span>
-                <strong style="color: #10b981; font-family: monospace;">{{ booking.reference|default:booking.id }}</strong>
-            </div>
-
-            <!-- Status -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Status:</span>
-                <strong style="color: #10b981;">
-                    {% if booking.status == "CONFIRMED" %}
-                        ✓ Confirmed
-                    {% elif booking.status == "PENDING" %}
-                        ⏳ Pending
-                    {% else %}
-                        {{ booking.get_status_display }}
-                    {% endif %}
-                </strong>
-            </div>
-
-            <!-- Route -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Route:</span>
-                <div style="text-align: right; max-width: 60%;">
-                    <div style="color: #666; margin-bottom: 4px;">
-                        <i class="bi bi-geo-alt"></i> {{ step1_data.pickup_address|truncatewords:5 }}
-                    </div>
-                    <div style="color: #666;">
-                        <i class="bi bi-pin"></i> {{ step1_data.dropoff_address|truncatewords:5 }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Distance & Fare -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Distance:</span>
-                <strong>{{ booking.distance_km|floatformat:1 }} km</strong>
-            </div>
-
-            <!-- Estimated Travelling Time -->
-            {% if eta_minutes %}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span style="display: flex; align-items: center; gap: 8px;">
-                    <i class="bi bi-clock"></i> Estimated Time:
-                </span>
-                <strong style="color: #f97316;">{{ eta_minutes }} minutes</strong>
-            </div>
-            {% endif %}
-
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Estimated Fare:</span>
-                <strong style="color: #10b981; font-size: 18px;">${{ booking.total_amount|floatformat:2 }}</strong>
-            </div>
-
-            <!-- Passengers -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Passengers:</span>
-                <strong>
-                    {{ booking.num_adults }} adult(s)
-                    {% if booking.num_kids_carried > 0 %}, {{ booking.num_kids_carried }} carried{% endif %}
-                </strong>
-            </div>
-
-            <!-- Passenger Name / Salutation -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Passenger:</span>
-                <strong>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</strong>
-            </div>
-
-            <!-- Airport / Flight (if available) -->
-            {% if booking.pickup_is_airport %}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Airport / Flight:</span>
-                <div style="text-align: right; max-width: 60%;">
-                    <strong>
-                        {% if booking.arrival_airline %}{{ booking.arrival_airline }}{% endif %}
-                        {% if booking.arrival_flight_number %} - {{ booking.arrival_flight_number }}{% endif %}
-                        {% if booking.arrival_date %} on {{ booking.arrival_date }}{% endif %}
-                        {% if booking.arrival_time %} at {{ booking.arrival_time }}{% endif %}
-                        {% if booking.pickup_airport_terminal %}<br>{{ booking.pickup_airport_terminal }}{% endif %}
-                    </strong>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Baby car seats -->
-            {% if booking.baby_car_seater > 0 %}
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                    <span>Baby car seats:</span>
-                    <strong>{{ booking.baby_car_seater }}</strong>
-                </div>
-            {% endif %}
-
-            <!-- Luggage -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Luggage:</span>
-                <strong>{{ booking.luggage_count }} bag(s){% if booking.hand_luggage_count %}, {{ booking.hand_luggage_count }} hand luggage{% endif %}</strong>
-            </div>
-
-            <!-- Return trip -->
-            {% if booking.is_return_trip %}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Return trip:</span>
-                <strong>{{ booking.return_date }} at {{ booking.return_time }}</strong>
-            </div>
-            {% if booking.return_uses_different_points %}
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Return route:</span>
-                <div style="text-align: right; max-width: 60%;">
-                    <strong>{{ booking.return_pickup_display }}<br>&rarr; {{ booking.return_dropoff_display }}</strong>
-                </div>
-            </div>
-            {% endif %}
-            {% if booking.price_breakdown.return_leg_fee %}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Return leg fare:</span>
-                <strong>${{ booking.price_breakdown.return_leg_fee|floatformat:2 }}</strong>
-            </div>
-            {% endif %}
-            {% endif %}
-
-            <!-- Stops along the way -->
-            {% if booking.stops_json %}
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Stops:</span>
-                <div style="text-align: right; max-width: 65%;">
-                    {% for stop in booking.stops_json %}
-                    <div style="font-weight: 600; font-size: 13px;">
-                        {{ forloop.counter }}. {{ stop.description|default:"Stop" }} &mdash; up to {{ stop.minutes }} min
-                        ({% if stop.fee %}${{ stop.fee|floatformat:2 }}{% else %}Free{% endif %})
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Night surcharge -->
-            {% if booking.price_breakdown.night_surcharge %}
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Night pickup surcharge:</span>
-                <strong>${{ booking.price_breakdown.night_surcharge|floatformat:2 }}</strong>
-            </div>
-            {% endif %}
-
-            <!-- Payment method -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Payment method:</span>
-                <strong>{{ booking.get_payment_option_display }}</strong>
-            </div>
-
-            <!-- Special Notes -->
-            {% if booking.extra_instructions %}
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Special Notes:</span>
-                <strong style="text-align: right; max-width: 60%;">{{ booking.extra_instructions }}</strong>
-            </div>
-            {% endif %}
-
-            <!-- Contact -->
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <span>Phone:</span>
-                <strong>{{ booking.phone }}</strong>
-            </div>
-
-            {% if booking.email %}
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
-                    <span>Email:</span>
-                    <strong>{{ booking.email }}</strong>
-                </div>
-            {% endif %}
-
-            <!-- Payment Method -->
-            <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px;">
-                <span>Payment:</span>
-                <strong>
-                    {% if booking.payment_option == "POA" %}
-                        💰 Pay on Arrival (Cash)
-                    {% elif booking.payment_option == "pos_card" %}
-                        💳 Pay on Arrival (POS/CARD)
-                    {% elif booking.payment_option == "money_transfer" %}
-                        💸 Money Transfer Agency
-                    {% elif booking.payment_option == "paylink" %}
-                        🔗 Paylink
-                    {% elif booking.payment_option == "PAYNOW" %}
-                        💳 Pay Online (Paynow)
-                    {% else %}
-                        {{ booking.get_payment_option_display }}
-                    {% endif %}
-                </strong>
-            </div>
-        </div>
-    </div>
-
-    <!-- Next Steps -->
-    <div class="info-box">
-        <h4 style="margin-bottom: 12px; font-size: 14px;">
-            <i class="bi bi-bell"></i> What's Next?
-        </h4>
-        <ol type="a" style="margin: 0; padding-left: 20px; line-height: 1.9; font-size: 14px;">
-            <li>Your driver will arrive exactly at the time you requested.</li>
-            <li>For airport pickups, the driver will display a name board with the name you provided for easy identification in the arrivals hall.</li>
-            <li>We offer free waiting time at the airport for your pickup — no extra charge while we wait for you to clear arrivals.</li>
-            <li>For any other pickup address, we offer up to <strong>15 minutes free</strong> waiting time. Extra waiting beyond 15 minutes will be charged at <strong>$20</strong>.</li>
-            <li>You will receive a booking confirmation email shortly. Keep it handy for your reference number.</li>
-        </ol>
-    </div>
-
-    <!-- Driver Contact -->
-    <div style="background: white; border: 2px solid #10b981; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-        <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Need help or update your booking?</p>
-        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <a href="tel:{{ TAXI_OWNER_PHONE }}" style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 700; color: white; background: #10b981; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i class="bi bi-telephone"></i> Call Driver
-            </a>
-            {% if whatsapp_message %}
-            <a href="{{ whatsapp_message }}" target="_blank" rel="noopener" style="flex: 1; min-width: 200px; font-size: 14px; font-weight: 700; color: white; background: #25D366; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                <i class="bi bi-whatsapp"></i> Send WhatsApp
-            </a>
-            {% endif %}
-        </div>
-    </div>
-
-{% else %}
-    <div class="info-box">
-        <i class="bi bi-info-circle"></i>
-        Your booking details are being confirmed. Check your email for updates.
+{% if error_message %}
+    <div class="error-message">
+        <i class="bi bi-exclamation-triangle"></i>
+        {{ error_message }}
     </div>
 {% endif %}
 
-<!-- Action Buttons -->
-<div class="btn-group-wizard">
-    <button type="button" class="btn btn-secondary" onclick="window.location.href='/'" style="flex: 1;">
-        <i class="bi bi-house"></i> Home
-    </button>
-    <button type="button" class="btn btn-primary" onclick="window.location.href='{% url "rides:booking_wizard_start" %}'" style="flex: 1;">
-        <i class="bi bi-plus-lg"></i> New Booking
-    </button>
-    <button type="button" class="btn btn-outline-primary" onclick="window.print()" style="flex: 1;">
-        <i class="bi bi-printer"></i> Print
-    </button>
+{% if fare_breakdown %}
+<div class="pay-total">
+    <div class="pay-total-label">Total to pay</div>
+    <div class="pay-total-amount">${{ fare_breakdown.total|floatformat:2 }}</div>
+    <div class="pay-total-meta">
+        {{ fare_breakdown.distance_km|floatformat:1 }} km &middot;
+        {{ step2_data.num_adults|default:1 }} passenger{{ step2_data.num_adults|default:1|pluralize }}
+        {% if fare_breakdown.is_return_trip %}&middot; return trip{% else %}&middot; one way{% endif %}
+    </div>
 </div>
 
+{% comment %}
+The full itemisation stays one tap away rather than on the page - this step is
+about choosing how to pay, not re-reading the quote.
+{% endcomment %}
+<button type="button" class="pay-disclosure" id="fare_toggle" aria-expanded="false" aria-controls="fare_detail">
+    See how this is worked out <i class="bi bi-chevron-down"></i>
+</button>
+<div id="fare_detail" style="display:none;">
+    {% include "rides/booking_wizard/partials/_fare_breakdown.html" %}
+</div>
+{% else %}
+<div class="error-message">
+    <i class="bi bi-exclamation-triangle"></i>
+    We couldn't work out the fare. Please go back and check your trip details.
+</div>
+{% endif %}
+
+{% if is_long_distance %}
+    {% include "rides/booking_wizard/partials/_long_distance_notice.html" %}
+{% endif %}
+
+<form method="POST" id="step5_form">
+    {% csrf_token %}
+
+    <div class="section-block">
+        <div class="section-title">Choose a payment method</div>
+        <p class="section-sub">Nothing is charged until you confirm.</p>
+
+        <div class="pay-grid">
+            {% comment %}
+            Cash and card-on-arrival are the same decision to the customer -
+            they pay the driver. Which one is asked below, only once this is
+            picked, because the driver still needs to know what to bring.
+            {% endcomment %}
+            <div class="pay-card" id="pay_arrival" role="button" tabindex="0"
+                 aria-haspopup="dialog" aria-controls="arrival_modal">
+                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
+                <span class="pay-icon"><i class="bi bi-wallet2"></i></span>
+                <span class="pay-name">Pay on arrival</span>
+                <span class="pay-note">Settle up with the driver when we collect you</span>
+                <span class="pay-chosen" id="arrival_chosen" hidden>
+                    <i class="bi" id="arrival_chosen_icon"></i>
+                    <span id="arrival_chosen_label"></span>
+                    <span class="pay-change">Change</span>
+                </span>
+            </div>
+
+            {% comment %}
+            The recipient is part of the choice, not an afterthought - picking
+            "money transfer" is useless without knowing who to send it to.
+            {% endcomment %}
+            <label class="pay-card" data-pay-card>
+                <input type="radio" name="payment_method" value="money_transfer" class="pay-radio">
+                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
+                <span class="pay-icon"><i class="bi bi-send"></i></span>
+                <span class="pay-name">Money transfer</span>
+                <span class="pay-note">Mukuru, Western Union, WorldRemit or EcoCash</span>
+                <span class="pay-recipient">
+                    <span class="pay-recipient-label">Send to</span>
+                    <strong>{{ money_transfer_recipient.NAME }}</strong>
+                    <strong>{{ money_transfer_recipient.PHONE }}</strong>
+                </span>
+            </label>
+
+            {% comment %}
+            Paylink needs the name on the card and an address to send the link
+            to, so the card opens a dialog for them the way "pay on arrival"
+            asks about the card machine.
+            {% endcomment %}
+            <div class="pay-card" id="pay_paylink" role="button" tabindex="0"
+                 aria-haspopup="dialog" aria-controls="paylink_modal">
+                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
+                <span class="pay-icon"><i class="bi bi-link-45deg"></i></span>
+                <span class="pay-name">Paylink</span>
+                <span class="pay-note">We email you a link to pay by card</span>
+                <span class="pay-chosen" id="paylink_chosen" hidden>
+                    <i class="bi bi-person-badge"></i>
+                    <span id="paylink_chosen_label"></span>
+                    <span class="pay-change">Change</span>
+                </span>
+            </div>
+
+            {% if paynow_allowed %}
+            <label class="pay-card" data-pay-card>
+                <input type="radio" name="payment_method" value="PAYNOW" class="pay-radio">
+                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
+                <span class="pay-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                <span class="pay-name">Pay online</span>
+                <span class="pay-note">Card or mobile money, secured by Paynow</span>
+            </label>
+            {% else %}
+            <div class="pay-card is-disabled" title="{{ paynow_rule.NOTE }}">
+                <span class="pay-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                <span class="pay-name">Pay online</span>
+                <span class="pay-note">
+                    Available on bookings of ${{ paynow_rule.MIN_AMOUNT|floatformat:0 }} and above
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% comment %}
+        Lives inside the form so the two radios post normally. Opened the moment
+        the card is picked, because the driver has to know whether to bring the
+        card machine and this was being missed at the foot of the page.
+        {% endcomment %}
+        <div class="wz-modal" id="arrival_modal" role="dialog" aria-modal="true"
+             aria-labelledby="arrival_modal_title">
+            <div class="wz-modal-card" style="max-width:430px;">
+                <div class="wz-modal-head">
+                    <div>
+                        <h4 id="arrival_modal_title">How will you pay the driver?</h4>
+                        <p>So the driver knows whether to bring the card machine.</p>
+                    </div>
+                    <button type="button" class="wz-modal-close" id="arrival_modal_close" aria-label="Close">&times;</button>
+                </div>
+                <div class="wz-modal-body">
+                    <label class="pay-choice" data-pay-choice>
+                        <input type="radio" name="payment_method" value="POA" class="pay-radio">
+                        <span class="pay-choice-icon"><i class="bi bi-cash-stack"></i></span>
+                        <span class="pay-choice-text">
+                            <span class="pay-choice-name">Cash</span>
+                            <span class="pay-choice-note">Pay the driver in cash on the day</span>
+                        </span>
+                        <i class="bi bi-chevron-right pay-choice-go"></i>
+                    </label>
+                    <label class="pay-choice" data-pay-choice>
+                        <input type="radio" name="payment_method" value="pos_card" class="pay-radio">
+                        <span class="pay-choice-icon"><i class="bi bi-credit-card-2-front"></i></span>
+                        <span class="pay-choice-text">
+                            <span class="pay-choice-name">Card machine</span>
+                            <span class="pay-choice-note">The driver brings a POS terminal</span>
+                        </span>
+                        <i class="bi bi-chevron-right pay-choice-go"></i>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        {% comment %}
+        Also inside the form, so the two fields and the method post together.
+        Nothing is charged here - we only collect who the link is for.
+        {% endcomment %}
+        <div class="wz-modal" id="paylink_modal" role="dialog" aria-modal="true"
+             aria-labelledby="paylink_modal_title">
+            <div class="wz-modal-card" style="max-width:430px;">
+                <div class="wz-modal-head">
+                    <div>
+                        <h4 id="paylink_modal_title">Who should we send the link to?</h4>
+                        <p>We email a secure payment link &mdash; nothing is charged now.</p>
+                    </div>
+                    <button type="button" class="wz-modal-close" id="paylink_modal_close" aria-label="Close">&times;</button>
+                </div>
+                <div class="wz-modal-body">
+                    <input type="radio" name="payment_method" value="paylink" class="pay-radio" id="paylink_radio">
+
+                    <div class="form-group">
+                        {% include "rides/booking_wizard/partials/_field.html" with field=form.paylink_card_name label="Card holder name" icon="bi-person-badge" only %}
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        {% include "rides/booking_wizard/partials/_field.html" with field=form.paylink_email label="Email address" icon="bi-envelope" hint="The payment link goes here." only %}
+                    </div>
+
+                    <div class="error-message" id="paylink_error" style="display:none;margin-top:12px;"></div>
+                </div>
+                <div class="wz-modal-foot">
+                    <button type="button" class="btn btn-secondary" id="paylink_cancel">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="paylink_save">Use this Paylink</button>
+                </div>
+            </div>
+        </div>
+
+        {% if form.payment_method.errors or form.paylink_card_name.errors or form.paylink_email.errors or form.non_field_errors %}
+            <div class="error-message" style="margin-top:12px;">
+                {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+                {% for error in form.payment_method.errors %}<div>{{ error }}</div>{% endfor %}
+                {% for error in form.paylink_card_name.errors %}<div>{{ error }}</div>{% endfor %}
+                {% for error in form.paylink_email.errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="info-box" style="margin-top:22px;">
+        <i class="bi bi-shield-check"></i>
+        Booking confirms your ride at the estimated fare above. Questions? Call {{ TAXI_OWNER_PHONE }}.
+    </div>
+
+    <div class="btn-group-wizard">
+        <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <button type="submit" class="btn btn-primary btn-grow" id="confirm_btn" disabled>
+            Confirm booking <i class="bi bi-check-lg"></i>
+        </button>
+    </div>
+</form>
+
 <script>
-    // Show print dialog option
-    console.log('Booking confirmed! Booking ID: {{ booking.reference|default:booking.id }}');
+(function () {
+    'use strict';
+
+    const arrivalCard = document.getElementById('pay_arrival');
+    const arrivalModal = document.getElementById('arrival_modal');
+    const arrivalClose = document.getElementById('arrival_modal_close');
+    const chosenPill = document.getElementById('arrival_chosen');
+    const chosenIcon = document.getElementById('arrival_chosen_icon');
+    const chosenLabel = document.getElementById('arrival_chosen_label');
+    const confirmBtn = document.getElementById('confirm_btn');
+
+    const paylinkCard = document.getElementById('pay_paylink');
+    const paylinkModal = document.getElementById('paylink_modal');
+    const paylinkRadio = document.getElementById('paylink_radio');
+    const paylinkName = document.getElementById('paylink_card_name');
+    const paylinkEmail = document.getElementById('paylink_email');
+    const paylinkPill = document.getElementById('paylink_chosen');
+    const paylinkPillLabel = document.getElementById('paylink_chosen_label');
+    const paylinkError = document.getElementById('paylink_error');
+
+    const ARRIVAL = {
+        POA:      { label: 'Cash', icon: 'bi-cash-stack' },
+        pos_card: { label: 'Card machine', icon: 'bi-credit-card-2-front' },
+    };
+
+    const chosen = () => document.querySelector('input[name="payment_method"]:checked');
+
+    function paint() {
+        const picked = chosen();
+        const value = picked ? picked.value : null;
+        const arrival = value ? ARRIVAL[value] : null;
+
+        document.querySelectorAll('[data-pay-card]').forEach(function (card) {
+            card.classList.toggle('is-selected', !!picked && card.contains(picked));
+        });
+        document.querySelectorAll('[data-pay-choice]').forEach(function (choice) {
+            choice.classList.toggle('is-selected', !!picked && choice.contains(picked));
+        });
+
+        arrivalCard.classList.toggle('is-selected', !!arrival);
+        chosenPill.hidden = !arrival;
+        if (arrival) {
+            chosenIcon.className = 'bi ' + arrival.icon;
+            chosenLabel.textContent = arrival.label;
+        }
+
+        // Paylink lives on a plain div too, so it is painted the same way.
+        const onPaylink = value === 'paylink';
+        paylinkCard.classList.toggle('is-selected', onPaylink);
+        paylinkPill.hidden = !onPaylink;
+        if (onPaylink) paylinkPillLabel.textContent = (paylinkName.value || '').trim();
+
+        confirmBtn.disabled = !picked;
+    }
+
+    function openArrivalModal() {
+        arrivalModal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        const first = arrivalModal.querySelector('input[name="payment_method"]');
+        if (first) first.focus();
+    }
+
+    function closeArrivalModal() {
+        arrivalModal.classList.remove('is-open');
+        document.body.style.overflow = '';
+        arrivalCard.focus();
+    }
+
+    arrivalCard.addEventListener('click', openArrivalModal);
+    arrivalCard.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openArrivalModal();
+        }
+    });
+
+    arrivalClose.addEventListener('click', closeArrivalModal);
+    arrivalModal.addEventListener('click', function (e) {
+        if (e.target === arrivalModal) closeArrivalModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        if (arrivalModal.classList.contains('is-open')) closeArrivalModal();
+        if (paylinkModal.classList.contains('is-open')) closePaylinkModal();
+    });
+
+    /* --- Paylink ---------------------------------------------------------- */
+
+    function openPaylinkModal() {
+        paylinkModal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+        paylinkName.focus();
+    }
+
+    function closePaylinkModal() {
+        paylinkModal.classList.remove('is-open');
+        document.body.style.overflow = '';
+        paylinkCard.focus();
+    }
+
+    function showPaylinkError(message) {
+        paylinkError.innerHTML = '<i class="bi bi-exclamation-triangle"></i> ' + message;
+        paylinkError.style.display = 'block';
+    }
+
+    paylinkCard.addEventListener('click', openPaylinkModal);
+    paylinkCard.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPaylinkModal();
+        }
+    });
+
+    document.getElementById('paylink_modal_close').addEventListener('click', closePaylinkModal);
+    document.getElementById('paylink_cancel').addEventListener('click', function () {
+        // Backing out leaves no method chosen rather than a half-filled one.
+        if (paylinkRadio.checked) {
+            paylinkRadio.checked = false;
+            paint();
+        }
+        closePaylinkModal();
+    });
+    paylinkModal.addEventListener('click', function (e) {
+        if (e.target === paylinkModal) closePaylinkModal();
+    });
+
+    // The server rejects a Paylink without these, so they are checked here first.
+    document.getElementById('paylink_save').addEventListener('click', function () {
+        const name = (paylinkName.value || '').trim();
+        const email = (paylinkEmail.value || '').trim();
+
+        if (!name) {
+            showPaylinkError('Please give the name on the card.');
+            paylinkName.focus();
+            return;
+        }
+        if (!email || email.indexOf('@') < 1 || email.indexOf('.') < 0) {
+            showPaylinkError('Please give a valid email address for the payment link.');
+            paylinkEmail.focus();
+            return;
+        }
+
+        paylinkError.style.display = 'none';
+        paylinkRadio.checked = true;
+        paint();
+        closePaylinkModal();
+    });
+
+    document.querySelectorAll('input[name="payment_method"]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+            paint();
+            if (ARRIVAL[radio.value]) {
+                // Picking is the whole task, so the dialog gets out of the way
+                setTimeout(closeArrivalModal, 180);
+            }
+        });
+    });
+
+    // Fare disclosure
+    const fareToggle = document.getElementById('fare_toggle');
+    const fareDetail = document.getElementById('fare_detail');
+    if (fareToggle && fareDetail) {
+        fareToggle.addEventListener('click', function () {
+            const open = fareDetail.style.display !== 'block';
+            fareDetail.style.display = open ? 'block' : 'none';
+            fareToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            fareToggle.innerHTML = open
+                ? 'Hide the breakdown <i class="bi bi-chevron-up"></i>'
+                : 'See how this is worked out <i class="bi bi-chevron-down"></i>';
+        });
+    }
+
+    document.getElementById('prev_btn').addEventListener('click', function (e) {
+        e.preventDefault();
+        window.location.href = '{% url "rides:booking_wizard" step=4 %}';
+    });
+
+    document.getElementById('step5_form').addEventListener('submit', function () {
+        window.morphButton(confirmBtn).loading();
+    });
+
+    // A re-render after a validation error keeps the customer's choice,
+    // shown on the card rather than by reopening the dialog on them.
+    paint();
+})();
 </script>
 {% endblock %}

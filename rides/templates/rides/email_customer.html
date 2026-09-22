@@ -81,6 +81,22 @@
           <tr><td>Notes</td><td>{{ booking.extra_instructions|default:"N/A" }}</td></tr>
           <tr><td>Payment method</td><td>{{ booking.get_payment_option_display }}</td></tr>
           <tr><td>Payment status</td><td><span class="badge {% if payment_status == 'PAID' %}badge-paid{% else %}badge-unpaid{% endif %}">{{ payment_status }}</span></td></tr>
+          {% if booking.payment_option == 'paylink' %}
+          <tr><td colspan="2" style="padding:0">
+            <div style="margin:6px 0;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;color:#1e3a8a;font-size:14px;line-height:1.7">
+              <strong>Your payment link is on its way.</strong><br>
+              We will send it to <strong>{{ booking.paylink_email|default:booking.email }}</strong>. Nothing has been charged yet.
+            </div>
+          </td></tr>
+          {% elif booking.payment_option == 'money_transfer' %}
+          <tr><td colspan="2" style="padding:0">
+            <div style="margin:6px 0;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#065f46;font-size:14px;line-height:1.7">
+              <strong>Send your transfer to:</strong><br>
+              {{ money_transfer_recipient.NAME }}<br>
+              {{ money_transfer_recipient.PHONE }}
+            </div>
+          </td></tr>
+          {% endif %}
           <tr class="total-row"><td>Total</td><td>USD ${{ booking.total_amount }}</td></tr>
         </table>
         {% if manage_url %}

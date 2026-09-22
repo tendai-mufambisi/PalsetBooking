@@ -21,6 +21,16 @@ def _manage_url(booking):
         return ''
 
 
+def _money_transfer_recipient():
+    """Who a money transfer goes to, as configured in the dashboard."""
+    try:
+        from rides.services.pricing import PricingService
+        return PricingService.get_money_transfer_recipient()
+    except Exception:
+        logger.exception('Could not read the money transfer recipient')
+        return {"NAME": '', "PHONE": ''}
+
+
 class EmailService:
     @staticmethod
     def send_owner_notification(booking, payment_status: str = "UNPAID"):
@@ -71,6 +81,8 @@ class EmailService:
             "payment_status": payment_status,
             "taxi_owner_phone": settings.TAXI_OWNER_PHONE,
             "manage_url": _manage_url(booking),
+            # A money transfer is only actionable with someone to send it to.
+            "money_transfer_recipient": _money_transfer_recipient(),
         }
 
         text = render_to_string("rides/email_customer.txt", context)

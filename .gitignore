@@ -13,3 +13,6 @@ staticfiles/
 
 # Uploaded blog/gallery images
 media/
+
+# Local database backups (e.g. db.sqlite3.backup-20260831-080345)
+*.sqlite3.backup-*

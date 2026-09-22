@@ -12,7 +12,9 @@ Total: ${{ booking.total_amount }}
 Passenger: {% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}
 
 Payment status: {{ payment_status }}
-
+{% if booking.payment_option == 'paylink' %}We will email your payment link to {{ booking.paylink_email|default:booking.email }}. Nothing has been charged yet.
+{% elif booking.payment_option == 'money_transfer' %}Send your transfer to {{ money_transfer_recipient.NAME }}, {{ money_transfer_recipient.PHONE }}.
+{% endif %}
 We may contact you at {{ booking.phone }} if needed. Thank you for choosing us.
 Notes: {{ booking.extra_instructions|default:"N/A" }}
 

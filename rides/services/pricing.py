@@ -467,6 +467,11 @@ class PricingService:
         return float(cfg.get("THRESHOLD_KM", DEFAULT_LONG_DISTANCE["THRESHOLD_KM"]))
 
     @classmethod
+    def get_long_distance_cfg(cls) -> dict:
+        """Long distance rates and allowances, for quoting them in the wizard."""
+        return _get_long_distance_cfg() or DEFAULT_LONG_DISTANCE
+
+    @classmethod
     def is_long_distance(cls, distance_km: float) -> bool:
         return float(distance_km) >= cls._get_ld_threshold()
 
@@ -622,9 +627,21 @@ class PricingService:
             return [
                 'International Arrivals',
                 'Domestic Arrivals',
-                'Departures / Drop-off',
-                'Private & Charter Terminal',
             ]
+
+    @classmethod
+    def get_money_transfer_recipient(cls) -> dict:
+        """Who a money transfer should be sent to."""
+        default = {"NAME": 'Leonard Zambwi', "PHONE": '+263772491982'}
+        try:
+            from rides.models import SiteSettings
+            cfg = SiteSettings.get_settings()
+            return {
+                "NAME": (cfg.money_transfer_recipient_name or default["NAME"]).strip(),
+                "PHONE": (cfg.money_transfer_recipient_phone or default["PHONE"]).strip(),
+            }
+        except Exception:
+            return default
 
     @classmethod
     def get_hand_luggage_cfg(cls) -> dict:

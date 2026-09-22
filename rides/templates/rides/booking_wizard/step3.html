@@ -1,103 +1,52 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
-{% block title %}Step 3: Contact Info - Book a Ride{% endblock %}
+{% block title %}Contact details - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 style="font-size: 20px; margin-bottom: 24px; color: #333;">My Contact Details</h2>
+<h2 class="step-heading">Contact details</h2>
+<p class="section-sub" style="margin-bottom:22px;">
+    Who the booking is for, and how we reach you. We only use these for this ride.
+</p>
 
-{% if form.non_field_errors %}
+{% if contact_form.non_field_errors %}
     <div class="error-message">
-        {% for error in form.non_field_errors %}
-            <div>{{ error }}</div>
-        {% endfor %}
+        {% for error in contact_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
     </div>
 {% endif %}
 
 <form method="POST" id="step3_form">
     {% csrf_token %}
 
-    <!-- Phone Number -->
-    <div class="form-group">
-        <label for="phone" class="form-label"><i class="bi bi-telephone"></i> Phone Number *</label>
-        {{ form.phone }}
-        {% if form.phone.errors %}
-            <div class="error-message" style="margin-top: 8px;">
-                {% for error in form.phone.errors %}{{ error }}{% endfor %}
-            </div>
-        {% endif %}
-    </div>
+    {% include "rides/booking_wizard/partials/_contact_fields.html" %}
 
-    <!-- Email -->
-    <div class="form-group">
-        <label for="email" class="form-label"><i class="bi bi-envelope"></i> Email Address <span style="color:#dc3545">*</span></label>
-        {{ form.email }}
-        <small class="form-text">Your booking confirmation will be sent here.</small>
-        {% if form.email.errors %}
-            <div class="error-message" style="margin-top: 8px;">
-                {% for error in form.email.errors %}{{ error }}{% endfor %}
-            </div>
-        {% endif %}
+    {% if step1_data.pickup_is_airport %}
+    <div class="info-box" style="margin-top:24px;">
+        <i class="bi bi-card-heading"></i>
+        Your driver will be waiting in {{ step1_data.pickup_airport_terminal|default:"the arrivals hall" }}
+        holding a board with that name on it.
     </div>
+    {% endif %}
 
-    <!-- Extra Instructions -->
-    <div class="form-group">
-        <label for="extra_instructions" class="form-label">
-            <i class="bi bi-chat-left-text"></i> Extra Instructions (Optional)
-        </label>
-        {{ form.extra_instructions }}
-        <!-- <small class="form-text">500 characters max. E.g., "Please wait at back gate", "I have a pet", etc.</small> -->
-        <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center;">
-            <span class="text-muted" id="char_count">0 / 500 characters</span>
-        </div>
-        {% if form.extra_instructions.errors %}
-            <div class="error-message" style="margin-top: 8px;">
-                {% for error in form.extra_instructions.errors %}{{ error }}{% endfor %}
-            </div>
-        {% endif %}
-    </div>
-
-    <!-- Info Box -->
-    <div class="info-box">
-        <i class="bi bi-info-circle"></i>
-        <strong>Important:</strong> We'll use your contact details only for ride-related communications
-    </div>
-
-    <!-- Action Buttons -->
     <div class="btn-group-wizard">
-        <button type="button" class="btn btn-secondary" id="prev_btn" style="flex: 1;">
+        <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
             <i class="bi bi-arrow-left"></i> Back
         </button>
-        <button type="submit" class="btn btn-primary" style="flex: 1;">
+        <button type="submit" class="btn btn-primary btn-grow" id="next_btn">
             Next <i class="bi bi-arrow-right"></i>
         </button>
     </div>
 </form>
 
+{% include "rides/booking_wizard/partials/_contact_fields_js.html" %}
+
 <script>
-    // Character counter for extra_instructions
-    const extraInstructionsInput = document.getElementById('extra_instructions');
-    const charCount = document.getElementById('char_count');
-
-    function updateCharCount() {
-        const length = (extraInstructionsInput && extraInstructionsInput.value) ? extraInstructionsInput.value.length : 0;
-        if (charCount) charCount.textContent = `${length} / 500 characters`;
-    }
-
-    if (extraInstructionsInput) {
-        extraInstructionsInput.addEventListener('input', updateCharCount);
-        extraInstructionsInput.addEventListener('change', updateCharCount);
-    }
-
-    // Back button
-    const prevBtn = document.getElementById('prev_btn');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', (e) => {
+    document.getElementById('prev_btn').addEventListener('click', function (e) {
         e.preventDefault();
         window.location.href = '{% url "rides:booking_wizard" step=2 %}';
     });
-    }
 
-    // Initialize char count on load
-    window.addEventListener('load', updateCharCount);
+    document.getElementById('step3_form').addEventListener('submit', function () {
+        window.morphButton(document.getElementById('next_btn')).loading();
+    });
 </script>
 {% endblock %}

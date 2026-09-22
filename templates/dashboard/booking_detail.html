@@ -245,6 +245,31 @@
           {% elif booking.payment_option == 'PAYNOW' %}Paynow (Online)
           {% else %}{{ booking.payment_option }}{% endif %}
         </div>
+        {% if booking.payment_option == 'paylink' %}
+        <div style="margin-bottom:16px;padding:12px 14px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px">
+          <div style="font-size:13px;font-weight:800;color:#1e3a8a;margin-bottom:8px">
+            <i class="bi bi-link-45deg"></i> Send this customer a payment link
+          </div>
+          <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Card holder</div>
+          <div style="font-size:14px;font-weight:600;color:#1e293b;margin:2px 0 8px">{{ booking.paylink_card_name|default:"Not given" }}</div>
+          <div style="font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.5px">Send link to</div>
+          <div style="font-size:14px;font-weight:600;color:#1e293b;margin-top:2px">
+            <a href="mailto:{{ booking.paylink_email|default:booking.email }}" style="color:#1d4ed8;text-decoration:none">
+              {{ booking.paylink_email|default:booking.email }}
+            </a>
+          </div>
+        </div>
+        {% elif booking.payment_option == 'money_transfer' %}
+        <div style="margin-bottom:16px;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px">
+          <div style="font-size:13px;font-weight:800;color:#065f46;margin-bottom:6px">
+            <i class="bi bi-send"></i> Money transfer expected
+          </div>
+          <div style="font-size:13px;color:#065f46">
+            Sent to {{ site_settings.money_transfer_recipient_name }} on
+            {{ site_settings.money_transfer_recipient_phone }}.
+          </div>
+        </div>
+        {% endif %}
         <div style="font-size:12px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px">Total</div>
         <div style="font-size:22px;font-weight:800;color:#10b981;margin-top:4px">${{ booking.total_amount }}</div>
       </div>

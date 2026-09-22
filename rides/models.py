@@ -112,6 +112,12 @@ class RideBooking(models.Model):
     # Human-friendly booking reference (e.g. ET101)
     reference = models.CharField(max_length=16, unique=True, null=True, blank=True)
 
+    # Paylink: the customer asks us to send them a payment link, so we need the
+    # name on the card and the address the link goes to. Blank for every other
+    # payment method.
+    paylink_card_name = models.CharField(max_length=256, blank=True, default='')
+    paylink_email = models.EmailField(blank=True, default='')
+
     payment_option = models.CharField(max_length=16, choices=[
         (PAYMENT_ON_ARRIVAL, 'Pay on Arrival (Cash)'),
         (PAYMENT_CARD_ON_ARRIVAL, 'Pay on Arrival (POS/CARD)'),
@@ -238,6 +244,17 @@ class RideBooking(models.Model):
 class SiteSettings(models.Model):
     taxi_owner_email = models.EmailField(default='enquiries@easytransit.co.zw')
     taxi_owner_phone = models.CharField(max_length=32, default='+263789423154')
+
+    # Who the customer sends a money transfer to. Shown on the payment step and
+    # repeated in their confirmation, so it is kept editable rather than hardcoded.
+    money_transfer_recipient_name = models.CharField(
+        max_length=128, default='Leonard Zambwi',
+        help_text='Name the customer sends a money transfer to.'
+    )
+    money_transfer_recipient_phone = models.CharField(
+        max_length=32, default='+263772491982',
+        help_text='Number the customer sends a money transfer to.'
+    )
 
     # City Ride Pricing
     pricing_min_km = models.DecimalField(max_digits=6, decimal_places=2, default=13.0)
@@ -423,11 +440,11 @@ class SiteSettings(models.Model):
         }
 
     def get_airport_terminals(self):
+        # We only collect from the arrivals halls, so departures and the private
+        # terminal are deliberately not offered.
         default = [
             'International Arrivals',
             'Domestic Arrivals',
-            'Departures / Drop-off',
-            'Private & Charter Terminal',
         ]
         terminals = [str(t).strip() for t in (self.airport_terminals or []) if str(t).strip()]
         return terminals or default

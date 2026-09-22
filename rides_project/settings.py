@@ -19,6 +19,11 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me-in-production")
 # Read DEBUG from environment; defaults to True for local development
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
+# Local convenience route that seeds the booking wizard's session so a later
+# step can be opened directly. Follows DEBUG, and can be opted into explicitly
+# for a local environment that runs with DEBUG off. Must stay off in production.
+ENABLE_DEV_FILL = DEBUG or os.getenv("ENABLE_DEV_FILL", "False") == "True"
+
 ALLOWED_HOSTS = ["*"]
 
 # CSRF trusted origins: supply a comma-separated list of origins (including scheme)
