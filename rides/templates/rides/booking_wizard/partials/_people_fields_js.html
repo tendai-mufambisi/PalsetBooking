@@ -1,6 +1,5 @@
 {% comment %}
-Behaviour for _people_fields.html — counters and the stops editor.
-Stop prices are re-derived server-side; the running total here is a preview.
+Behaviour for _people_fields.html — the passenger and luggage counters.
 {% endcomment %}
 <script>
 (function () {
@@ -76,121 +75,9 @@ Stop prices are re-derived server-side; the running total here is a preview.
         btn.addEventListener('click', (e) => { e.preventDefault(); step(btn.dataset.field, -1); });
     });
 
-    /* --- Stops ------------------------------------------------------------- */
-
-    const STOP_TIERS = [
-        {% for tier in stop_tiers %}{ maxMinutes: {{ tier.max_minutes }}, price: {{ tier.price }} }{% if not forloop.last %}, {% endif %}{% endfor %}
-    ];
-    let stops = [];
-
-    function feeForMinutes(minutes) {
-        for (const tier of STOP_TIERS) {
-            if (minutes <= tier.maxMinutes) return tier.price;
-        }
-        return STOP_TIERS.length ? STOP_TIERS[STOP_TIERS.length - 1].price : 0;
-    }
-
-    function stopOptions(selected) {
-        return STOP_TIERS.map((tier) => {
-            const label = tier.price > 0
-                ? 'Up to ' + tier.maxMinutes + ' minutes — $' + tier.price
-                : 'Up to ' + tier.maxMinutes + ' minutes — Free';
-            const isSelected = Number(selected) === tier.maxMinutes ? 'selected' : '';
-            return '<option value="' + tier.maxMinutes + '" ' + isSelected + '>' + label + '</option>';
-        }).join('');
-    }
-
-    function escapeAttr(value) {
-        return String(value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-    }
-
-    function renderStops() {
-        const container = el('stops_container');
-        if (!container) return;
-        container.innerHTML = '';
-
-        stops.forEach((stop, index) => {
-            const row = document.createElement('div');
-            row.style.cssText = 'background:var(--light-bg);border:1px solid var(--border-light);border-left:4px solid var(--primary-color);border-radius:8px;padding:14px;margin-bottom:10px;';
-            // Same floating-label markup as the server-rendered fields.
-            row.innerHTML =
-                '<div style="display:grid;grid-template-columns:1fr 190px;gap:10px;">' +
-                    '<div class="ff">' +
-                        '<input type="text" class="form-control stop-desc" data-index="' + index + '" ' +
-                               'id="stop_desc_' + index + '" placeholder=" " ' +
-                               'data-hint="e.g. Pick up a parcel in Belgravia" value="' + escapeAttr(stop.description) + '">' +
-                        '<label class="ff-label" for="stop_desc_' + index + '">Stop ' + (index + 1) + ' &mdash; where?</label>' +
-                    '</div>' +
-                    '<div class="ff ff-static">' +
-                        '<select class="form-select stop-minutes" data-index="' + index + '" id="stop_minutes_' + index + '">' +
-                            stopOptions(stop.minutes) +
-                        '</select>' +
-                        '<label class="ff-label" for="stop_minutes_' + index + '">How long?</label>' +
-                    '</div>' +
-                '</div>' +
-                '<div style="text-align:right;margin-top:8px;">' +
-                    '<button type="button" class="stop-remove" data-index="' + index + '" ' +
-                            'style="background:#fee2e2;color:#991b1b;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;">Remove</button>' +
-                '</div>';
-            container.appendChild(row);
-        });
-
-        // Newly built fields need the same focus-hint behaviour as the rest.
-        if (window.applyFloatingHints) window.applyFloatingHints(container);
-
-        container.querySelectorAll('.stop-desc').forEach((node) => {
-            node.addEventListener('input', () => { stops[node.dataset.index].description = node.value; syncStops(); });
-        });
-        container.querySelectorAll('.stop-minutes').forEach((node) => {
-            node.addEventListener('change', () => { stops[node.dataset.index].minutes = parseInt(node.value, 10) || 0; syncStops(); });
-        });
-        container.querySelectorAll('.stop-remove').forEach((node) => {
-            node.addEventListener('click', () => { stops.splice(Number(node.dataset.index), 1); renderStops(); });
-        });
-
-        syncStops();
-    }
-
-    function syncStops() {
-        if (el('stops_json')) el('stops_json').value = JSON.stringify(stops);
-
-        const totalBox = el('stops_total');
-        if (!totalBox) return;
-        if (!stops.length) {
-            totalBox.style.display = 'none';
-            return;
-        }
-        const total = stops.reduce((sum, s) => sum + feeForMinutes(s.minutes), 0);
-        totalBox.style.display = 'block';
-        totalBox.textContent = stops.length + ' stop' + (stops.length > 1 ? 's' : '') +
-                               ' — $' + total.toFixed(2) + ' added to your fare';
-    }
-
-    function initStops() {
-        const field = el('stops_json');
-        if (field && field.value) {
-            try {
-                const parsed = JSON.parse(field.value);
-                if (Array.isArray(parsed)) stops = parsed;
-            } catch (e) {
-                stops = [];
-            }
-        }
-        renderStops();
-    }
-
-    const addStopBtn = el('add_stop_btn');
-    if (addStopBtn) {
-        addStopBtn.addEventListener('click', () => {
-            stops.push({ description: '', minutes: STOP_TIERS.length ? STOP_TIERS[0].maxMinutes : 10 });
-            renderStops();
-        });
-    }
-
     window.addEventListener('load', () => {
         initCounters();
         initChildrenSection();
-        initStops();
     });
 })();
 </script>

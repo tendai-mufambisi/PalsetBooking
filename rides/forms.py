@@ -243,14 +243,55 @@ class Step1PickupDropoffForm(FloatingLabelMixin, forms.Form):
         widget=forms.HiddenInput(attrs={'id': 'distance_km'}),
     )
 
+    # Stops belong to the route, so they are set alongside it. JSON list of
+    # {"description": str, "minutes": int}, built by the stops widget.
+    stops_json = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput()
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from .services.pricing import PricingService
         self.airport_terminals = PricingService.get_airport_terminals()
         self.fields['pickup_airport_terminal'].choices = [(t, t) for t in self.airport_terminals]
 
+    @staticmethod
+    def _clean_stops(raw):
+        """Parse the stops widget payload into [{"description", "minutes"}].
+
+        Anything malformed is dropped rather than failing the whole step; the
+        durations are re-priced server-side from the configured tiers regardless
+        of what the browser sent.
+        """
+        if not raw:
+            return []
+        try:
+            data = json.loads(raw)
+        except (TypeError, ValueError):
+            return []
+        if not isinstance(data, list):
+            return []
+
+        stops = []
+        for entry in data[:20]:  # generous ceiling, guards against a runaway payload
+            if not isinstance(entry, dict):
+                continue
+            try:
+                minutes = int(entry.get('minutes') or 0)
+            except (TypeError, ValueError):
+                continue
+            if minutes <= 0:
+                continue
+            stops.append({
+                'description': str(entry.get('description') or '').strip()[:200],
+                'minutes': minutes,
+            })
+        return stops
+
     def clean(self):
         cleaned = super().clean()
+        cleaned['stops'] = self._clean_stops(cleaned.get('stops_json'))
         pickup_lat = cleaned.get('pickup_latitude')
         pickup_lng = cleaned.get('pickup_longitude')
         dropoff_lat = cleaned.get('dropoff_latitude')
@@ -365,11 +406,35 @@ class Step2PassengersLuggageForm(FloatingLabelMixin, forms.Form):
         required=False,
         widget=forms.HiddenInput()
     )
-    # JSON list of {"description": str, "minutes": int}, built by the stops widget
-    stops_json = forms.CharField(
-        required=False,
-        widget=forms.HiddenInput()
-    )
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get('num_adults', 0) < 1:
+            raise ValidationError('At least one adult is required.')
+
+        cleaned['hand_luggage_count'] = cleaned.get('hand_luggage_count') or 0
+
+        # Enforce the maximums configured in the dashboard. A limit of 0 means no limit.
+        from .services.pricing import PricingService
+        limits = PricingService.get_booking_limits()
+        checks = (
+            ('num_adults', limits.get('MAX_PASSENGERS', 0), 'passengers'),
+            ('luggage_count', limits.get('MAX_LUGGAGE', 0), 'luggage bags'),
+            ('hand_luggage_count', limits.get('MAX_HAND_LUGGAGE', 0), 'hand luggage items'),
+        )
+        for field, limit, noun in checks:
+            if limit and (cleaned.get(field) or 0) > limit:
+                raise ValidationError(f'A maximum of {limit} {noun} can be booked online. Please contact us for larger groups.')
+
+        return cleaned
+
+
+class ChauffeurPassengersForm(Step2PassengersLuggageForm):
+    """Chauffeur step 3: the same counts, plus the passenger's name.
+
+    The ride wizard asks for the name with the contact details instead, so the
+    two fields live here rather than on the shared counts form.
+    """
+
     salutation = forms.CharField(
         max_length=32,
         required=False,
@@ -385,61 +450,6 @@ class Step2PassengersLuggageForm(FloatingLabelMixin, forms.Form):
         max_length=256,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name (e.g. John Doe)'})
     )
-
-    @staticmethod
-    def _clean_stops(raw):
-        """Parse the stops widget payload into [{"description", "minutes"}].
-
-        Anything malformed is dropped rather than failing the whole step; the
-        durations are re-priced server-side from the configured tiers regardless
-        of what the browser sent.
-        """
-        if not raw:
-            return []
-        try:
-            data = json.loads(raw)
-        except (TypeError, ValueError):
-            return []
-        if not isinstance(data, list):
-            return []
-
-        stops = []
-        for entry in data[:20]:  # generous ceiling, guards against a runaway payload
-            if not isinstance(entry, dict):
-                continue
-            try:
-                minutes = int(entry.get('minutes') or 0)
-            except (TypeError, ValueError):
-                continue
-            if minutes <= 0:
-                continue
-            stops.append({
-                'description': str(entry.get('description') or '').strip()[:200],
-                'minutes': minutes,
-            })
-        return stops
-
-    def clean(self):
-        cleaned = super().clean()
-        if cleaned.get('num_adults', 0) < 1:
-            raise ValidationError('At least one adult is required.')
-
-        cleaned['hand_luggage_count'] = cleaned.get('hand_luggage_count') or 0
-        cleaned['stops'] = self._clean_stops(cleaned.get('stops_json'))
-
-        # Enforce the maximums configured in the dashboard. A limit of 0 means no limit.
-        from .services.pricing import PricingService
-        limits = PricingService.get_booking_limits()
-        checks = (
-            ('num_adults', limits.get('MAX_PASSENGERS', 0), 'passengers'),
-            ('luggage_count', limits.get('MAX_LUGGAGE', 0), 'luggage bags'),
-            ('hand_luggage_count', limits.get('MAX_HAND_LUGGAGE', 0), 'hand luggage items'),
-        )
-        for field, limit, noun in checks:
-            if limit and (cleaned.get(field) or 0) > limit:
-                raise ValidationError(f'A maximum of {limit} {noun} can be booked online. Please contact us for larger groups.')
-
-        return cleaned
 
 
 class Step3ContactExtraForm(FloatingLabelMixin, forms.Form):
@@ -472,16 +482,27 @@ class Step3ContactExtraForm(FloatingLabelMixin, forms.Form):
             'id': 'extra_instructions',
         })
     )
-    # Passenger details
+    # Passenger identity. This is the name written on the placard the driver
+    # holds up at arrivals, so it is asked for once, here, with the rest of the
+    # details that identify the customer.
     salutation = forms.CharField(
         max_length=32,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Mr / Mrs / Dr', 'id': 'id_salutation'})
+        widget=forms.Select(
+            choices=[
+                ('Mr', 'Mr'), ('Mrs', 'Mrs'), ('Miss', 'Miss'), ('Ms', 'Ms'),
+                ('Dr', 'Dr'), ('Professor', 'Professor'), ('Rev', 'Rev'), ('Hon', 'Hon'),
+            ],
+            attrs={'class': 'form-select', 'id': 'id_salutation'},
+        )
     )
     passenger_full_name = forms.CharField(
         max_length=256,
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full name (e.g. John Doe)', 'id': 'id_passenger_full_name'})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Full name (e.g. John Doe)',
+            'id': 'id_passenger_full_name',
+        })
     )
 
     def clean(self):
@@ -500,7 +521,7 @@ class Step3ContactExtraForm(FloatingLabelMixin, forms.Form):
         return cleaned
 
 
-class Step4FarePaymentForm(forms.Form):
+class Step4FarePaymentForm(FloatingLabelMixin, forms.Form):
     """Step 4: Fare preview & payment method selection."""
     
     # Distance and fare are displayed but not edited here; they're calculated on backend
@@ -532,10 +553,41 @@ class Step4FarePaymentForm(forms.Form):
         })
     )
 
+    # Asked for in the Paylink modal. Optional on the form itself because every
+    # other method leaves them blank; required in clean() when Paylink is chosen,
+    # since the modal can be bypassed.
+    paylink_card_name = forms.CharField(
+        max_length=256,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Name as it appears on the card',
+            'id': 'paylink_card_name',
+        })
+    )
+    paylink_email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'your@email.com',
+            'id': 'paylink_email',
+        })
+    )
+
     def clean(self):
         cleaned = super().clean()
         if not cleaned.get('payment_method'):
             raise ValidationError('Please select a payment method.')
+
+        if cleaned.get('payment_method') == RideBooking.PAYMENT_PAYLINK:
+            if not (cleaned.get('paylink_card_name') or '').strip():
+                raise ValidationError('Please give the card holder name so we can send your payment link.')
+            if not (cleaned.get('paylink_email') or '').strip():
+                raise ValidationError('Please give the email address the payment link should go to.')
+        else:
+            cleaned['paylink_card_name'] = ''
+            cleaned['paylink_email'] = ''
+
         return cleaned
 
 

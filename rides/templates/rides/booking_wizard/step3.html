@@ -1,442 +1,52 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
-{% block title %}Check your booking - Book a Ride{% endblock %}
-{% block step_name %}Check your booking{% endblock %}
-
-{% block extra_css %}
-<style>
-    .review-panel {
-        background: #fff;
-        border: 1px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        margin-bottom: 20px;
-        overflow: hidden;
-    }
-    .review-panel-head {
-        background: #fff;
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--border-light);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-    }
-    .review-panel-head h4 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
-    .review-panel-head p { margin: 3px 0 0; font-size: 12px; color: var(--ink-soft); }
-    .edit-open-btn {
-        flex: 0 0 auto;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: white;
-        border: 1px solid var(--primary-color);
-        color: var(--primary-deep);
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        padding: 8px 14px;
-        border-radius: 999px;
-        cursor: pointer;
-        transition: background .2s ease, transform .2s ease;
-    }
-    .edit-open-btn:hover { background: var(--primary-soft); transform: translateY(-1px); }
-
-    .review-section { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
-    .review-section:last-child { border-bottom: none; }
-    .review-section-head {
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--primary-deep);
-        text-transform: uppercase;
-        letter-spacing: .4px;
-        margin-bottom: 8px;
-    }
-    .review-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 14px;
-        font-size: 14px;
-        padding: 5px 0;
-    }
-    .review-row span { color: var(--ink-soft); flex-shrink: 0; }
-    .review-row strong { text-align: right; color: var(--ink); font-weight: 600; }
-    .review-note-text {
-        font-size: 13px;
-        background: #fff8e1;
-        padding: 4px 8px;
-        border-radius: 4px;
-        border-left: 3px solid #f59e0b;
-        max-width: 62%;
-    }
-    .review-empty { font-size: 13px; color: #94a3b8; padding: 3px 0; }
-    .review-note { margin-top: 8px; font-size: 13px; padding: 8px 12px; border-radius: 6px; }
-    .review-note-night { background: #eef2ff; border-left: 3px solid #6366f1; color: #3730a3; }
-
-    .acc { border: 1px solid var(--border-light); border-radius: var(--radius); margin-bottom: 10px; }
-    .acc.is-open { border-color: #86efac; }
-    .acc-head {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        width: 100%;
-        padding: 14px;
-        background: none;
-        border: none;
-        font-family: inherit;
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--ink);
-        text-align: left;
-        cursor: pointer;
-    }
-    .acc-head > i:first-child { color: var(--primary-color); }
-    .acc-head .acc-label { flex: 1; }
-    .acc-body { padding: 4px 14px 16px; border-top: 1px solid var(--border-light); }
-    .acc-body > .section-block:first-child { margin-top: 18px; }
-
-    /* Google's suggestion dropdown must clear the modal. */
-    .pac-container { z-index: 1300 !important; }
-</style>
-{% endblock %}
+{% block title %}Contact details - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 class="step-heading">Check your booking</h2>
+<h2 class="step-heading">Contact details</h2>
+<p class="section-sub" style="margin-bottom:22px;">
+    Who the booking is for, and how we reach you. We only use these for this ride.
+</p>
 
-{% if error_message %}
+{% if contact_form.non_field_errors %}
     <div class="error-message">
-        <i class="bi bi-exclamation-triangle"></i>
-        {{ error_message }}
+        {% for error in contact_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
     </div>
 {% endif %}
 
-{% include "rides/booking_wizard/partials/_fare_breakdown.html" %}
+<form method="POST" id="step3_form">
+    {% csrf_token %}
 
-<!-- Full Booking Review -->
-<div class="review-panel">
-    <div class="review-panel-head">
-        <div>
-            <h4><i class="bi bi-clipboard-check"></i> Check your booking</h4>
-            <p>Make sure everything below is right before you confirm.</p>
-        </div>
-        <button type="button" class="edit-open-btn" id="open_edit_modal">
-            <i class="bi bi-pencil"></i> Edit
+    {% include "rides/booking_wizard/partials/_contact_fields.html" %}
+
+    {% if step1_data.pickup_is_airport %}
+    <div class="info-box" style="margin-top:24px;">
+        <i class="bi bi-card-heading"></i>
+        Your driver will be waiting in {{ step1_data.pickup_airport_terminal|default:"the arrivals hall" }}
+        holding a board with that name on it.
+    </div>
+    {% endif %}
+
+    <div class="btn-group-wizard">
+        <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+            <i class="bi bi-arrow-left"></i> Back
+        </button>
+        <button type="submit" class="btn btn-primary btn-grow" id="next_btn">
+            Next <i class="bi bi-arrow-right"></i>
         </button>
     </div>
+</form>
 
-    <!-- Trip -->
-    <div class="review-section">
-        <div class="review-section-head"><i class="bi bi-geo-alt"></i> Trip</div>
-        <div class="review-row"><span>Pickup</span><strong>{{ step1_data.pickup_address }}</strong></div>
-        {% if step1_data.pickup_point_detail %}
-        <div class="review-row"><span>Exact pickup point</span><strong>{{ step1_data.pickup_point_detail }}</strong></div>
-        {% endif %}
-        <div class="review-row"><span>Dropoff</span><strong>{{ step1_data.dropoff_address }}</strong></div>
-        {% if step1_data.dropoff_point_detail %}
-        <div class="review-row"><span>Exact drop-off point</span><strong>{{ step1_data.dropoff_point_detail }}</strong></div>
-        {% endif %}
-        <div class="review-row">
-            <span>Pickup date &amp; time</span>
-            <strong>{{ step1_data.pickup_date }} at {{ step1_data.pickup_time }}</strong>
-        </div>
-        {% if step1_data.pickup_is_airport %}
-        <div class="review-row"><span>Airport pickup</span><strong>Yes</strong></div>
-        {% if step1_data.pickup_airport_terminal %}
-        <div class="review-row"><span>Collection point</span><strong>{{ step1_data.pickup_airport_terminal }}</strong></div>
-        {% endif %}
-        <div class="review-row">
-            <span>Flight</span>
-            <strong>{{ step1_data.arrival_airline }} {{ step1_data.arrival_flight_number }}</strong>
-        </div>
-        <div class="review-row">
-            <span>Arrival</span>
-            <strong>{{ step1_data.arrival_date }} at {{ step1_data.arrival_time }}</strong>
-        </div>
-        {% if step1_data.flight_departure_airport %}
-        <div class="review-row"><span>Departing from</span><strong>{{ step1_data.flight_departure_airport }}</strong></div>
-        {% endif %}
-        {% if step1_data.flight_connection_details %}
-        <div class="review-row"><span>Connection</span><strong>{{ step1_data.flight_connection_details }}</strong></div>
-        {% endif %}
-        {% if step1_data.flight_notes %}
-        <div class="review-row"><span>Flight notes</span><strong>{{ step1_data.flight_notes }}</strong></div>
-        {% endif %}
-        {% endif %}
-        {% if step1_data.is_return_trip %}
-        <div class="review-row">
-            <span>Return trip</span>
-            <strong>{{ step1_data.return_date }} at {{ step1_data.return_time }}</strong>
-        </div>
-        {% if step1_data.return_use_different_points %}
-        <div class="review-row">
-            <span>Return pickup</span>
-            <strong>{{ step1_data.return_pickup_address }}{% if step1_data.return_pickup_point_detail %} &mdash; {{ step1_data.return_pickup_point_detail }}{% endif %}</strong>
-        </div>
-        <div class="review-row">
-            <span>Return dropoff</span>
-            <strong>{{ step1_data.return_dropoff_address }}{% if step1_data.return_dropoff_point_detail %} &mdash; {{ step1_data.return_dropoff_point_detail }}{% endif %}</strong>
-        </div>
-        {% if fare_breakdown.return_distance_km %}
-        <div class="review-row">
-            <span>Return distance</span>
-            <strong>{{ fare_breakdown.return_distance_km|floatformat:1 }} km</strong>
-        </div>
-        {% endif %}
-        {% else %}
-        <div class="review-row"><span>Return route</span><strong>Same trip in reverse</strong></div>
-        {% endif %}
-        {% else %}
-        <div class="review-row"><span>Return trip</span><strong>No &mdash; one way only</strong></div>
-        {% endif %}
-        {% if fare_breakdown.is_night_pickup %}
-        <div class="review-note review-note-night">
-            <i class="bi bi-moon-stars"></i>
-            This is a night pickup ({{ night_cfg.START|time:"H:i" }}&ndash;{{ night_cfg.END|time:"H:i" }}), so a
-            ${{ fare_breakdown.night_surcharge|floatformat:2 }} surcharge applies.
-        </div>
-        {% endif %}
-        {% if fare_breakdown.is_night_return %}
-        <div class="review-note review-note-night">
-            <i class="bi bi-moon-stars"></i>
-            Your return is also a night pickup, so a further
-            ${{ fare_breakdown.return_night_surcharge|floatformat:2 }} surcharge applies.
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Passengers & luggage -->
-    <div class="review-section">
-        <div class="review-section-head"><i class="bi bi-people"></i> Passengers &amp; luggage</div>
-        <div class="review-row"><span>Passengers seated</span><strong>{{ step2_data.num_adults|default:1 }}</strong></div>
-        {% if step2_data.num_kids_carried %}
-        <div class="review-row"><span>Kids carried</span><strong>{{ step2_data.num_kids_carried }}</strong></div>
-        {% endif %}
-        {% if step2_data.baby_car_seater %}
-        <div class="review-row"><span>Baby car seats</span><strong>{{ step2_data.baby_car_seater }}</strong></div>
-        {% endif %}
-        <div class="review-row"><span>Luggage bags</span><strong>{{ step2_data.luggage_count|default:0 }}</strong></div>
-        <div class="review-row"><span>Hand luggage</span><strong>{{ step2_data.hand_luggage_count|default:0 }}</strong></div>
-        <div class="review-row">
-            <span>Booked by</span>
-            <strong>{% if step2_data.salutation %}{{ step2_data.salutation }} {% endif %}{{ step2_data.passenger_full_name }}</strong>
-        </div>
-    </div>
-
-    <!-- Stops -->
-    <div class="review-section">
-        <div class="review-section-head"><i class="bi bi-signpost-split"></i> Stops along the way</div>
-        {% if fare_breakdown.stops %}
-            {% for stop in fare_breakdown.stops %}
-            <div class="review-row">
-                <span>{{ forloop.counter }}. {{ stop.description|default:"Stop" }}</span>
-                <strong>up to {{ stop.minutes }} min &mdash; {% if stop.fee > 0 %}${{ stop.fee|floatformat:2 }}{% else %}Free{% endif %}</strong>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="review-empty">No stops added &mdash; the driver will go straight to your dropoff.</div>
-        {% endif %}
-    </div>
-
-    <!-- Contact -->
-    <div class="review-section">
-        <div class="review-section-head"><i class="bi bi-person-check"></i> Contact details</div>
-        <div class="review-row"><span>Phone</span><strong>{{ step3_data.phone }}</strong></div>
-        <div class="review-row"><span>Email</span><strong>{{ step3_data.email }}</strong></div>
-        {% if step3_data.extra_instructions %}
-        <div class="review-row">
-            <span>Additional notes</span>
-            <strong class="review-note-text">{{ step3_data.extra_instructions }}</strong>
-        </div>
-        {% else %}
-        <div class="review-empty">No additional notes added.</div>
-        {% endif %}
-    </div>
-</div>
-
-{% comment %}
-No form here - step 3 only confirms what was already captured, so moving on is
-a plain link to the payment step rather than a submission.
-{% endcomment %}
-<div class="btn-group-wizard">
-    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
-        <i class="bi bi-arrow-left"></i> Back
-    </button>
-    <a class="btn btn-primary btn-grow" href="{% url 'rides:booking_wizard' step=4 %}"
-       style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
-        Continue to payment <i class="bi bi-arrow-right"></i>
-    </a>
-</div>
-
-<!-- Edit modal: one place to change anything, without losing your place -->
-<!-- ------------------------------------------------------------------ -->
-<div class="wz-modal" id="edit_modal" role="dialog" aria-modal="true" aria-labelledby="edit_modal_title">
-    <div class="wz-modal-card">
-        <div class="wz-modal-head">
-            <div>
-                <h4 id="edit_modal_title">Edit your booking</h4>
-                <p>Open a section, change what you need, then save.</p>
-            </div>
-            <button type="button" class="wz-modal-close" id="close_edit_modal" aria-label="Close">&times;</button>
-        </div>
-
-        <form id="edit_form" class="wz-modal-body">
-            {% csrf_token %}
-
-            <div class="error-message" id="edit_errors" style="display:none;"></div>
-
-            <div class="acc" data-acc>
-                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
-                    <i class="bi bi-geo-alt"></i>
-                    <span class="acc-label">Trip &amp; schedule</span>
-                    <i class="bi bi-chevron-down" data-acc-chevron></i>
-                </button>
-                <div class="acc-body" style="display:none;">
-                    {% include "rides/booking_wizard/partials/_trip_fields.html" %}
-                </div>
-            </div>
-
-            <div class="acc" data-acc>
-                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
-                    <i class="bi bi-people"></i>
-                    <span class="acc-label">Passengers, luggage &amp; stops</span>
-                    <i class="bi bi-chevron-down" data-acc-chevron></i>
-                </button>
-                <div class="acc-body" style="display:none;">
-                    {% include "rides/booking_wizard/partials/_people_fields.html" %}
-                </div>
-            </div>
-
-            <div class="acc" data-acc>
-                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
-                    <i class="bi bi-person-check"></i>
-                    <span class="acc-label">Contact details</span>
-                    <i class="bi bi-chevron-down" data-acc-chevron></i>
-                </button>
-                <div class="acc-body" style="display:none;">
-                    {% include "rides/booking_wizard/partials/_contact_fields.html" %}
-                </div>
-            </div>
-        </form>
-
-        <div class="wz-modal-foot">
-            <button type="button" class="btn btn-secondary" id="cancel_edit">Cancel</button>
-            <button type="submit" form="edit_form" class="btn btn-primary" id="save_edit">Save changes</button>
-        </div>
-    </div>
-</div>
-
-{% include "rides/booking_wizard/partials/_trip_fields_js.html" %}
-{% include "rides/booking_wizard/partials/_people_fields_js.html" %}
 {% include "rides/booking_wizard/partials/_contact_fields_js.html" %}
 
 <script>
-(function () {
-    'use strict';
-
     document.getElementById('prev_btn').addEventListener('click', function (e) {
         e.preventDefault();
         window.location.href = '{% url "rides:booking_wizard" step=2 %}';
     });
 
-    /* --- Edit modal -------------------------------------------------------- */
-    const modal = document.getElementById('edit_modal');
-    const openBtn = document.getElementById('open_edit_modal');
-    const closeBtn = document.getElementById('close_edit_modal');
-    const cancelBtn = document.getElementById('cancel_edit');
-    const saveBtn = document.getElementById('save_edit');
-    const editForm = document.getElementById('edit_form');
-    const errorBox = document.getElementById('edit_errors');
-
-    function openModal() {
-        modal.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeModal() {
-        modal.classList.remove('is-open');
-        document.body.style.overflow = '';
-    }
-
-    openBtn.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-    cancelBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) closeModal();
+    document.getElementById('step3_form').addEventListener('submit', function () {
+        window.morphButton(document.getElementById('next_btn')).loading();
     });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
-    });
-
-    // Accordion sections
-    document.querySelectorAll('[data-acc]').forEach(function (acc) {
-        const head = acc.querySelector('[data-acc-toggle]');
-        const body = acc.querySelector('.acc-body');
-        const chevron = acc.querySelector('[data-acc-chevron]');
-        head.addEventListener('click', function () {
-            const open = body.style.display !== 'block';
-            body.style.display = open ? 'block' : 'none';
-            head.setAttribute('aria-expanded', open ? 'true' : 'false');
-            acc.classList.toggle('is-open', open);
-            if (chevron) chevron.className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
-        });
-    });
-
-    // The trip fields report their own validity; a trip that would be rejected
-    // server-side cannot be saved here either.
-    let tripValid = true;
-    window.onTripValidityChange = function (isValid) {
-        tripValid = isValid;
-        saveBtn.disabled = !isValid;
-        saveBtn.title = isValid ? '' : 'Some trip details still need fixing';
-    };
-
-    function showErrors(errors) {
-        const messages = [];
-        Object.keys(errors || {}).forEach(function (field) {
-            (errors[field] || []).forEach(function (msg) { messages.push(msg); });
-        });
-        errorBox.innerHTML = messages.length
-            ? '<i class="bi bi-exclamation-triangle"></i> ' + messages.join('<br>')
-            : '<i class="bi bi-exclamation-triangle"></i> We could not save those changes. Please check the fields above.';
-        errorBox.style.display = 'block';
-        errorBox.scrollIntoView({ block: 'nearest' });
-    }
-
-    editForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        if (!tripValid) return;
-
-        errorBox.style.display = 'none';
-
-        // Saving happens in-page, so this button gets the full arc: shrink to a
-        // spinner, open into a tick once the server has taken the changes, then
-        // reload to show the new fare.
-        const morph = window.morphButton(saveBtn);
-        morph.loading();
-
-        fetch('{% url "rides:booking_wizard_edit" %}', {
-            method: 'POST',
-            body: new FormData(editForm),
-            credentials: 'same-origin',
-        })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data.ok) {
-                    morph.success();
-                    // Long enough for the tick to finish drawing. The review page
-                    // re-prices on every load, so a reload is the single source
-                    // of truth for the new fare.
-                    setTimeout(function () { window.location.reload(); }, 700);
-                    return;
-                }
-                showErrors(data.errors);
-                morph.reset();
-            })
-            .catch(function () {
-                showErrors(null);
-                morph.reset();
-            });
-    });
-})();
 </script>
 {% endblock %}

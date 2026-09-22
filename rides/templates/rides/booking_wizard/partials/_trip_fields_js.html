@@ -413,37 +413,6 @@ keep the customer from reaching a rejection.
     /* --- Collapsibles ------------------------------------------------------ */
 
     function setupCollapsibles() {
-        // Exact pickup / drop-off points
-        const pointsToggle = el('points_toggle');
-        const pointFields = el('point_detail_fields');
-        if (pointsToggle && pointFields) {
-            const setOpen = (open) => {
-                pointFields.style.display = open ? 'block' : 'none';
-                pointsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                if (el('points_option')) el('points_option').classList.toggle('is-open', open);
-                if (el('points_chevron')) el('points_chevron').className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
-            };
-            // Keep it open when the customer (or a saved booking) already filled one in
-            setOpen(['pickup_point_detail', 'dropoff_point_detail'].some((id) => val(id).trim().length > 0));
-            pointsToggle.addEventListener('click', () => setOpen(pointFields.style.display !== 'block'));
-        }
-
-        // Extra flight details
-        const moreBtn = el('more_flight_details_btn');
-        const moreFields = el('more_flight_fields');
-        if (moreBtn && moreFields) {
-            const prefilled = ['id_flight_departure_airport', 'id_flight_connection_details', 'id_flight_notes']
-                .some((id) => val(id).trim().length > 0);
-            if (prefilled) moreFields.style.display = 'block';
-            moreBtn.addEventListener('click', () => {
-                const open = moreFields.style.display === 'block';
-                moreFields.style.display = open ? 'none' : 'block';
-                moreBtn.innerHTML = open
-                    ? '<i class="bi bi-plus-circle"></i> Add more flight details'
-                    : '<i class="bi bi-dash-circle"></i> Hide extra flight details';
-            });
-        }
-
         // Return trip
         const returnCheckbox = el('is_return_trip');
         const differentPoints = el('return_use_different_points');

@@ -214,6 +214,9 @@ class DashboardBookingDetailView(View):
             'booking': booking,
             'payments': payments,
             'can_edit': _can_edit(request.user),
+            # A money transfer booking is only readable next to the details the
+            # customer was actually given.
+            'site_settings': SiteSettings.get_settings(),
         })
 
     @_require_dashboard
@@ -613,10 +616,16 @@ class DashboardSettingsView(View):
         else:
             email = request.POST.get('taxi_owner_email', '').strip()
             phone = request.POST.get('taxi_owner_phone', '').strip()
+            transfer_name = request.POST.get('money_transfer_recipient_name', '').strip()
+            transfer_phone = request.POST.get('money_transfer_recipient_phone', '').strip()
             if email:
                 site_settings.taxi_owner_email = email
             if phone:
                 site_settings.taxi_owner_phone = phone
+            if transfer_name:
+                site_settings.money_transfer_recipient_name = transfer_name
+            if transfer_phone:
+                site_settings.money_transfer_recipient_phone = transfer_phone
             site_settings.save()
             messages.success(request, 'Settings saved successfully.')
 

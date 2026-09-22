@@ -24,6 +24,19 @@
             /* One comfortable reading column, centred on a full-width page */
             --measure: 820px;
             --gutter: 24px;
+
+            /* --- Step transition -------------------------------------------
+               Distance a step travels on the way in or out. The brief called
+               for 100%, which on an 820px column throws the form a long way
+               across the screen and reads as disorienting on a tall step; a
+               firm offset gives the same spatial read without the lurch.
+               Set it to 100% here if you want the full sweep. */
+            --wz-shift: 56px;
+            --wz-in: 440ms;         /* container settle, inside the 400-500ms brief */
+            --wz-out: 240ms;        /* exit is snappier than entry, so it never drags */
+            --wz-stagger: 40ms;     /* per-child cascade */
+            --wz-lead: 90ms;        /* container gets a head start over its children */
+            --wz-ease: cubic-bezier(0.16, 1, 0.3, 1);
             --radius-lg: 14px;
             --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
             --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
@@ -42,6 +55,9 @@
             background: #fff;
             min-height: 100vh;
             color: var(--ink);
+            /* A step sliding past the edge must not raise a horizontal
+               scrollbar mid-transition. Vertical scrolling is untouched. */
+            overflow-x: hidden;
         }
 
         /* --- Sticky bar -----------------------------------------------------
@@ -117,53 +133,235 @@
             margin: 0;
         }
 
-        /* --- Progress ------------------------------------------------------ */
+        /* --- Progress rail ---------------------------------------------------
+           Labelled nodes on one track: finished steps carry a tick and can be
+           reopened, the current one is ringed and haloed, and the fill sweeps
+           along as you advance. The track is inset by half a column at each
+           end so it runs node-centre to node-centre for any step count. */
         .progress-bar-container {
             max-width: var(--measure);
             margin: 0 auto;
-            padding: 0 var(--gutter) 13px;
+            padding: 2px var(--gutter) 12px;
         }
 
-        .progress-meta {
+        .wz-rail {
+            --wz-half: calc(100% / var(--wz-count) / 2);
+            position: relative;
             display: flex;
-            align-items: baseline;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
         }
 
-        .progress-count {
-            font-size: 13px;
+        .wz-rail::before,
+        .wz-rail::after {
+            content: "";
+            position: absolute;
+            top: 12px;
+            left: var(--wz-half);
+            right: var(--wz-half);
+            height: 3px;
+            border-radius: 999px;
+        }
+
+        /* Track not yet walked */
+        .wz-rail::before { background: #e8edf3; }
+
+        /* Track walked. scaleX keeps the fill on the compositor and works for
+           any step count without the template doing arithmetic. */
+        .wz-rail::after {
+            transform: scaleX(var(--wz-ratio));
+            transform-origin: left center;
+            transition: transform .75s cubic-bezier(.22,.61,.36,1);
+            background: linear-gradient(90deg, var(--primary-deep), var(--primary-color), #6ee7b7, var(--primary-color));
+            background-size: 200% 100%;
+            animation: wz-sheen 3.2s linear infinite;
+        }
+
+        @keyframes wz-sheen {
+            from { background-position: 0% 50%; }
+            to   { background-position: -200% 50%; }
+        }
+
+        .wz-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 0;
+        }
+
+        .wz-node {
+            position: relative;
+            z-index: 1;
+            width: 27px;
+            height: 27px;
+            border-radius: 50%;
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
             font-weight: 700;
-            color: var(--primary-deep);
-            letter-spacing: .2px;
-            white-space: nowrap;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: transform .3s cubic-bezier(.34,1.56,.64,1),
+                        border-color .3s ease, background-color .3s ease, color .3s ease;
         }
 
-        .progress-name {
-            font-size: 13px;
+        .is-done .wz-node {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .is-done .wz-node:hover {
+            background: var(--primary-deep);
+            border-color: var(--primary-deep);
+            transform: scale(1.14);
+        }
+
+        .is-current .wz-node {
+            border-color: var(--primary-color);
+            color: var(--primary-deep);
+            transform: scale(1.16);
+            box-shadow: 0 0 0 4px var(--primary-ring);
+        }
+
+        /* A slow halo marks where you are without shouting */
+        .is-current .wz-node::after {
+            content: "";
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            animation: wz-halo 2.4s cubic-bezier(.22,.61,.36,1) infinite;
+        }
+
+        @keyframes wz-halo {
+            0%   { transform: scale(1); opacity: .55; }
+            70%  { transform: scale(1.75); opacity: 0; }
+            100% { transform: scale(1.75); opacity: 0; }
+        }
+
+        .wz-tick {
+            width: 15px;
+            height: 15px;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 3.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .wz-tick path {
+            stroke-dasharray: 26;
+            stroke-dashoffset: 26;
+            animation: draw-check .4s cubic-bezier(.65,0,.35,1) .15s forwards;
+        }
+
+        .wz-label {
+            margin-top: 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: .6px;
+            text-transform: uppercase;
+            color: #b0bac6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+            transition: color .3s ease;
+        }
+
+        .is-done .wz-label { color: var(--ink-soft); }
+        .is-current .wz-label { color: var(--primary-deep); }
+
+        /* Full name of the current step; carries the whole rail on mobile */
+        .wz-caption {
+            display: none;
+            margin: 10px 0 0;
+            font-size: 12.5px;
             font-weight: 600;
             color: var(--ink-soft);
-            text-align: right;
-        }
-
-        .progress-track {
-            height: 6px;
-            border-radius: 999px;
-            background: #e6f6ef;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary-color), var(--primary-deep));
-            width: 0;
-            transition: width .6s cubic-bezier(.22,.61,.36,1);
+            text-align: center;
         }
 
         .wizard-body {
             padding: 26px 0 52px;
+        }
+
+        /* --- Step transition: spatial slide + fade ---------------------------
+           This wizard is server-rendered: every step is a separate document,
+           so the outgoing and incoming steps never coexist and there is no
+           swap to absolutely position. The spatial read is built instead from
+           two halves of one motion - the old document slides out under
+           --wz-out, then the new one slides in from the opposite edge under
+           --wz-in, with its contents cascading behind it.
+
+           Direction comes from data-wz-dir, written by the head script before
+           first paint so nothing flashes in the wrong place. Transform and
+           opacity only, so it all stays on the compositor. */
+        .wz-stage {
+            animation: wz-enter-plain var(--wz-in) var(--wz-ease) both;
+            will-change: transform, opacity;
+        }
+
+        [data-wz-dir="1"] .wz-stage { animation-name: wz-enter-forward; }
+        [data-wz-dir="-1"] .wz-stage { animation-name: wz-enter-back; }
+
+        /* Children cascade in behind the container, which has already
+           established its boundaries. --wz-i is set per element by the shell
+           script; if that never runs they simply arrive together. */
+        .wz-stage > *:not(form),
+        .wz-stage > form > * {
+            animation: wz-rise calc(var(--wz-in) - 40ms) var(--wz-ease) both;
+            animation-delay: calc(var(--wz-lead) + var(--wz-i, 0) * var(--wz-stagger));
+        }
+
+        /* Leaving: the old document clears the way before navigation */
+        [data-wz-leaving="1"] .wz-stage {
+            animation: wz-exit-forward var(--wz-out) cubic-bezier(0.4, 0, 1, 1) both;
+        }
+
+        [data-wz-leaving="-1"] .wz-stage {
+            animation: wz-exit-back var(--wz-out) cubic-bezier(0.4, 0, 1, 1) both;
+        }
+
+        /* Children hold still on the way out; only the container travels */
+        [data-wz-leaving] .wz-stage > *:not(form),
+        [data-wz-leaving] .wz-stage > form > * { animation: none; }
+
+        @keyframes wz-enter-forward {
+            from { opacity: 0; transform: translate3d(var(--wz-shift), 0, 0); }
+            to   { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes wz-enter-back {
+            from { opacity: 0; transform: translate3d(calc(var(--wz-shift) * -1), 0, 0); }
+            to   { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        /* First arrival has no previous step to come from, so it just settles */
+        @keyframes wz-enter-plain {
+            from { opacity: 0; transform: translate3d(0, 12px, 0); }
+            to   { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes wz-exit-forward {
+            from { opacity: 1; transform: translate3d(0, 0, 0); }
+            to   { opacity: 0; transform: translate3d(calc(var(--wz-shift) * -1), 0, 0); }
+        }
+
+        @keyframes wz-exit-back {
+            from { opacity: 1; transform: translate3d(0, 0, 0); }
+            to   { opacity: 0; transform: translate3d(var(--wz-shift), 0, 0); }
+        }
+
+        @keyframes wz-rise {
+            from { opacity: 0; transform: translate3d(0, 14px, 0); }
+            to   { opacity: 1; transform: translate3d(0, 0, 0); }
         }
 
         .step-heading {
@@ -678,6 +876,34 @@
             margin-bottom: 12px;
         }
 
+        /* A decision that is easy to walk past if it is set in the same quiet
+           type as the optional extras. Round trips were being missed. */
+        .option-row-loud {
+            border-width: 2px;
+            border-color: var(--primary-color);
+            background: var(--primary-soft);
+            margin-bottom: 16px;
+        }
+
+        .option-row-loud .option-row-head {
+            padding: 17px 16px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .option-row-loud .option-row-head > i:first-child { font-size: 20px; }
+
+        .option-row-loud .option-row-hint {
+            display: block;
+            margin-top: 3px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primary-deep);
+        }
+
+        .option-row-loud.is-open { background: #f6fefa; }
+
         .btn {
             border-radius: var(--radius);
             font-weight: 600;
@@ -1075,8 +1301,12 @@
             .app-brand { font-size: 15px; }
             .app-brand img { height: 26px; }
 
-            .progress-meta { flex-direction: column; gap: 2px; align-items: flex-start; }
-            .progress-name { text-align: left; }
+            /* Five uppercase labels will not fit across a phone, so the
+               caption names the current step instead. */
+            .wz-label { display: none; }
+            .wz-caption { display: block; }
+            .wz-node { width: 24px; height: 24px; font-size: 10.5px; }
+            .wz-rail::before, .wz-rail::after { top: 10.5px; }
 
             .trip-type-grid { grid-template-columns: 1fr; }
 
@@ -1099,6 +1329,30 @@
         }
     </style>
     {% block extra_css %}{% endblock %}
+
+    {% comment %}
+    Direction has to be known before the first paint, or the step would render
+    centred and then jump to its start position. This runs synchronously in the
+    head and compares where we are with where we just were.
+    {% endcomment %}
+    <script>
+        (function () {
+            var KEY = 'wz-last-step';
+            var step = parseInt('{{ step|default:0 }}', 10) || 0;
+            if (!step) return;
+            try {
+                var last = parseInt(sessionStorage.getItem(KEY) || '0', 10) || 0;
+                // No previous step means a cold arrival: settle in place rather
+                // than sliding in from a direction the customer never came from.
+                if (last && last !== step) {
+                    document.documentElement.setAttribute('data-wz-dir', step > last ? '1' : '-1');
+                }
+                sessionStorage.setItem(KEY, step);
+            } catch (e) {
+                /* private mode: fall back to the plain settle */
+            }
+        })();
+    </script>
 </head>
 <body>
     <header class="app-bar">
@@ -1122,13 +1376,25 @@
         {% endcomment %}
         {% if show_progress %}
         <div class="progress-bar-container">
-            <div class="progress-meta">
-                <span class="progress-count">Step {{ step }} of {{ total_steps }}</span>
-                <span class="progress-name">{% block step_name %}{% endblock %}</span>
-            </div>
-            <div class="progress-track">
-                <div class="progress-fill" id="progress_fill" data-step="{{ step }}" data-total="{{ total_steps }}"></div>
-            </div>
+            <ol class="wz-rail" style="--wz-count:{{ total_steps }}; --wz-ratio:{{ progress_ratio }};">
+                {% for s in wizard_rail %}
+                <li class="wz-step is-{{ s.state }}">
+                    {% if s.state == 'done' %}
+                        {# A finished step can be reopened; the wizard's own guards still apply. #}
+                        <a class="wz-node" href="{% url 'rides:booking_wizard' step=s.number %}"
+                           title="Back to {{ s.label|lower }}" aria-label="Back to {{ s.label|lower }}">
+                            <svg class="wz-tick" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </a>
+                    {% else %}
+                        <span class="wz-node"{% if s.state == 'current' %} aria-current="step"{% endif %}>{{ s.number }}</span>
+                    {% endif %}
+                    <span class="wz-label">{{ s.short }}</span>
+                </li>
+                {% endfor %}
+            </ol>
+            <p class="wz-caption">Step {{ step }} of {{ total_steps }} &middot; {{ step_heading }}</p>
         </div>
         {% endif %}
     </header>
@@ -1143,14 +1409,20 @@
 
         <!-- Main Content -->
         <div class="wizard-body">
-            {% if error_message %}
-                <div class="error-message">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    {{ error_message }}
-                </div>
-            {% endif %}
+            {% comment %}
+            The stage is what travels. Everything a step renders sits inside it
+            so the slide is one movement rather than a dozen competing ones.
+            {% endcomment %}
+            <div class="wz-stage" id="wz_stage"{% if prev_step %} data-wz-prev="{% url 'rides:booking_wizard' step=prev_step %}"{% endif %}>
+                {% if error_message %}
+                    <div class="error-message">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        {{ error_message }}
+                    </div>
+                {% endif %}
 
-            {% block content %}{% endblock %}
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </main>
 
@@ -1221,14 +1493,100 @@
             };
         };
 
-        // Fill the track after paint so the width animates in.
+        /* --- Step transition: cascade and exit ----------------------------
+           Two jobs. Assign each row its place in the cascade, and hold a
+           navigation open just long enough for the outgoing step to clear.
+           Both degrade to plain navigation if anything here fails. */
         (function () {
-            const fill = document.getElementById('progress_fill');
-            if (!fill) return;
-            const step = parseInt(fill.dataset.step, 10) || 1;
-            const total = parseInt(fill.dataset.total, 10) || 1;
+            var stage = document.getElementById('wz_stage');
+            if (!stage) return;
+
+            var OUT_MS = 240;   // keep in step with --wz-out
+
+            // Index only rows that actually occupy space, so the hidden inputs
+            // every step carries do not eat slots in the cascade.
+            (function cascade() {
+                var rows = [];
+                Array.prototype.forEach.call(stage.children, function (child) {
+                    var group = child.tagName === 'FORM' ? child.children : [child];
+                    Array.prototype.forEach.call(group, function (node) {
+                        if (node.getClientRects().length) rows.push(node);
+                    });
+                });
+                rows.forEach(function (node, i) {
+                    // Past a point the delay is longer than the animation and
+                    // the tail just looks slow, so the cascade plateaus.
+                    node.style.setProperty('--wz-i', Math.min(i, 12));
+                });
+            })();
+
+            var leaving = false;
+
+            function leave(direction, go) {
+                if (leaving) return;
+                leaving = true;
+                document.documentElement.setAttribute('data-wz-leaving', String(direction));
+                // A timer rather than animationend: navigation must happen even
+                // if the animation is skipped, dropped, or never fires.
+                setTimeout(go, OUT_MS);
+            }
+
+            // Capture phase, so a step's own click handler never navigates
+            // before the exit has played.
+            document.addEventListener('click', function (e) {
+                if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+                if (!e.target || typeof e.target.closest !== 'function') return;
+
+                var back = e.target.closest('#prev_btn');
+                if (back) {
+                    var prev = stage.getAttribute('data-wz-prev');
+                    if (!prev) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    leave(-1, function () { window.location.href = prev; });
+                    return;
+                }
+
+                // Any link to another step, whether in the stage or up in the
+                // progress rail. Direction comes from the step it points at.
+                var link = e.target.closest('a[href]');
+                if (!link || link.target === '_blank') return;
+
+                var match = (link.getAttribute('href') || '').match(/\/booking\/step\/(\d+)\//);
+                if (!match) return;
+
+                var target = parseInt(match[1], 10);
+                var current = parseInt('{{ step|default:0 }}', 10) || 0;
+                if (!target || !current || target === current) return;
+
+                e.preventDefault();
+                leave(target > current ? 1 : -1, function () { window.location.href = link.href; });
+            }, true);
+
+            // Bubble phase for submits, so the button has already morphed into
+            // its spinner and a step that handles its own submit (the edit
+            // modal) keeps that submission to itself.
+            document.addEventListener('submit', function (e) {
+                var form = e.target;
+                if (e.defaultPrevented || form.dataset.wzGo) return;
+                if (!stage.contains(form)) return;
+                e.preventDefault();
+                form.dataset.wzGo = '1';
+                leave(1, function () { form.submit(); });
+            });
+        })();
+
+        // Let the rail's fill animate in from empty rather than appearing
+        // already extended. CSS does the rest.
+        (function () {
+            const rail = document.querySelector('.wz-rail');
+            if (!rail) return;
+            const target = rail.style.getPropertyValue('--wz-ratio');
+            rail.style.setProperty('--wz-ratio', '0');
             requestAnimationFrame(function () {
-                fill.style.width = Math.round((step / total) * 100) + '%';
+                requestAnimationFrame(function () {
+                    rail.style.setProperty('--wz-ratio', target);
+                });
             });
         })();
     </script>

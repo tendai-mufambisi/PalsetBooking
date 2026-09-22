@@ -1,0 +1,65 @@
+{% comment %}
+The long distance notice, in one place.
+
+Shown twice and no more: on step 1, where the route is chosen and the JS reveals
+it the moment the distance crosses the threshold, and on the payment step, where
+it changes what the customer is agreeing to pay. Repeating it on every screen in
+between was just noise.
+
+Include with hidden=1 for the step-1 copy, which starts hidden and is filled in
+by checkLongDistance() in _trip_fields_js.html.
+{% endcomment %}
+
+<div id="long_distance_alert"{% if hidden %} style="display:none;"{% endif %}
+     class="ld-notice">
+    <div class="ld-notice-title">
+        <i class="bi bi-sign-intersection-fill"></i> Long distance trip
+    </div>
+    <div class="ld-notice-body">
+        {% if hidden %}
+            Your route is <strong><span id="ld_distance_display">-</span> km</strong> &mdash; trips of
+            <strong id="ld_threshold_display">{{ ld_threshold_km|floatformat:"-1" }}</strong> km or more are
+            quoted at the long distance rate of ${{ ld_cfg.PER_KM|floatformat:2 }} per km.
+        {% else %}
+            Your route is over <strong>{{ ld_threshold_km|floatformat:"-1" }} km</strong>, so this is quoted
+            at the long distance rate of ${{ ld_cfg.PER_KM|floatformat:2 }} per km.
+        {% endif %}
+        The quote covers <strong>up to {{ ld_cfg.BASE_PASSENGERS }} passengers</strong>;
+        each extra seat is ${{ ld_cfg.EXTRA_PAX_FEE|floatformat:2 }}. For a larger group, please ask us directly:
+        <div class="ld-notice-links">
+            <a href="https://wa.me/{{ TAXI_OWNER_PHONE|cut:'+'|cut:' ' }}" target="_blank" rel="noopener"
+               style="background:#25d366;">
+                <i class="bi bi-whatsapp"></i> {{ TAXI_OWNER_PHONE }}
+            </a>
+            <a href="mailto:{{ TAXI_OWNER_EMAIL }}" style="background:var(--primary-deep);">
+                <i class="bi bi-envelope"></i> {{ TAXI_OWNER_EMAIL }}
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .ld-notice {
+        margin-bottom: 20px;
+        padding: 16px 18px;
+        background: #fffbeb;
+        border: 1px solid #fcd34d;
+        border-radius: 12px;
+        color: #78350f;
+    }
+    .ld-notice-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+    .ld-notice-title i { color: #f59e0b; margin-right: 6px; }
+    .ld-notice-body { font-size: 13px; line-height: 1.7; }
+    .ld-notice-links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .ld-notice-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+</style>

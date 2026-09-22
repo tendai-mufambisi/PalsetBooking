@@ -1,5 +1,5 @@
 {% comment %}
-Passenger, luggage and stop fields — shared by step 2 and the edit modal.
+Passenger count and luggage fields — shared by step 2 and the edit modal.
 
 The hidden inputs below are seeded from the saved step-2 data, not from a
 hardcoded default, so coming back to this step (or opening the edit modal)
@@ -12,18 +12,6 @@ shows the counts the customer actually chose.
 <input type="hidden" id="num_kids_carried" name="num_kids_carried" value="{{ step2_data.num_kids_carried|default:0 }}">
 <input type="hidden" id="luggage_count" name="luggage_count" value="{{ step2_data.luggage_count|default:0 }}">
 <input type="hidden" id="hand_luggage_count" name="hand_luggage_count" value="{{ step2_data.hand_luggage_count|default:0 }}">
-<input type="hidden" id="stops_json" name="stops_json" value="{{ step2_data.stops_json|default:'[]' }}">
-
-<div class="form-group">
-    {% comment %}
-    Each column is wrapped, so a field's helper text or error stays in its own
-    cell instead of becoming a grid item of its own.
-    {% endcomment %}
-    <div style="display:grid; grid-template-columns:110px 1fr; gap:10px; align-items:start;">
-        <div>{% include "rides/booking_wizard/partials/_field.html" with field=people_form.salutation label="Title" static=1 only %}</div>
-        <div>{% include "rides/booking_wizard/partials/_field.html" with field=people_form.passenger_full_name label="Full name" icon="bi-person" only %}</div>
-    </div>
-</div>
 
 <div class="section-block">
     <div class="section-title"><i class="bi bi-people"></i> How many are travelling?</div>
@@ -117,30 +105,4 @@ shows the counts the customer actually chose.
             </div>
         </div>
     </div>
-</div>
-
-<div class="section-block">
-    <div class="section-title"><i class="bi bi-signpost-split"></i> Stops along the way</div>
-    <p class="section-sub">
-        Need the driver to wait somewhere on the way? Add each stop and how long you expect it to take.
-        Each stop is charged separately.
-    </p>
-
-    <div style="background:var(--light-bg);border:1px solid var(--border-light);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#334155;">
-        {% for tier in stop_tiers %}
-            <span style="display:inline-block;margin:2px 10px 2px 0;">
-                Up to {{ tier.max_minutes }} min:
-                <strong>{% if tier.price > 0 %}${{ tier.price|floatformat:0 }}{% else %}Free{% endif %}</strong>
-            </span>
-        {% endfor %}
-    </div>
-
-    <div id="stops_container"></div>
-
-    <button type="button" id="add_stop_btn"
-            style="margin-top:6px;background:var(--primary-soft);color:#065f46;border:1px dashed #6ee7b7;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:600;">
-        <i class="bi bi-plus-lg"></i> Add a stop
-    </button>
-
-    <div id="stops_total" style="margin-top:12px;font-size:14px;font-weight:700;color:var(--primary-deep);display:none;"></div>
 </div>

@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from .views import (
     CreateBookingView, PaynowResultView, PaynowReturnView, PaynowPollView,
     BookingFormView, BookingSuccessView, PriceEstimateView,
-    MultiStepBookingWizardView, BookingWizardEditView,
+    MultiStepBookingWizardView, BookingWizardEditView, DevFillWizardView,
     PlacesAutocompleteView, DistanceFareCalcView,
     ChauffeurBookingWizardView, ServiceSelectorView, ManageBookingView,
 )
@@ -17,6 +17,8 @@ urlpatterns = [
     # Regular / Long Distance booking wizard
     path('booking/step/<int:step>/', MultiStepBookingWizardView.as_view(), name='booking_wizard'),
     path('booking/', MultiStepBookingWizardView.as_view(), {'step': 1}, name='booking_wizard_start'),
+    # Development only: seed the wizard session and jump to a step (404 when DEBUG is off)
+    path('booking/dev-fill/', DevFillWizardView.as_view(), name='booking_wizard_dev_fill'),
     # Saves edits made from the single Edit modal on the review step
     path('booking/edit/', BookingWizardEditView.as_view(), name='booking_wizard_edit'),
 

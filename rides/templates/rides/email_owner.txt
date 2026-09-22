@@ -27,6 +27,11 @@ Extra instructions: {{ booking.extra_instructions }}
 
 Payment status: {{ payment_status }}
 USD ${{ booking.total_amount }}
+{% if booking.payment_option == 'paylink' %}
+ACTION NEEDED - send this customer a payment link.
+Card holder: {{ booking.paylink_card_name|default:"Not given" }}
+Send the link to: {{ booking.paylink_email|default:booking.email }}
+{% endif %}
 
 
 

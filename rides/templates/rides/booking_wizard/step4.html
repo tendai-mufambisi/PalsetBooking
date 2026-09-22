@@ -1,207 +1,106 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
-{% block title %}Payment - Book a Ride{% endblock %}
-{% block step_name %}Payment{% endblock %}
+{% block title %}Check your booking - Book a Ride{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* --- The number, up front ------------------------------------------- */
-    .pay-total {
-        text-align: center;
-        padding: 26px 20px 24px;
+    .review-panel {
+        background: #fff;
         border: 1px solid var(--border-light);
         border-radius: var(--radius-lg);
-        background: var(--primary-soft);
-        margin-bottom: 14px;
+        margin-bottom: 20px;
+        overflow: hidden;
     }
-    .pay-total-label {
-        font-size: 13px;
-        font-weight: 600;
-        letter-spacing: .4px;
-        text-transform: uppercase;
-        color: var(--primary-deep);
-    }
-    .pay-total-amount {
-        font-size: 44px;
-        font-weight: 700;
-        letter-spacing: -1.5px;
-        line-height: 1.1;
-        margin: 6px 0 4px;
-        color: var(--ink);
-    }
-    .pay-total-meta { font-size: 13px; color: var(--ink-soft); }
-
-    .pay-disclosure {
-        display: block;
-        width: 100%;
-        background: none;
-        border: none;
-        font-family: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--primary-deep);
-        padding: 6px;
-        cursor: pointer;
-        text-align: center;
-    }
-    .pay-disclosure:hover { text-decoration: underline; }
-    #fare_detail { margin-top: 10px; }
-
-    /* --- Method cards ---------------------------------------------------- */
-    .pay-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+    .review-panel-head {
+        background: #fff;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         gap: 12px;
     }
-
-    .pay-card {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 16px 16px 15px;
-        margin: 0;
-        border: 2px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        background: #fff;
-        cursor: pointer;
-        transition: border-color .2s ease, background .2s ease, transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s ease;
-    }
-
-    .pay-card:hover { border-color: #6ee7b7; transform: translateY(-2px); box-shadow: var(--shadow-md); }
-    .pay-card:focus-within { box-shadow: 0 0 0 4px var(--primary-ring); }
-
-    .pay-card.is-selected {
-        border-color: var(--primary-color);
-        background: var(--primary-soft);
-    }
-
-    /* Native control stays for keyboard and assistive tech, visually replaced
-       by the card itself. */
-    .pay-radio {
-        position: absolute;
-        opacity: 0;
-        width: 1px;
-        height: 1px;
-        margin: 0;
-        pointer-events: none;
-    }
-
-    .pay-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: var(--light-bg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 19px;
-        color: var(--primary-deep);
-        margin-bottom: 4px;
-        transition: background .2s ease, color .2s ease;
-    }
-    .pay-card.is-selected .pay-icon { background: var(--primary-color); color: #fff; }
-
-    .pay-name { font-size: 15px; font-weight: 700; color: var(--ink); }
-    .pay-note { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
-
-    .pay-tick {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: var(--primary-color);
-        color: #fff;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transform: scale(.4);
-        transition: opacity .2s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
-    }
-    .pay-card.is-selected .pay-tick { opacity: 1; transform: scale(1); }
-
-    .pay-card.is-disabled {
-        opacity: .55;
-        cursor: not-allowed;
-        background: var(--light-bg);
-    }
-    .pay-card.is-disabled:hover { transform: none; box-shadow: none; border-color: var(--border-light); }
-
-    /* --- Cash or card ----------------------------------------------------
-       Asked in a dialog the moment "pay on arrival" is picked. It used to be a
-       panel under the grid, where it was easy to walk straight past. */
-    .pay-chosen {
+    .review-panel-head h4 { margin: 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+    .review-panel-head p { margin: 3px 0 0; font-size: 12px; color: var(--ink-soft); }
+    .edit-open-btn {
+        flex: 0 0 auto;
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        margin-top: 8px;
-        padding: 5px 11px;
+        background: white;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-deep);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 8px 14px;
         border-radius: 999px;
-        background: var(--primary-color);
-        color: #fff;
+        cursor: pointer;
+        transition: background .2s ease, transform .2s ease;
+    }
+    .edit-open-btn:hover { background: var(--primary-soft); transform: translateY(-1px); }
+
+    .review-section { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; }
+    .review-section:last-child { border-bottom: none; }
+    .review-section-head {
         font-size: 12px;
         font-weight: 700;
-        width: fit-content;
-        animation: control-pop .34s cubic-bezier(.34,1.56,.64,1);
-    }
-    .pay-chosen .pay-change {
-        font-weight: 600;
-        opacity: .85;
-        text-decoration: underline;
-    }
-
-    .pay-choice {
-        position: relative;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        width: 100%;
-        padding: 16px;
-        margin: 0 0 10px;
-        border: 2px solid var(--border-light);
-        border-radius: var(--radius-lg);
-        background: #fff;
-        cursor: pointer;
-        text-align: left;
-        transition: border-color .2s ease, background .2s ease, transform .15s ease;
-    }
-    .pay-choice:last-child { margin-bottom: 0; }
-    .pay-choice:hover { border-color: var(--primary-color); background: var(--primary-soft); transform: translateY(-1px); }
-    .pay-choice:focus-within { box-shadow: 0 0 0 4px var(--primary-ring); }
-    .pay-choice.is-selected { border-color: var(--primary-color); background: var(--primary-soft); }
-
-    .pay-choice-icon {
-        flex: 0 0 auto;
-        width: 46px;
-        height: 46px;
-        border-radius: 12px;
-        background: var(--primary-soft);
         color: var(--primary-deep);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        margin-bottom: 8px;
+    }
+    .review-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        font-size: 14px;
+        padding: 5px 0;
+    }
+    .review-row span { color: var(--ink-soft); flex-shrink: 0; }
+    .review-row strong { text-align: right; color: var(--ink); font-weight: 600; }
+    .review-note-text {
+        font-size: 13px;
+        background: #fff8e1;
+        padding: 4px 8px;
+        border-radius: 4px;
+        border-left: 3px solid #f59e0b;
+        max-width: 62%;
+    }
+    .review-empty { font-size: 13px; color: #94a3b8; padding: 3px 0; }
+    .review-note { margin-top: 8px; font-size: 13px; padding: 8px 12px; border-radius: 6px; }
+    .review-note-night { background: #eef2ff; border-left: 3px solid #6366f1; color: #3730a3; }
+
+    .acc { border: 1px solid var(--border-light); border-radius: var(--radius); margin-bottom: 10px; }
+    .acc.is-open { border-color: #86efac; }
+    .acc-head {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 22px;
+        gap: 10px;
+        width: 100%;
+        padding: 14px;
+        background: none;
+        border: none;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--ink);
+        text-align: left;
+        cursor: pointer;
     }
-    .pay-choice.is-selected .pay-choice-icon { background: var(--primary-color); color: #fff; }
+    .acc-head > i:first-child { color: var(--primary-color); }
+    .acc-head .acc-label { flex: 1; }
+    .acc-body { padding: 4px 14px 16px; border-top: 1px solid var(--border-light); }
+    .acc-body > .section-block:first-child { margin-top: 18px; }
 
-    .pay-choice-text { flex: 1; min-width: 0; }
-    .pay-choice-name { display: block; font-size: 16px; font-weight: 700; color: var(--ink); }
-    .pay-choice-note { display: block; font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
-    .pay-choice-go { color: #cbd5e1; font-size: 16px; }
-
-    @media (max-width: 576px) {
-        .pay-grid { grid-template-columns: 1fr; }
-        .pay-total-amount { font-size: 38px; }
-    }
+    /* Google's suggestion dropdown must clear the modal. */
+    .pac-container { z-index: 1300 !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-<h2 class="step-heading">How would you like to pay?</h2>
+<h2 class="step-heading">Check your booking</h2>
 
 {% if error_message %}
     <div class="error-message">
@@ -210,261 +109,334 @@
     </div>
 {% endif %}
 
-{% if fare_breakdown %}
-<div class="pay-total">
-    <div class="pay-total-label">Total to pay</div>
-    <div class="pay-total-amount">${{ fare_breakdown.total|floatformat:2 }}</div>
-    <div class="pay-total-meta">
-        {{ fare_breakdown.distance_km|floatformat:1 }} km &middot;
-        {{ step2_data.num_adults|default:1 }} passenger{{ step2_data.num_adults|default:1|pluralize }}
-        {% if fare_breakdown.is_return_trip %}&middot; return trip{% else %}&middot; one way{% endif %}
+{% include "rides/booking_wizard/partials/_fare_breakdown.html" %}
+
+<!-- Full Booking Review -->
+<div class="review-panel">
+    <div class="review-panel-head">
+        <div>
+            <h4><i class="bi bi-clipboard-check"></i> Check your booking</h4>
+            <p>Make sure everything below is right before you confirm.</p>
+        </div>
+        <button type="button" class="edit-open-btn" id="open_edit_modal">
+            <i class="bi bi-pencil"></i> Edit
+        </button>
+    </div>
+
+    <!-- Trip -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-geo-alt"></i> Trip</div>
+        <div class="review-row"><span>Pickup</span><strong>{{ step1_data.pickup_address }}</strong></div>
+        {% if step1_data.pickup_point_detail %}
+        <div class="review-row"><span>Exact pickup point</span><strong>{{ step1_data.pickup_point_detail }}</strong></div>
+        {% endif %}
+        <div class="review-row"><span>Dropoff</span><strong>{{ step1_data.dropoff_address }}</strong></div>
+        {% if step1_data.dropoff_point_detail %}
+        <div class="review-row"><span>Exact drop-off point</span><strong>{{ step1_data.dropoff_point_detail }}</strong></div>
+        {% endif %}
+        <div class="review-row">
+            <span>Pickup date &amp; time</span>
+            <strong>{{ step1_data.pickup_date }} at {{ step1_data.pickup_time }}</strong>
+        </div>
+        {% if step1_data.pickup_is_airport %}
+        <div class="review-row"><span>Airport pickup</span><strong>Yes</strong></div>
+        {% if step1_data.pickup_airport_terminal %}
+        <div class="review-row"><span>Collection point</span><strong>{{ step1_data.pickup_airport_terminal }}</strong></div>
+        {% endif %}
+        <div class="review-row">
+            <span>Flight</span>
+            <strong>{{ step1_data.arrival_airline }} {{ step1_data.arrival_flight_number }}</strong>
+        </div>
+        <div class="review-row">
+            <span>Arrival</span>
+            <strong>{{ step1_data.arrival_date }} at {{ step1_data.arrival_time }}</strong>
+        </div>
+        {% if step1_data.flight_departure_airport %}
+        <div class="review-row"><span>Departing from</span><strong>{{ step1_data.flight_departure_airport }}</strong></div>
+        {% endif %}
+        {% if step1_data.flight_connection_details %}
+        <div class="review-row"><span>Connection</span><strong>{{ step1_data.flight_connection_details }}</strong></div>
+        {% endif %}
+        {% if step1_data.flight_notes %}
+        <div class="review-row"><span>Flight notes</span><strong>{{ step1_data.flight_notes }}</strong></div>
+        {% endif %}
+        {% endif %}
+        {% if step1_data.is_return_trip %}
+        <div class="review-row">
+            <span>Return trip</span>
+            <strong>{{ step1_data.return_date }} at {{ step1_data.return_time }}</strong>
+        </div>
+        {% if step1_data.return_use_different_points %}
+        <div class="review-row">
+            <span>Return pickup</span>
+            <strong>{{ step1_data.return_pickup_address }}{% if step1_data.return_pickup_point_detail %} &mdash; {{ step1_data.return_pickup_point_detail }}{% endif %}</strong>
+        </div>
+        <div class="review-row">
+            <span>Return dropoff</span>
+            <strong>{{ step1_data.return_dropoff_address }}{% if step1_data.return_dropoff_point_detail %} &mdash; {{ step1_data.return_dropoff_point_detail }}{% endif %}</strong>
+        </div>
+        {% if fare_breakdown.return_distance_km %}
+        <div class="review-row">
+            <span>Return distance</span>
+            <strong>{{ fare_breakdown.return_distance_km|floatformat:1 }} km</strong>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="review-row"><span>Return route</span><strong>Same trip in reverse</strong></div>
+        {% endif %}
+        {% else %}
+        <div class="review-row"><span>Return trip</span><strong>No &mdash; one way only</strong></div>
+        {% endif %}
+        {% if fare_breakdown.is_night_pickup %}
+        <div class="review-note review-note-night">
+            <i class="bi bi-moon-stars"></i>
+            This is a night pickup ({{ night_cfg.START|time:"H:i" }}&ndash;{{ night_cfg.END|time:"H:i" }}), so a
+            ${{ fare_breakdown.night_surcharge|floatformat:2 }} surcharge applies.
+        </div>
+        {% endif %}
+        {% if fare_breakdown.is_night_return %}
+        <div class="review-note review-note-night">
+            <i class="bi bi-moon-stars"></i>
+            Your return is also a night pickup, so a further
+            ${{ fare_breakdown.return_night_surcharge|floatformat:2 }} surcharge applies.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Passengers & luggage -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-people"></i> Passengers &amp; luggage</div>
+        <div class="review-row"><span>Passengers seated</span><strong>{{ step2_data.num_adults|default:1 }}</strong></div>
+        {% if step2_data.num_kids_carried %}
+        <div class="review-row"><span>Kids carried</span><strong>{{ step2_data.num_kids_carried }}</strong></div>
+        {% endif %}
+        {% if step2_data.baby_car_seater %}
+        <div class="review-row"><span>Baby car seats</span><strong>{{ step2_data.baby_car_seater }}</strong></div>
+        {% endif %}
+        <div class="review-row"><span>Luggage bags</span><strong>{{ step2_data.luggage_count|default:0 }}</strong></div>
+        <div class="review-row"><span>Hand luggage</span><strong>{{ step2_data.hand_luggage_count|default:0 }}</strong></div>
+    </div>
+
+    <!-- Stops -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-signpost-split"></i> Stops along the way</div>
+        {% if fare_breakdown.stops %}
+            {% for stop in fare_breakdown.stops %}
+            <div class="review-row">
+                <span>{{ forloop.counter }}. {{ stop.description|default:"Stop" }}</span>
+                <strong>up to {{ stop.minutes }} min &mdash; {% if stop.fee > 0 %}${{ stop.fee|floatformat:2 }}{% else %}Free{% endif %}</strong>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="review-empty">No stops added &mdash; the driver will go straight to your dropoff.</div>
+        {% endif %}
+    </div>
+
+    <!-- Contact -->
+    <div class="review-section">
+        <div class="review-section-head"><i class="bi bi-person-check"></i> Contact details</div>
+        <div class="review-row">
+            <span>Name on the placard</span>
+            <strong>{% if step3_data.salutation %}{{ step3_data.salutation }} {% endif %}{{ step3_data.passenger_full_name }}</strong>
+        </div>
+        <div class="review-row"><span>Phone</span><strong>{{ step3_data.phone }}</strong></div>
+        <div class="review-row"><span>Email</span><strong>{{ step3_data.email }}</strong></div>
+        {% if step3_data.extra_instructions %}
+        <div class="review-row">
+            <span>Additional notes</span>
+            <strong class="review-note-text">{{ step3_data.extra_instructions }}</strong>
+        </div>
+        {% else %}
+        <div class="review-empty">No additional notes added.</div>
+        {% endif %}
     </div>
 </div>
 
 {% comment %}
-The full itemisation stays one tap away rather than on the page - this step is
-about choosing how to pay, not re-reading the quote.
+No form here - step 3 only confirms what was already captured, so moving on is
+a plain link to the payment step rather than a submission.
 {% endcomment %}
-<button type="button" class="pay-disclosure" id="fare_toggle" aria-expanded="false" aria-controls="fare_detail">
-    See how this is worked out <i class="bi bi-chevron-down"></i>
-</button>
-<div id="fare_detail" style="display:none;">
-    {% include "rides/booking_wizard/partials/_fare_breakdown.html" %}
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+    <a class="btn btn-primary btn-grow" href="{% url 'rides:booking_wizard' step=5 %}"
+       style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
+        Continue to payment <i class="bi bi-arrow-right"></i>
+    </a>
 </div>
-{% else %}
-<div class="error-message">
-    <i class="bi bi-exclamation-triangle"></i>
-    We couldn't work out the fare. Please go back and check your trip details.
-</div>
-{% endif %}
 
-<form method="POST" id="step4_form">
-    {% csrf_token %}
-
-    <div class="section-block">
-        <div class="section-title">Choose a payment method</div>
-        <p class="section-sub">Nothing is charged until you confirm.</p>
-
-        <div class="pay-grid">
-            {% comment %}
-            Cash and card-on-arrival are the same decision to the customer -
-            they pay the driver. Which one is asked below, only once this is
-            picked, because the driver still needs to know what to bring.
-            {% endcomment %}
-            <div class="pay-card" id="pay_arrival" role="button" tabindex="0"
-                 aria-haspopup="dialog" aria-controls="arrival_modal">
-                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
-                <span class="pay-icon"><i class="bi bi-wallet2"></i></span>
-                <span class="pay-name">Pay on arrival</span>
-                <span class="pay-note">Settle up with the driver when we collect you</span>
-                <span class="pay-chosen" id="arrival_chosen" hidden>
-                    <i class="bi" id="arrival_chosen_icon"></i>
-                    <span id="arrival_chosen_label"></span>
-                    <span class="pay-change">Change</span>
-                </span>
+<!-- Edit modal: one place to change anything, without losing your place -->
+<!-- ------------------------------------------------------------------ -->
+<div class="wz-modal" id="edit_modal" role="dialog" aria-modal="true" aria-labelledby="edit_modal_title">
+    <div class="wz-modal-card">
+        <div class="wz-modal-head">
+            <div>
+                <h4 id="edit_modal_title">Edit your booking</h4>
+                <p>Open a section, change what you need, then save.</p>
             </div>
-
-            <label class="pay-card" data-pay-card>
-                <input type="radio" name="payment_method" value="money_transfer" class="pay-radio">
-                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
-                <span class="pay-icon"><i class="bi bi-send"></i></span>
-                <span class="pay-name">Money transfer</span>
-                <span class="pay-note">Mukuru, Western Union, WorldRemit or EcoCash</span>
-            </label>
-
-            <label class="pay-card" data-pay-card>
-                <input type="radio" name="payment_method" value="paylink" class="pay-radio">
-                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
-                <span class="pay-icon"><i class="bi bi-link-45deg"></i></span>
-                <span class="pay-name">Paylink</span>
-                <span class="pay-note">We send a payment link to {{ TAXI_OWNER_PHONE }}</span>
-            </label>
-
-            {% if paynow_allowed %}
-            <label class="pay-card" data-pay-card>
-                <input type="radio" name="payment_method" value="PAYNOW" class="pay-radio">
-                <span class="pay-tick"><i class="bi bi-check-lg"></i></span>
-                <span class="pay-icon"><i class="bi bi-lightning-charge-fill"></i></span>
-                <span class="pay-name">Pay online</span>
-                <span class="pay-note">Card or mobile money, secured by Paynow</span>
-            </label>
-            {% else %}
-            <div class="pay-card is-disabled" title="{{ paynow_rule.NOTE }}">
-                <span class="pay-icon"><i class="bi bi-lightning-charge-fill"></i></span>
-                <span class="pay-name">Pay online</span>
-                <span class="pay-note">
-                    Available on bookings of ${{ paynow_rule.MIN_AMOUNT|floatformat:0 }} and above
-                </span>
-            </div>
-            {% endif %}
+            <button type="button" class="wz-modal-close" id="close_edit_modal" aria-label="Close">&times;</button>
         </div>
 
-        {% comment %}
-        Lives inside the form so the two radios post normally. Opened the moment
-        the card is picked, because the driver has to know whether to bring the
-        card machine and this was being missed at the foot of the page.
-        {% endcomment %}
-        <div class="wz-modal" id="arrival_modal" role="dialog" aria-modal="true"
-             aria-labelledby="arrival_modal_title">
-            <div class="wz-modal-card" style="max-width:430px;">
-                <div class="wz-modal-head">
-                    <div>
-                        <h4 id="arrival_modal_title">How will you pay the driver?</h4>
-                        <p>So the driver knows whether to bring the card machine.</p>
-                    </div>
-                    <button type="button" class="wz-modal-close" id="arrival_modal_close" aria-label="Close">&times;</button>
-                </div>
-                <div class="wz-modal-body">
-                    <label class="pay-choice" data-pay-choice>
-                        <input type="radio" name="payment_method" value="POA" class="pay-radio">
-                        <span class="pay-choice-icon"><i class="bi bi-cash-stack"></i></span>
-                        <span class="pay-choice-text">
-                            <span class="pay-choice-name">Cash</span>
-                            <span class="pay-choice-note">Pay the driver in cash on the day</span>
-                        </span>
-                        <i class="bi bi-chevron-right pay-choice-go"></i>
-                    </label>
-                    <label class="pay-choice" data-pay-choice>
-                        <input type="radio" name="payment_method" value="pos_card" class="pay-radio">
-                        <span class="pay-choice-icon"><i class="bi bi-credit-card-2-front"></i></span>
-                        <span class="pay-choice-text">
-                            <span class="pay-choice-name">Card machine</span>
-                            <span class="pay-choice-note">The driver brings a POS terminal</span>
-                        </span>
-                        <i class="bi bi-chevron-right pay-choice-go"></i>
-                    </label>
+        <form id="edit_form" class="wz-modal-body">
+            {% csrf_token %}
+
+            <div class="error-message" id="edit_errors" style="display:none;"></div>
+
+            <div class="acc" data-acc>
+                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
+                    <i class="bi bi-geo-alt"></i>
+                    <span class="acc-label">Trip &amp; schedule</span>
+                    <i class="bi bi-chevron-down" data-acc-chevron></i>
+                </button>
+                <div class="acc-body" style="display:none;">
+                    {% include "rides/booking_wizard/partials/_trip_fields.html" %}
                 </div>
             </div>
+
+            <div class="acc" data-acc>
+                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
+                    <i class="bi bi-people"></i>
+                    <span class="acc-label">Passengers &amp; luggage</span>
+                    <i class="bi bi-chevron-down" data-acc-chevron></i>
+                </button>
+                <div class="acc-body" style="display:none;">
+                    {% include "rides/booking_wizard/partials/_people_fields.html" %}
+                </div>
+            </div>
+
+            <div class="acc" data-acc>
+                <button type="button" class="acc-head" data-acc-toggle aria-expanded="false">
+                    <i class="bi bi-person-check"></i>
+                    <span class="acc-label">Contact details</span>
+                    <i class="bi bi-chevron-down" data-acc-chevron></i>
+                </button>
+                <div class="acc-body" style="display:none;">
+                    {% include "rides/booking_wizard/partials/_contact_fields.html" %}
+                </div>
+            </div>
+        </form>
+
+        <div class="wz-modal-foot">
+            <button type="button" class="btn btn-secondary" id="cancel_edit">Cancel</button>
+            <button type="submit" form="edit_form" class="btn btn-primary" id="save_edit">Save changes</button>
         </div>
-
-        {% if form.payment_method.errors %}
-            <div class="error-message" style="margin-top:12px;">
-                {% for error in form.payment_method.errors %}{{ error }}{% endfor %}
-            </div>
-        {% endif %}
     </div>
+</div>
 
-    <div class="info-box" style="margin-top:22px;">
-        <i class="bi bi-shield-check"></i>
-        Booking confirms your ride at the estimated fare above. Questions? Call {{ TAXI_OWNER_PHONE }}.
-    </div>
-
-    <div class="btn-group-wizard">
-        <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
-            <i class="bi bi-arrow-left"></i> Back
-        </button>
-        <button type="submit" class="btn btn-primary btn-grow" id="confirm_btn" disabled>
-            Confirm booking <i class="bi bi-check-lg"></i>
-        </button>
-    </div>
-</form>
+{% include "rides/booking_wizard/partials/_trip_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_people_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_stops_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_contact_fields_js.html" %}
 
 <script>
 (function () {
     'use strict';
-
-    const arrivalCard = document.getElementById('pay_arrival');
-    const arrivalModal = document.getElementById('arrival_modal');
-    const arrivalClose = document.getElementById('arrival_modal_close');
-    const chosenPill = document.getElementById('arrival_chosen');
-    const chosenIcon = document.getElementById('arrival_chosen_icon');
-    const chosenLabel = document.getElementById('arrival_chosen_label');
-    const confirmBtn = document.getElementById('confirm_btn');
-
-    const ARRIVAL = {
-        POA:      { label: 'Cash', icon: 'bi-cash-stack' },
-        pos_card: { label: 'Card machine', icon: 'bi-credit-card-2-front' },
-    };
-
-    const chosen = () => document.querySelector('input[name="payment_method"]:checked');
-
-    function paint() {
-        const picked = chosen();
-        const value = picked ? picked.value : null;
-        const arrival = value ? ARRIVAL[value] : null;
-
-        document.querySelectorAll('[data-pay-card]').forEach(function (card) {
-            card.classList.toggle('is-selected', !!picked && card.contains(picked));
-        });
-        document.querySelectorAll('[data-pay-choice]').forEach(function (choice) {
-            choice.classList.toggle('is-selected', !!picked && choice.contains(picked));
-        });
-
-        arrivalCard.classList.toggle('is-selected', !!arrival);
-        chosenPill.hidden = !arrival;
-        if (arrival) {
-            chosenIcon.className = 'bi ' + arrival.icon;
-            chosenLabel.textContent = arrival.label;
-        }
-
-        confirmBtn.disabled = !picked;
-    }
-
-    function openArrivalModal() {
-        arrivalModal.classList.add('is-open');
-        document.body.style.overflow = 'hidden';
-        const first = arrivalModal.querySelector('input[name="payment_method"]');
-        if (first) first.focus();
-    }
-
-    function closeArrivalModal() {
-        arrivalModal.classList.remove('is-open');
-        document.body.style.overflow = '';
-        arrivalCard.focus();
-    }
-
-    arrivalCard.addEventListener('click', openArrivalModal);
-    arrivalCard.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openArrivalModal();
-        }
-    });
-
-    arrivalClose.addEventListener('click', closeArrivalModal);
-    arrivalModal.addEventListener('click', function (e) {
-        if (e.target === arrivalModal) closeArrivalModal();
-    });
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && arrivalModal.classList.contains('is-open')) closeArrivalModal();
-    });
-
-    document.querySelectorAll('input[name="payment_method"]').forEach(function (radio) {
-        radio.addEventListener('change', function () {
-            paint();
-            if (ARRIVAL[radio.value]) {
-                // Picking is the whole task, so the dialog gets out of the way
-                setTimeout(closeArrivalModal, 180);
-            }
-        });
-    });
-
-    // Fare disclosure
-    const fareToggle = document.getElementById('fare_toggle');
-    const fareDetail = document.getElementById('fare_detail');
-    if (fareToggle && fareDetail) {
-        fareToggle.addEventListener('click', function () {
-            const open = fareDetail.style.display !== 'block';
-            fareDetail.style.display = open ? 'block' : 'none';
-            fareToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            fareToggle.innerHTML = open
-                ? 'Hide the breakdown <i class="bi bi-chevron-up"></i>'
-                : 'See how this is worked out <i class="bi bi-chevron-down"></i>';
-        });
-    }
 
     document.getElementById('prev_btn').addEventListener('click', function (e) {
         e.preventDefault();
         window.location.href = '{% url "rides:booking_wizard" step=3 %}';
     });
 
-    document.getElementById('step4_form').addEventListener('submit', function () {
-        window.morphButton(confirmBtn).loading();
+    /* --- Edit modal -------------------------------------------------------- */
+    const modal = document.getElementById('edit_modal');
+    const openBtn = document.getElementById('open_edit_modal');
+    const closeBtn = document.getElementById('close_edit_modal');
+    const cancelBtn = document.getElementById('cancel_edit');
+    const saveBtn = document.getElementById('save_edit');
+    const editForm = document.getElementById('edit_form');
+    const errorBox = document.getElementById('edit_errors');
+
+    function openModal() {
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
     });
 
-    // A re-render after a validation error keeps the customer's choice,
-    // shown on the card rather than by reopening the dialog on them.
-    paint();
+    // Accordion sections
+    document.querySelectorAll('[data-acc]').forEach(function (acc) {
+        const head = acc.querySelector('[data-acc-toggle]');
+        const body = acc.querySelector('.acc-body');
+        const chevron = acc.querySelector('[data-acc-chevron]');
+        head.addEventListener('click', function () {
+            const open = body.style.display !== 'block';
+            body.style.display = open ? 'block' : 'none';
+            head.setAttribute('aria-expanded', open ? 'true' : 'false');
+            acc.classList.toggle('is-open', open);
+            if (chevron) chevron.className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+        });
+    });
+
+    // The trip fields report their own validity; a trip that would be rejected
+    // server-side cannot be saved here either.
+    let tripValid = true;
+    window.onTripValidityChange = function (isValid) {
+        tripValid = isValid;
+        saveBtn.disabled = !isValid;
+        saveBtn.title = isValid ? '' : 'Some trip details still need fixing';
+    };
+
+    function showErrors(errors) {
+        const messages = [];
+        Object.keys(errors || {}).forEach(function (field) {
+            (errors[field] || []).forEach(function (msg) { messages.push(msg); });
+        });
+        errorBox.innerHTML = messages.length
+            ? '<i class="bi bi-exclamation-triangle"></i> ' + messages.join('<br>')
+            : '<i class="bi bi-exclamation-triangle"></i> We could not save those changes. Please check the fields above.';
+        errorBox.style.display = 'block';
+        errorBox.scrollIntoView({ block: 'nearest' });
+    }
+
+    editForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!tripValid) return;
+
+        errorBox.style.display = 'none';
+
+        // Saving happens in-page, so this button gets the full arc: shrink to a
+        // spinner, open into a tick once the server has taken the changes, then
+        // reload to show the new fare.
+        const morph = window.morphButton(saveBtn);
+        morph.loading();
+
+        fetch('{% url "rides:booking_wizard_edit" %}', {
+            method: 'POST',
+            body: new FormData(editForm),
+            credentials: 'same-origin',
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.ok) {
+                    morph.success();
+                    // Long enough for the tick to finish drawing. The review page
+                    // re-prices on every load, so a reload is the single source
+                    // of truth for the new fare.
+                    setTimeout(function () { window.location.reload(); }, 700);
+                    return;
+                }
+                showErrors(data.errors);
+                morph.reset();
+            })
+            .catch(function () {
+                showErrors(null);
+                morph.reset();
+            });
+    });
 })();
 </script>
 {% endblock %}

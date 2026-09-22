@@ -1,7 +1,6 @@
 {% extends "rides/booking_wizard/base_wizard.html" %}
 
 {% block title %}My trip details - Book a Ride{% endblock %}
-{% block step_name %}My trip details{% endblock %}
 
 {% block content %}
 <h2 class="step-heading">My trip details</h2>
@@ -52,6 +51,7 @@
 </div>
 
 {% include "rides/booking_wizard/partials/_trip_fields_js.html" %}
+{% include "rides/booking_wizard/partials/_stops_fields_js.html" %}
 
 <script>
     // The Next button follows the shared trip-field validation.

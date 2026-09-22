@@ -1,6 +1,21 @@
 {% comment %}
-Contact fields — shared by step 2 and the edit modal.
+Contact fields — shared by step 3 and the edit modal.
+
+The name is asked here rather than with the passenger counts because it is the
+name that identifies the booking: it goes on the placard at arrivals and on the
+confirmation.
 {% endcomment %}
+
+<div class="form-group">
+    {% comment %}
+    Each column is wrapped, so a field's helper text or error stays in its own
+    cell instead of becoming a grid item of its own.
+    {% endcomment %}
+    <div style="display:grid; grid-template-columns:110px 1fr; gap:10px; align-items:start;">
+        <div>{% include "rides/booking_wizard/partials/_field.html" with field=contact_form.salutation label="Title" static=1 only %}</div>
+        <div>{% include "rides/booking_wizard/partials/_field.html" with field=contact_form.passenger_full_name label="Name for the driver's placard" icon="bi-card-heading" hint="Write it exactly as you want it to appear — this is the name the driver holds up on the board at arrivals." only %}</div>
+    </div>
+</div>
 
 <div class="form-group">
     {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.phone label="Phone number" icon="bi-telephone" hint="The driver uses this to reach you on the day." only %}
