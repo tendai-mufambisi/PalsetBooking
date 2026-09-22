@@ -5,7 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Book a Ride - Easy Transit{% endblock %}</title>
-    <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% comment %}
+    Bootstrap's stylesheet and JS bundle used to sit here. Every class this
+    wizard uses is defined below, the modals and accordions are hand-rolled,
+    and no Bootstrap JS component is instantiated anywhere - so the pair were
+    around 240KB of render-blocking download standing between the customer and
+    the first paint on every single step. Only the icon font is genuinely used.
+
+    Warming the connection first means the icon CSS is the one small blocking
+    request left, rather than a cold DNS and TLS handshake as well.
+    {% endcomment %}
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://maps.googleapis.com">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
     <style>
         :root {
@@ -48,6 +59,19 @@
             padding: 0;
             box-sizing: border-box;
         }
+
+        /* Bootstrap's Reboot used to do this. Form controls do NOT inherit the
+           page font on their own, so without it every input, select and
+           textarea silently falls back to the browser's own UI font - which is
+           a different face again on iOS. This is the only part of those 152KB
+           that was actually holding the design together. */
+        input, button, select, textarea, optgroup {
+            font-family: inherit;
+            line-height: inherit;
+            color: inherit;
+        }
+
+        img, svg { vertical-align: middle; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -944,6 +968,52 @@
             border-color: #cbd5e1;
         }
 
+        /* The one class Bootstrap was still providing, used by the print
+           button on the confirmation step. */
+        .btn-outline-primary {
+            background: transparent;
+            color: var(--primary-deep);
+            border: 1px solid var(--primary-color);
+        }
+
+        .btn-outline-primary:hover { background: var(--primary-soft); }
+
+        /* --- Navigation progress --------------------------------------------
+           A step now leaves before the next one arrives, so between them there
+           is a stretch with nothing on screen: the exit, the round trip, and
+           the browser's own swap. This keeps something moving throughout, so
+           the gap reads as loading rather than as a broken page. The bar is
+           fixed and outside the stage, so it survives the step sliding away. */
+        .wz-loadbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            z-index: 300;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .12s ease;
+        }
+
+        [data-wz-leaving] .wz-loadbar { opacity: 1; }
+
+        .wz-loadbar::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            width: 45%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), var(--primary-deep), transparent);
+            animation: wz-loadsweep 1s cubic-bezier(.65,0,.35,1) infinite;
+        }
+
+        @keyframes wz-loadsweep {
+            from { transform: translateX(-100%); }
+            to   { transform: translateX(320%); }
+        }
+
         .btn-group-wizard {
             display: flex;
             gap: 12px;
@@ -1355,6 +1425,8 @@
     </script>
 </head>
 <body>
+    <div class="wz-loadbar" aria-hidden="true"></div>
+
     <header class="app-bar">
         <div class="app-bar-inner">
             <span class="app-brand">
@@ -1426,7 +1498,7 @@
         </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    {# Bootstrap's JS bundle was never used: no component here is instantiated. #}
     <script>
         // Floating labels: an example hint would sit where the resting label is,
         // so it is held back until the field actually has focus. Exposed so
@@ -1501,7 +1573,11 @@
             var stage = document.getElementById('wz_stage');
             if (!stage) return;
 
-            var OUT_MS = 240;   // keep in step with --wz-out
+            // Deliberately shorter than --wz-out. The request goes out while
+            // the step is still moving, so the animation plays over the network
+            // wait instead of being added in front of it, and the page is never
+            // left sitting blank at the end of its exit.
+            var OUT_MS = 150;
 
             // Index only rows that actually occupy space, so the hidden inputs
             // every step carries do not eat slots in the cascade.
