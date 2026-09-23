@@ -322,9 +322,11 @@
 (function () {
     'use strict';
 
-    document.getElementById('prev_btn').addEventListener('click', function (e) {
-        e.preventDefault();
-        window.location.href = '{% url "rides:booking_wizard" step=3 %}';
+    wzReady(function () {
+        document.getElementById('prev_btn').addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = '{% url "rides:booking_wizard" step=3 %}';
+        });
     });
 
     /* --- Edit modal -------------------------------------------------------- */

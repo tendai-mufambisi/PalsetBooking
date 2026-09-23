@@ -52,3 +52,53 @@ def test_first_arrival_has_no_direction(monkeypatch, client):
     # Step 1 still ships the resolver; it simply has nothing to compare against
     assert 'wz-last-step' in b
     assert 'wz-enter-plain' in b
+
+
+@pytest.mark.django_db
+@override_settings(ENABLE_DEV_FILL=True)
+def test_step_scripts_do_not_reach_forward_into_the_dock(monkeypatch, client):
+    """A step's inline script runs while the page is still being parsed.
+
+    The action dock is rendered after the stage, so anything the script
+    dereferences straight away has to appear before it in the document -
+    otherwise getElementById returns null and the whole script dies on the
+    spot, taking every listener registered after it with it. That is what
+    silently broke Back on steps 2-4 and left the payment dialogs stuck open.
+
+    Work deferred with wzReady() runs after parsing, so it may look forward.
+    """
+    monkeypatch.setattr('rides.services.distance.DistanceService.get_distance_km',
+                        lambda o, d, use_cache=True: 14.0)
+    client.get('/booking/dev-fill/?step=5')
+
+    def blank_out_deferred(text):
+        """Replace each wzReady(...) call with spaces, keeping every offset."""
+        out = list(text)
+        start = text.find('wzReady(')
+        while start != -1:
+            depth, i = 0, text.index('(', start)
+            while i < len(text):
+                if text[i] == '(':
+                    depth += 1
+                elif text[i] == ')':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                i += 1
+            for j in range(start, min(i + 1, len(text))):
+                out[j] = ' '
+            start = text.find('wzReady(', i + 1)
+        return ''.join(out)
+
+    # Step 6 needs a confirmed booking to render, and carries no dock script.
+    for step in (1, 2, 3, 4, 5):
+        body = client.get(reverse('rides:booking_wizard', kwargs={'step': step})).content.decode()
+        immediate = blank_out_deferred(body)
+
+        # An immediate dereference: getElementById('x') followed by a property
+        for match in re.finditer(r"getElementById\('([\w\-]+)'\)\s*\.", immediate):
+            element = body.find('id="%s"' % match.group(1))
+            assert element != -1, 'step %d references a missing id: %s' % (step, match.group(1))
+            assert element < match.start(), (
+                'step %d dereferences #%s before the parser has reached it'
+                % (step, match.group(1)))

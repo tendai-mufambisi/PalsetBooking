@@ -28,9 +28,11 @@
 {% include "rides/booking_wizard/partials/_contact_fields_js.html" %}
 
 <script>
-    document.getElementById('prev_btn').addEventListener('click', function (e) {
-        e.preventDefault();
-        window.location.href = '{% url "rides:booking_wizard" step=2 %}';
+    wzReady(function () {
+        document.getElementById('prev_btn').addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = '{% url "rides:booking_wizard" step=2 %}';
+        });
     });
 
     document.getElementById('step3_form').addEventListener('submit', function () {

@@ -435,7 +435,8 @@ about choosing how to pay, not re-reading the quote.
     const chosenPill = document.getElementById('arrival_chosen');
     const chosenIcon = document.getElementById('arrival_chosen_icon');
     const chosenLabel = document.getElementById('arrival_chosen_label');
-    const confirmBtn = document.getElementById('confirm_btn');
+    // Looked up on use, not now: the dock it lives in is parsed after this.
+    const confirmBtn = () => document.getElementById('confirm_btn');
 
     const paylinkCard = document.getElementById('pay_paylink');
     const paylinkModal = document.getElementById('paylink_modal');
@@ -478,7 +479,8 @@ about choosing how to pay, not re-reading the quote.
         paylinkPill.hidden = !onPaylink;
         if (onPaylink) paylinkPillLabel.textContent = (paylinkName.value || '').trim();
 
-        confirmBtn.disabled = !picked;
+        const btn = confirmBtn();
+        if (btn) btn.disabled = !picked;
     }
 
     function openArrivalModal() {
@@ -590,7 +592,7 @@ about choosing how to pay, not re-reading the quote.
             radio.checked = true;
             paint();
             // Picking is the whole task, so the dialog gets out of the way.
-            setTimeout(closeArrivalModal, 180);
+            closeArrivalModal();
         });
     });
 
@@ -608,13 +610,17 @@ about choosing how to pay, not re-reading the quote.
         });
     }
 
-    document.getElementById('prev_btn').addEventListener('click', function (e) {
-        e.preventDefault();
-        window.location.href = '{% url "rides:booking_wizard" step=4 %}';
+    wzReady(function () {
+        document.getElementById('prev_btn').addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = '{% url "rides:booking_wizard" step=4 %}';
+        });
+        // Painted before the dock existed, so the disabled state is set again.
+        paint();
     });
 
     document.getElementById('step5_form').addEventListener('submit', function () {
-        window.morphButton(confirmBtn).loading();
+        window.morphButton(confirmBtn()).loading();
     });
 
     // A re-render after a validation error keeps the customer's choice,

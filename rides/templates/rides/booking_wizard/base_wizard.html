@@ -1360,6 +1360,17 @@
     head and compares where we are with where we just were.
     {% endcomment %}
     <script>
+        /* The dock is parsed after the step's own scripts, so anything that
+           reaches for a button in it has to wait for the parser to get there.
+           Calls after the document is parsed simply run. */
+        window.wzReady = function (fn) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', fn);
+            } else {
+                fn();
+            }
+        };
+
         (function () {
             var KEY = 'wz-last-step';
             var step = parseInt('{{ step|default:0 }}', 10) || 0;
