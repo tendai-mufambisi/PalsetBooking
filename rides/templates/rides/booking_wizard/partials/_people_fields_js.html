@@ -36,29 +36,6 @@ Behaviour for _people_fields.html — the passenger and luggage counters.
         });
     }
 
-    // The child options are folded away by default. Open them when the booking
-    // already uses one, so editing never hides a choice the customer made.
-    function initChildrenSection() {
-        const toggle = el('children_toggle');
-        const fields = el('children_fields');
-        if (!toggle || !fields) return;
-
-        const setOpen = (open) => {
-            fields.style.display = open ? 'block' : 'none';
-            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (el('children_option')) el('children_option').classList.toggle('is-open', open);
-            if (el('children_chevron')) {
-                el('children_chevron').className = open ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
-            }
-        };
-
-        setOpen(['baby_car_seater', 'num_kids_carried'].some(
-            (field) => (parseInt((el(field) || {}).value, 10) || 0) > 0
-        ));
-
-        toggle.addEventListener('click', () => setOpen(fields.style.display !== 'block'));
-    }
-
     function step(field, delta) {
         const spec = FIELDS[field];
         if (!spec) return;
@@ -75,9 +52,6 @@ Behaviour for _people_fields.html — the passenger and luggage counters.
         btn.addEventListener('click', (e) => { e.preventDefault(); step(btn.dataset.field, -1); });
     });
 
-    window.addEventListener('load', () => {
-        initCounters();
-        initChildrenSection();
-    });
+    window.addEventListener('load', initCounters);
 })();
 </script>

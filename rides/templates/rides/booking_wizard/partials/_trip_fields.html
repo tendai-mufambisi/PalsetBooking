@@ -6,30 +6,23 @@ accompanying _trip_fields_js.html can address them directly.
 {% endcomment %}
 
 <!-- Trip type: the first and only decision on this screen until it is made -->
-<div class="trip-type-grid">
-    <button type="button" class="trip-type-card" id="trip_type_airport" data-airport="1" aria-pressed="false">
-        <span class="tt-check"><i class="bi bi-check-lg"></i></span>
-        <i class="bi bi-airplane-fill tt-icon"></i>
-        <span class="tt-title">Airport pickup</span>
-        <span class="tt-sub">We track your flight arrival</span>
-    </button>
-    <button type="button" class="trip-type-card" id="trip_type_regular" data-airport="0" aria-pressed="false">
-        <span class="tt-check"><i class="bi bi-check-lg"></i></span>
-        <i class="bi bi-geo-alt-fill tt-icon"></i>
-        <span class="tt-title">Regular pickup</span>
-        <span class="tt-sub">Home, work, anywhere in town</span>
-    </button>
+<div class="form-group">
+    <div class="ff ff-static ff-icon">
+        <select id="trip_type_select" class="form-select">
+            <option value="">Choose your trip type</option>
+            <option value="1" id="trip_type_airport">Airport pickup</option>
+            <option value="0" id="trip_type_regular">Regular pickup</option>
+        </select>
+        <i class="bi bi-car-front ff-lead"></i>
+        <label for="trip_type_select" class="ff-label">Trip type</label>
+    </div>
 </div>
 
-<!-- Backs the cards above. The form and all server-side validation still key
+<!-- Backs the select above. The form and all server-side validation still key
      off this single boolean, so nothing downstream had to change. -->
 <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;">
     {{ trip_form.pickup_is_airport }}
 </div>
-
-<p id="trip_type_prompt" class="section-sub" style="margin-top:14px;">
-    Choose one to continue &mdash; we&rsquo;ll only ask for what that trip needs.
-</p>
 
 <!-- Everything below stays out of the way until a trip type is chosen -->
 <div id="trip_fields_panel" class="reveal-panel">
@@ -37,26 +30,11 @@ accompanying _trip_fields_js.html can address them directly.
     <!-- Airport-only: which flight, and which side of the airport -->
     <div id="airport_fields" class="reveal-panel">
         <div class="form-group">
-            <label class="form-label">Which part of the airport are we collecting you from?</label>
-            <div style="display:grid;gap:8px;margin-top:6px;">
-                {% for choice in trip_form.pickup_airport_terminal %}
-                <label style="display:flex;align-items:center;gap:10px;padding:13px 14px;border:1px solid #d1d5db;border-radius:10px;cursor:pointer;margin:0;">
-                    {{ choice.tag }}
-                    <span>{{ choice.choice_label }}</span>
-                </label>
-                {% endfor %}
-            </div>
-            <small class="form-text text-muted">An airport name on its own doesn&rsquo;t tell the driver which side to wait at.</small>
-            {% if trip_form.pickup_airport_terminal.errors %}
-                <div class="error-message" style="margin-top:8px;">
-                    {% for error in trip_form.pickup_airport_terminal.errors %}{{ error }}{% endfor %}
-                </div>
-            {% endif %}
+            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.pickup_airport_terminal label="Arrivals hall" icon="bi-door-open" static=1 only %}
         </div>
 
         <div class="section-block">
             <div class="section-title"><i class="bi bi-airplane"></i> My flight details</div>
-            <p class="section-sub">So the driver is there when you land, not when you were meant to.</p>
 
             <div class="form-group">
                 {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.arrival_airline label="Airline" icon="bi-airplane" only %}
@@ -74,6 +52,12 @@ accompanying _trip_fields_js.html can address them directly.
             </div>
         </div>
     </div>
+
+    {% comment %}
+    The route sits in its own block so the address boxes are not pressed up
+    against the arrival or pickup times directly above them.
+    {% endcomment %}
+    <div class="section-block">
 
     {% comment %}
     Pickup: the locate button shares the row, so this one is laid out here
@@ -99,21 +83,24 @@ accompanying _trip_fields_js.html can address them directly.
         {% endif %}
         <input type="hidden" id="pickup_latitude" name="pickup_latitude" value="{{ step1_data.pickup_latitude|default:'' }}">
         <input type="hidden" id="pickup_longitude" name="pickup_longitude" value="{{ step1_data.pickup_longitude|default:'' }}">
-        <div style="margin-top:12px;">
-            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.pickup_point_detail label="Exact pickup point (optional)" icon="bi-signpost-split" hint="Big places have many entrances — e.g. “outside Gate 2, by the coffee kiosk”." only %}
+        {% comment %}
+        Only a regular pickup needs this: at the airport the arrivals hall above
+        already says where the driver waits.
+        {% endcomment %}
+        <div id="pickup_point_detail_row" class="reveal-panel" style="margin-top:12px;">
+            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.pickup_point_detail label="Exact pickup point (optional)" icon="bi-signpost-split" only %}
         </div>
     </div>
 
-    <!-- Dropoff, with its own exact point directly beneath it -->
+    <!-- Dropoff -->
     <div class="form-group">
         {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.dropoff_address label="Drop-off location" icon="bi-pin-map" only %}
         <input type="hidden" id="dropoff_latitude" name="dropoff_latitude" value="{{ step1_data.dropoff_latitude|default:'' }}">
         <input type="hidden" id="dropoff_longitude" name="dropoff_longitude" value="{{ step1_data.dropoff_longitude|default:'' }}">
         <input type="hidden" id="distance_km" name="distance_km" value="{{ step1_data.distance_km|default:'' }}">
-        <div style="margin-top:12px;">
-            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.dropoff_point_detail label="Exact drop-off point (optional)" icon="bi-signpost-split" hint="Where exactly to pull up — e.g. “main entrance, Block C reception”." only %}
-        </div>
     </div>
+
+    </div><!-- /route block -->
 
     <!-- Regular-only: when to collect -->
     <div id="pickup_schedule_fields" class="reveal-panel">
@@ -184,9 +171,6 @@ accompanying _trip_fields_js.html can address them directly.
                     </div>
                     <div class="form-group">
                         {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_dropoff_address label="Return drop-off location" icon="bi-pin-map" only %}
-                        <div style="margin-top:12px;">
-                            {% include "rides/booking_wizard/partials/_field.html" with field=trip_form.return_dropoff_point_detail label="Exact drop-off point (optional)" only %}
-                        </div>
                     </div>
                     <div id="return_distance_note" style="display:none;font-size:13px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:10px 12px;">
                         Return journey measured at <strong><span id="return_distance_display">-</span> km</strong> &mdash;

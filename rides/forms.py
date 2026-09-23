@@ -154,7 +154,7 @@ class Step1PickupDropoffForm(FloatingLabelMixin, forms.Form):
     pickup_airport_terminal = forms.ChoiceField(
         required=False,
         choices=(),
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'})
+        widget=forms.Select(attrs={'class': 'form-select', 'id': 'id_pickup_airport_terminal'})
     )
 
     # Extra flight context, revealed by the "add more flight details" button.
@@ -254,7 +254,11 @@ class Step1PickupDropoffForm(FloatingLabelMixin, forms.Form):
         super().__init__(*args, **kwargs)
         from .services.pricing import PricingService
         self.airport_terminals = PricingService.get_airport_terminals()
-        self.fields['pickup_airport_terminal'].choices = [(t, t) for t in self.airport_terminals]
+        # A blank first option keeps the select from reading as an answer the
+        # customer never gave — the same "choose one" state the radios had.
+        self.fields['pickup_airport_terminal'].choices = (
+            [('', 'Which arrivals hall?')] + [(t, t) for t in self.airport_terminals]
+        )
 
     @staticmethod
     def _clean_stops(raw):
@@ -406,6 +410,17 @@ class Step2PassengersLuggageForm(FloatingLabelMixin, forms.Form):
         required=False,
         widget=forms.HiddenInput()
     )
+    # Not everything that travels can be counted in bags.
+    other_luggage = forms.CharField(
+        max_length=256,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g. wheelchair, pushchair, golf clubs',
+            'id': 'other_luggage',
+        })
+    )
+
     def clean(self):
         cleaned = super().clean()
         if cleaned.get('num_adults', 0) < 1:
@@ -500,8 +515,19 @@ class Step3ContactExtraForm(FloatingLabelMixin, forms.Form):
         max_length=256,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Full name (e.g. John Doe)',
+            'placeholder': 'First name',
             'id': 'id_passenger_full_name',
+        })
+    )
+    # The name the driver holds up. Asked separately because it is not always
+    # the person's own first name.
+    display_name = forms.CharField(
+        max_length=256,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Name to display for identification',
+            'id': 'id_display_name',
         })
     )
 

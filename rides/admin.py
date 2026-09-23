@@ -29,7 +29,8 @@ class RideBookingAdmin(admin.ModelAdmin):
         ("Passengers & Luggage", {
             "fields": (
                 "num_adults", "num_kids_seated", "baby_car_seater",
-                "num_kids_carried", "luggage_count", "passengers_over_limit",
+                "num_kids_carried", "luggage_count", "hand_luggage_count",
+                "other_luggage", "passengers_over_limit",
             ),
         }),
         ("Schedule", {
@@ -43,7 +44,7 @@ class RideBookingAdmin(admin.ModelAdmin):
             "classes": ("collapse",),
         }),
         ("Passenger Identity", {
-            "fields": ("salutation", "passenger_full_name"),
+            "fields": ("salutation", "passenger_full_name", "display_name"),
         }),
         ("Contact", {
             "fields": ("phone", "email", "extra_instructions"),

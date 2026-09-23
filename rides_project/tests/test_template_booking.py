@@ -298,7 +298,8 @@ def test_five_steps_each_with_one_subject(monkeypatch, client):
 
     b1 = client.get(reverse('rides:booking_wizard', kwargs={'step': 1})).content.decode()
     assert 'Step 1 of 5' in b1
-    assert 'Book a Ride' in b1 and 'Fast, safe, and affordable' in b1   # banner on step 1
+    # The banner is gone: the rail already says where you are
+    assert 'Fast, safe, and affordable' not in b1
     assert 'app-bar' in b1 and 'position: sticky' in b1
     # The route owns its stops, and its exact points sit with the addresses
     assert 'Stops along the way' in b1 and 'add_stop_btn' in b1
@@ -312,15 +313,15 @@ def test_five_steps_each_with_one_subject(monkeypatch, client):
 
     b2 = client.get(reverse('rides:booking_wizard', kwargs={'step': 2})).content.decode()
     assert 'Step 2 of 5' in b2
-    assert 'Fast, safe, and affordable' not in b2, 'banner should be step 1 only'
     # Step 2 is passengers and luggage, nothing else
-    for stray in ('id="phone"', 'id="email"', 'placard', 'Stops along the way'):
+    for stray in ('id="phone"', 'id="email"', 'Name to display', 'Stops along the way'):
         assert stray not in b2, stray
     assert 'Long distance trip' not in b2, 'the long distance notice is step 1 + payment only'
 
     b3 = client.get(reverse('rides:booking_wizard', kwargs={'step': 3})).content.decode()
     assert 'Step 3 of 5' in b3
-    assert 'placard' in b3
+    # The name that identifies the booking is asked here, under the contact details
+    assert 'Name to display for identification' in b3
     assert 'id="phone"' in b3 and 'id="email"' in b3
 
     b4 = client.get(reverse('rides:booking_wizard', kwargs={'step': 4})).content.decode()
@@ -347,9 +348,9 @@ def test_five_steps_each_with_one_subject(monkeypatch, client):
     assert 'pay_arrival' in b5 and 'id="arrival_modal"' in b5
     assert 'wz-modal' in b5
     assert 'How will you pay the driver?' in b5
-    # Paylink asks who the link is for; money transfer says who to send to
+    # Paylink asks who the link is for; money transfer lists the agencies
     assert 'id="paylink_modal"' in b5 and 'paylink_card_name' in b5
-    assert 'Leonard Zambwi' in b5 and '263772491982' in b5
+    assert 'Ecocash, Western Union, WorldRemit, Mukuru, Remitly' in b5
     # Green page background is gone
     assert 'linear-gradient(135deg, #10b981 0%, #047857 100%)' not in b5
 
@@ -452,8 +453,8 @@ def test_nothing_preselected(monkeypatch, client):
 
     # 1. Brand new visitor
     b = client.get(reverse('rides:booking_wizard_start')).content.decode()
-    assert _chosen(b) == 'false', 'fresh form must not preselect a card'
-    assert 'Choose one to continue' in b
+    assert _chosen(b) == 'false', 'fresh form must not preselect a trip type'
+    assert 'Choose your trip type' in b
 
     # 2. Complete step 1, so the session now holds a trip
     pickup = _future()
@@ -465,7 +466,7 @@ def test_nothing_preselected(monkeypatch, client):
 
     # Going back to step 1 in-flow keeps the answer
     b = client.get(reverse('rides:booking_wizard', kwargs={'step': 1})).content.decode()
-    assert _chosen(b) == 'true', 'Back from step 2 should keep the chosen card'
+    assert _chosen(b) == 'true', 'Back from step 2 should keep the chosen trip type'
     assert 'value="Start"' in b
 
     # 3. Re-entering at /booking/ starts clean - this was the reported bug

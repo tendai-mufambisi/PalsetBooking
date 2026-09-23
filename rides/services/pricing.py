@@ -372,7 +372,7 @@ class PricingService:
         extra_adults_fee = Decimal(str(pricing_cfg.get("EXTRA_ADULT_FEE", DEFAULT_PRICING["EXTRA_ADULT_FEE"]))) * extra_adults
 
         # Baby car seater: flat $10 fee
-        baby_car_seater_fee = Decimal("10.00") * Decimal(baby_car_seater)
+        baby_car_seater_fee = cls.BABY_SEAT_FEE * Decimal(baby_car_seater)
 
         # Luggage: First N items are free
         free_luggage = int(pricing_cfg.get("FREE_LUGGAGE_ITEMS", DEFAULT_PRICING["FREE_LUGGAGE_ITEMS"]))
@@ -642,6 +642,25 @@ class PricingService:
             }
         except Exception:
             return default
+
+    BABY_SEAT_FEE = Decimal("10.00")
+
+    @classmethod
+    def get_baby_seat_fee(cls) -> float:
+        """Per-seat charge for a fitted baby car seat."""
+        return float(cls.BABY_SEAT_FEE)
+
+    @classmethod
+    def get_luggage_cfg(cls) -> dict:
+        """Free hold-luggage allowance and the per-bag charge beyond it."""
+        try:
+            from rides.models import SiteSettings
+            return SiteSettings.get_settings().get_luggage_cfg()
+        except Exception:
+            return {
+                "FREE_ITEMS": DEFAULT_PRICING["FREE_LUGGAGE_ITEMS"],
+                "FEE": DEFAULT_PRICING["LUGGAGE_FEE"],
+            }
 
     @classmethod
     def get_hand_luggage_cfg(cls) -> dict:

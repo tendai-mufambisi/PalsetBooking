@@ -31,10 +31,43 @@ shows the counts the customer actually chose.
             </div>
         </div>
 
+        <div class="count-row" data-count-row="baby_car_seater">
+            <div class="count-row-text">
+                <div class="count-row-title">
+                    <i class="bi bi-shield-check"></i> Baby car seat
+                    <span class="count-badge">${{ baby_seat_fee|floatformat:"-2" }} each</span>
+                </div>
+                <div class="count-row-sub">Fitted before we collect you</div>
+            </div>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="baby_car_seater" aria-label="One fewer baby seat">&minus;</button>
+                <input type="text" id="display_baby_car_seater" readonly value="0" aria-label="Number of baby car seats">
+                <button type="button" class="btn-increment" data-field="baby_car_seater" aria-label="One more baby seat">+</button>
+            </div>
+        </div>
+
+        <div class="count-row" data-count-row="num_kids_carried">
+            <div class="count-row-text">
+                <div class="count-row-title">
+                    <i class="bi bi-backpack"></i> Kids on lap
+                    <span class="count-badge">Free</span>
+                </div>
+                <div class="count-row-sub">Travelling on a lap, no seat needed</div>
+            </div>
+            <div class="field-counter">
+                <button type="button" class="btn-decrement" data-field="num_kids_carried" aria-label="One fewer child on a lap">&minus;</button>
+                <input type="text" id="display_num_kids_carried" readonly value="0" aria-label="Number of children on a lap">
+                <button type="button" class="btn-increment" data-field="num_kids_carried" aria-label="One more child on a lap">+</button>
+            </div>
+        </div>
+
         <div class="count-row" data-count-row="luggage_count">
             <div class="count-row-text">
                 <div class="count-row-title"><i class="bi bi-suitcase-lg"></i> Luggage bags</div>
-                <div class="count-row-sub">First 5 free, then $3 each</div>
+                <div class="count-row-sub">
+                    {% if luggage_cfg.FEE > 0 %}First {{ luggage_cfg.FREE_ITEMS }} free,
+                    then ${{ luggage_cfg.FEE|floatformat:"-2" }} each{% else %}Included in the fare{% endif %}
+                </div>
             </div>
             <div class="field-counter">
                 <button type="button" class="btn-decrement" data-field="luggage_count" aria-label="One fewer bag">&minus;</button>
@@ -48,7 +81,7 @@ shows the counts the customer actually chose.
                 <div class="count-row-title"><i class="bi bi-handbag"></i> Hand luggage</div>
                 <div class="count-row-sub">
                     Kept with you in the cabin{% if hand_luggage_cfg.FEE > 0 %} &mdash;
-                    first {{ hand_luggage_cfg.FREE_ITEMS }} free, then ${{ hand_luggage_cfg.FEE|floatformat:2 }} each{% endif %}
+                    first {{ hand_luggage_cfg.FREE_ITEMS }} free, then ${{ hand_luggage_cfg.FEE|floatformat:"-2" }} each{% endif %}
                 </div>
             </div>
             <div class="field-counter">
@@ -60,49 +93,12 @@ shows the counts the customer actually chose.
     </div>
 
     {% comment %}
-    The two child options apply to a minority of bookings, so they fold away
-    behind one line rather than sitting in the main list. Opened automatically
-    when either already has a value.
+    Anything that is not a bag and cannot be counted — a wheelchair, a pushchair,
+    golf clubs. Free text, because the list is open-ended and the driver needs to
+    know what to make room for.
     {% endcomment %}
-    <div class="option-row" id="children_option" style="margin-top:12px;">
-        <button type="button" class="option-row-head" id="children_toggle" aria-expanded="false" aria-controls="children_fields">
-            <i class="bi bi-people-fill"></i>
-            <span class="option-row-label">Travelling with young children? <span class="option-row-hint">baby seats, lap infants</span></span>
-            <i class="bi bi-chevron-down" id="children_chevron"></i>
-        </button>
-
-        <div id="children_fields" class="option-row-body" style="display:none; padding:0;">
-            <div class="count-list" style="border:none; border-radius:0;">
-                <div class="count-row" data-count-row="baby_car_seater">
-                    <div class="count-row-text">
-                        <div class="count-row-title">
-                            <i class="bi bi-shield-check"></i> Baby car seat
-                            <span class="count-badge">$10 each</span>
-                        </div>
-                        <div class="count-row-sub">Fitted before we collect you</div>
-                    </div>
-                    <div class="field-counter">
-                        <button type="button" class="btn-decrement" data-field="baby_car_seater" aria-label="One fewer baby seat">&minus;</button>
-                        <input type="text" id="display_baby_car_seater" readonly value="0" aria-label="Number of baby car seats">
-                        <button type="button" class="btn-increment" data-field="baby_car_seater" aria-label="One more baby seat">+</button>
-                    </div>
-                </div>
-
-                <div class="count-row" data-count-row="num_kids_carried">
-                    <div class="count-row-text">
-                        <div class="count-row-title">
-                            <i class="bi bi-backpack"></i> Kids carried
-                            <span class="count-badge">Free</span>
-                        </div>
-                        <div class="count-row-sub">Travelling on a lap, no seat needed</div>
-                    </div>
-                    <div class="field-counter">
-                        <button type="button" class="btn-decrement" data-field="num_kids_carried" aria-label="One fewer child carried">&minus;</button>
-                        <input type="text" id="display_num_kids_carried" readonly value="0" aria-label="Number of children carried">
-                        <button type="button" class="btn-increment" data-field="num_kids_carried" aria-label="One more child carried">+</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="form-group" style="margin-top:14px; margin-bottom:0;">
+        {% include "rides/booking_wizard/partials/_field.html" with field=people_form.other_luggage label="Other luggage (optional)" icon="bi-box-seam" only %}
     </div>
+
 </div>

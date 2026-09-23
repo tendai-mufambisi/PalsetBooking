@@ -117,7 +117,7 @@
             <!-- Luggage -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid white; padding-bottom: 8px;">
                 <span>Luggage:</span>
-                <strong>{{ booking.luggage_count }} bag(s){% if booking.hand_luggage_count %}, {{ booking.hand_luggage_count }} hand luggage{% endif %}</strong>
+                <strong>{{ booking.luggage_count }} bag(s){% if booking.hand_luggage_count %}, {{ booking.hand_luggage_count }} hand luggage{% endif %}{% if booking.other_luggage %}, {{ booking.other_luggage }}{% endif %}</strong>
             </div>
 
             <!-- Return trip -->
@@ -224,9 +224,7 @@
             </div>
             {% elif booking.payment_option == "money_transfer" %}
             <div style="margin-top: 12px; padding: 12px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; font-size: 13px; color: #065f46; line-height: 1.6;">
-                <strong>Send your transfer to:</strong><br>
-                {{ money_transfer_recipient.NAME }}<br>
-                {{ money_transfer_recipient.PHONE }}
+                Payment can be done via Ecocash, Western Union, WorldRemit, Mukuru, Remitly etc
             </div>
             {% endif %}
         </div>
@@ -243,6 +241,13 @@
             <li>We offer free waiting time at the airport for your pickup — no extra charge while we wait for you to clear arrivals.</li>
             <li>For any other pickup address, we offer up to <strong>15 minutes free</strong> waiting time. Extra waiting beyond 15 minutes will be charged at <strong>$20</strong>.</li>
             <li>You will receive a booking confirmation email shortly. Keep it handy for your reference number.</li>
+            <li>
+                Cancellation policy:
+                <ul style="margin: 4px 0 0; padding-left: 18px; line-height: 1.7;">
+                    <li>Cancellation 2 hours in advance of the scheduled pick up time is free.</li>
+                    <li>Cancellation at the pick up point attracts full payment.</li>
+                </ul>
+            </li>
         </ol>
     </div>
 
@@ -268,7 +273,14 @@
     </div>
 {% endif %}
 
-<!-- Action Buttons -->
+
+<script>
+    // Show print dialog option
+    console.log('Booking confirmed! Booking ID: {{ booking.reference|default:booking.id }}');
+</script>
+{% endblock %}
+
+{% block actions %}
 <div class="btn-group-wizard">
     <button type="button" class="btn btn-secondary" onclick="window.location.href='/'" style="flex: 1;">
         <i class="bi bi-house"></i> Home
@@ -280,9 +292,5 @@
         <i class="bi bi-printer"></i> Print
     </button>
 </div>
-
-<script>
-    // Show print dialog option
-    console.log('Booking confirmed! Booking ID: {{ booking.reference|default:booking.id }}');
-</script>
 {% endblock %}
+

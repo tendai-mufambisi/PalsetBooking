@@ -3,7 +3,6 @@
 {% block title %}My trip details - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 class="step-heading">My trip details</h2>
 
 {% if request.GET.missing_coords %}
     <div class="error-message">
@@ -23,15 +22,6 @@
     {% csrf_token %}
 
     {% include "rides/booking_wizard/partials/_trip_fields.html" with trip_form=form %}
-
-    <div class="btn-group-wizard">
-        <button type="button" class="btn btn-secondary btn-grow" onclick="window.location.href='/'">
-            <i class="bi bi-x-lg"></i> Cancel
-        </button>
-        <button type="submit" class="btn btn-primary btn-grow" id="next_btn" disabled>
-            Next <i class="bi bi-arrow-right"></i>
-        </button>
-    </div>
 
     <div class="wizard-footnote">
         <button type="button" class="link-quiet" id="start_new_btn">Start a new booking</button>
@@ -83,3 +73,19 @@
     });
 </script>
 {% endblock %}
+
+{% comment %}
+The buttons sit in the shell's dock, outside the sliding stage. `form` ties the
+submit back to the step's form, which is still up in the content block.
+{% endcomment %}
+{% block actions %}
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary btn-grow" onclick="window.location.href='/'">
+        <i class="bi bi-x-lg"></i> Cancel
+    </button>
+    <button type="submit" form="step1_form" class="btn btn-primary btn-grow" id="next_btn" disabled>
+        Next <i class="bi bi-arrow-right"></i>
+    </button>
+</div>
+{% endblock %}
+

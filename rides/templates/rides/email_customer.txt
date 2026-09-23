@@ -13,7 +13,7 @@ Passenger: {% if booking.passenger_full_name %}{{ booking.salutation }} {{ booki
 
 Payment status: {{ payment_status }}
 {% if booking.payment_option == 'paylink' %}We will email your payment link to {{ booking.paylink_email|default:booking.email }}. Nothing has been charged yet.
-{% elif booking.payment_option == 'money_transfer' %}Send your transfer to {{ money_transfer_recipient.NAME }}, {{ money_transfer_recipient.PHONE }}.
+{% elif booking.payment_option == 'money_transfer' %}Payment can be done via Ecocash, Western Union, WorldRemit, Mukuru, Remitly etc.
 {% endif %}
 We may contact you at {{ booking.phone }} if needed. Thank you for choosing us.
 Notes: {{ booking.extra_instructions|default:"N/A" }}

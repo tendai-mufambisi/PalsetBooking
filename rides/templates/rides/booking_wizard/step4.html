@@ -100,7 +100,6 @@
 {% endblock %}
 
 {% block content %}
-<h2 class="step-heading">Check your booking</h2>
 
 {% if error_message %}
     <div class="error-message">
@@ -215,6 +214,9 @@
         {% endif %}
         <div class="review-row"><span>Luggage bags</span><strong>{{ step2_data.luggage_count|default:0 }}</strong></div>
         <div class="review-row"><span>Hand luggage</span><strong>{{ step2_data.hand_luggage_count|default:0 }}</strong></div>
+        {% if step2_data.other_luggage %}
+        <div class="review-row"><span>Other luggage</span><strong>{{ step2_data.other_luggage }}</strong></div>
+        {% endif %}
     </div>
 
     <!-- Stops -->
@@ -252,19 +254,6 @@
     </div>
 </div>
 
-{% comment %}
-No form here - step 3 only confirms what was already captured, so moving on is
-a plain link to the payment step rather than a submission.
-{% endcomment %}
-<div class="btn-group-wizard">
-    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
-        <i class="bi bi-arrow-left"></i> Back
-    </button>
-    <a class="btn btn-primary btn-grow" href="{% url 'rides:booking_wizard' step=5 %}"
-       style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
-        Continue to payment <i class="bi bi-arrow-right"></i>
-    </a>
-</div>
 
 <!-- Edit modal: one place to change anything, without losing your place -->
 <!-- ------------------------------------------------------------------ -->
@@ -440,3 +429,20 @@ a plain link to the payment step rather than a submission.
 })();
 </script>
 {% endblock %}
+
+{% comment %}
+No form here - this step only confirms what was already captured, so moving on
+is a plain link to the payment step rather than a submission.
+{% endcomment %}
+{% block actions %}
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+    <a class="btn btn-primary btn-grow" href="{% url 'rides:booking_wizard' step=5 %}"
+       style="display:inline-flex; align-items:center; justify-content:center; gap:8px; text-decoration:none;">
+        Continue to payment <i class="bi bi-arrow-right"></i>
+    </a>
+</div>
+{% endblock %}
+

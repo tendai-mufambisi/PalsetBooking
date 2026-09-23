@@ -18,7 +18,7 @@ def test_transition_contract(monkeypatch, client):
     # Everything the step renders travels as one stage
     assert 'class="wz-stage"' in b
     stage = b[b.index('class="wz-stage"'):b.index('</main>')]
-    assert 'step-heading' in stage and '<form' in stage
+    assert 'id="step3_form"' in stage and '<form' in stage
 
     # Back target handed to the shell, so the exit can play first
     assert 'data-wz-prev="/booking/step/2/"' in b
