@@ -8,21 +8,29 @@ confirmation.
 
 <div class="form-group">
     {% comment %}
-    Each column is wrapped, so a field's helper text or error stays in its own
-    cell instead of becoming a grid item of its own.
+    Each column is wrapped, so a field's error stays in its own cell instead of
+    becoming a grid item of its own.
     {% endcomment %}
     <div style="display:grid; grid-template-columns:110px 1fr; gap:10px; align-items:start;">
         <div>{% include "rides/booking_wizard/partials/_field.html" with field=contact_form.salutation label="Title" static=1 only %}</div>
-        <div>{% include "rides/booking_wizard/partials/_field.html" with field=contact_form.passenger_full_name label="Name for the driver's placard" icon="bi-card-heading" hint="Write it exactly as you want it to appear — this is the name the driver holds up on the board at arrivals." only %}</div>
+        <div>{% include "rides/booking_wizard/partials/_field.html" with field=contact_form.passenger_full_name label="First name" icon="bi-person" only %}</div>
     </div>
 </div>
 
 <div class="form-group">
-    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.phone label="Phone number" icon="bi-telephone" hint="The driver uses this to reach you on the day." only %}
+    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.phone label="Phone number" icon="bi-telephone" only %}
 </div>
 
 <div class="form-group">
-    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.email label="Email address" icon="bi-envelope" hint="Your confirmation and booking-management link are sent here." only %}
+    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.email label="Email address" icon="bi-envelope" only %}
+</div>
+
+{% comment %}
+The name the driver holds up. It sits with the contact details rather than next
+to the first name, because it is not always the passenger's own name.
+{% endcomment %}
+<div class="form-group">
+    {% include "rides/booking_wizard/partials/_field.html" with field=contact_form.display_name label="Name to display for identification" icon="bi-card-heading" only %}
 </div>
 
 <div class="form-group" style="margin-bottom:0;">

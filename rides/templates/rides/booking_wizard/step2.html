@@ -3,7 +3,6 @@
 {% block title %}Passenger details & luggage - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 class="step-heading">Passenger details &amp; luggage</h2>
 
 {% if people_form.non_field_errors %}
     <div class="error-message">
@@ -21,14 +20,6 @@
         <strong>Included:</strong> the base fare covers up to 3 passengers.
     </div>
 
-    <div class="btn-group-wizard">
-        <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
-            <i class="bi bi-arrow-left"></i> Back
-        </button>
-        <button type="submit" class="btn btn-primary btn-grow" id="next_btn">
-            Next <i class="bi bi-arrow-right"></i>
-        </button>
-    </div>
 </form>
 
 {% include "rides/booking_wizard/partials/_people_fields_js.html" %}
@@ -44,3 +35,15 @@
     });
 </script>
 {% endblock %}
+
+{% block actions %}
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+    <button type="submit" form="step2_form" class="btn btn-primary btn-grow" id="next_btn">
+        Next <i class="bi bi-arrow-right"></i>
+    </button>
+</div>
+{% endblock %}
+

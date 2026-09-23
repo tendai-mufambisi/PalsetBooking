@@ -25,22 +25,20 @@ keep the customer from reaching a rejection.
     const tripPanel = el('trip_fields_panel');
     const airportFields = el('airport_fields');
     const scheduleFields = el('pickup_schedule_fields');
-    const typePrompt = el('trip_type_prompt');
-    const cards = [el('trip_type_regular'), el('trip_type_airport')].filter(Boolean);
+    const pickupPointRow = el('pickup_point_detail_row');
+    const typeSelect = el('trip_type_select');
 
     function applyTripType(chosen) {
         const isAirport = !!(airportCheckbox && airportCheckbox.checked);
 
-        cards.forEach((card) => {
-            const selected = chosen && (card.dataset.airport === '1') === isAirport;
-            card.classList.toggle('is-selected', selected);
-            card.setAttribute('aria-pressed', selected ? 'true' : 'false');
-        });
+        // The select is the control; the checkbox stays the value the form posts.
+        if (typeSelect) typeSelect.value = chosen ? (isAirport ? '1' : '0') : '';
 
-        if (typePrompt) typePrompt.style.display = chosen ? 'none' : 'block';
         if (tripPanel) tripPanel.classList.toggle('is-shown', chosen);
         if (airportFields) airportFields.classList.toggle('is-shown', chosen && isAirport);
         if (scheduleFields) scheduleFields.classList.toggle('is-shown', chosen && !isAirport);
+        // The arrivals hall already pins the meeting point for an airport run.
+        if (pickupPointRow) pickupPointRow.classList.toggle('is-shown', chosen && !isAirport);
     }
 
     // Nothing is preselected: the customer picks a card first. This is set
@@ -49,14 +47,15 @@ keep the customer from reaching a rejection.
     // half-finished attempt, would both trip.
     let typeChosen = {{ trip_type_chosen|yesno:"true,false" }};
 
-    cards.forEach((card) => {
-        card.addEventListener('click', () => {
-            if (airportCheckbox) airportCheckbox.checked = card.dataset.airport === '1';
-            typeChosen = true;
-            applyTripType(true);
+    if (typeSelect) {
+        typeSelect.addEventListener('change', () => {
+            const picked = typeSelect.value;
+            if (airportCheckbox) airportCheckbox.checked = picked === '1';
+            typeChosen = picked !== '';
+            applyTripType(typeChosen);
             validate();
         });
-    });
+    }
 
     /* --- Places autocomplete ---------------------------------------------- */
 
@@ -291,7 +290,8 @@ keep the customer from reaching a rejection.
             }
 
             // International and domestic are far apart — the driver needs to know.
-            if (airportValid && !document.querySelector('input[name="pickup_airport_terminal"]:checked')) {
+            const terminalNode = document.querySelector('[name="pickup_airport_terminal"]');
+            if (airportValid && !(terminalNode && terminalNode.value)) {
                 airportValid = false;
             }
         } else {
@@ -451,7 +451,7 @@ keep the customer from reaching a rejection.
 
         revalidateOn(['pickup_date', 'pickup_time', 'id_arrival_airline', 'id_arrival_flight_number',
                       'id_arrival_date', 'id_arrival_time', 'return_date', 'return_time']);
-        document.querySelectorAll('input[name="pickup_airport_terminal"]').forEach((node) => {
+        document.querySelectorAll('[name="pickup_airport_terminal"]').forEach((node) => {
             node.addEventListener('change', validate);
         });
 

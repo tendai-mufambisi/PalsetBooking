@@ -52,6 +52,9 @@ class RideBooking(models.Model):
     num_kids_carried = models.PositiveSmallIntegerField(default=0)
     luggage_count = models.PositiveSmallIntegerField(default=0)
     hand_luggage_count = models.PositiveSmallIntegerField(default=0)
+    # Anything that is not a countable bag — a wheelchair, a pushchair, golf
+    # clubs. Free text, so the driver knows what to make room for.
+    other_luggage = models.CharField(max_length=256, blank=True, default='')
 
     # Stops along the way: list of {"description": str, "minutes": int, "fee": float}
     stops_json = JSONField(null=True, blank=True)
@@ -108,6 +111,9 @@ class RideBooking(models.Model):
     # Passenger identity / salutation
     salutation = models.CharField(max_length=32, null=True, blank=True)
     passenger_full_name = models.CharField(max_length=256, null=True, blank=True)
+    # What goes on the driver's board. Kept apart from the first name above so a
+    # customer can be met under a company name, a surname, or a group's name.
+    display_name = models.CharField(max_length=256, blank=True, default='')
 
     # Human-friendly booking reference (e.g. ET101)
     reference = models.CharField(max_length=16, unique=True, null=True, blank=True)
@@ -473,6 +479,13 @@ class SiteSettings(models.Model):
             {"max_minutes": 60, "price": 30},
         ]
         return self.stop_tiers or default
+
+    def get_luggage_cfg(self):
+        """Free hold-luggage allowance and the per-bag charge beyond it."""
+        return {
+            "FREE_ITEMS": int(self.pricing_free_luggage or 0),
+            "FEE": float(self.pricing_luggage_fee or 0),
+        }
 
     def get_hand_luggage_cfg(self):
         return {

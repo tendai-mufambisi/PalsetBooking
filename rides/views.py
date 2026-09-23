@@ -283,6 +283,8 @@ def build_booking_message(booking, eta_minutes=None, payment_label_override: Opt
 
         if getattr(booking, 'hand_luggage_count', 0):
             parts.append(f"*Hand luggage:* {booking.hand_luggage_count} item(s)")
+        if getattr(booking, 'other_luggage', ''):
+            parts.append(f"*Other luggage:* {booking.other_luggage}")
 
         stops = getattr(booking, 'stops_json', None) or []
         if stops:
@@ -470,8 +472,6 @@ class MultiStepBookingWizardView(View):
             'prev_step': step - 1 if step > 1 else None,
             # How far along the rail the fill reaches, 0-1, as a scaleX factor
             'progress_ratio': '%.4f' % (max(step - 1, 0) / spans),
-            # The form only introduces itself once; after step 1 it is noise.
-            'show_banner': step == 1,
             'GOOGLE_MAPS_CLIENT_KEY': settings.GOOGLE_MAPS_CLIENT_KEY,
             'TAXI_OWNER_PHONE': settings.TAXI_OWNER_PHONE,
             'TAXI_OWNER_EMAIL': settings.TAXI_OWNER_EMAIL,
@@ -482,6 +482,8 @@ class MultiStepBookingWizardView(View):
             'booking_limits': PricingService.get_booking_limits(),
             'stop_tiers': PricingService.get_stop_tiers(),
             'night_cfg': PricingService.get_night_cfg(),
+            'baby_seat_fee': PricingService.get_baby_seat_fee(),
+            'luggage_cfg': PricingService.get_luggage_cfg(),
             'hand_luggage_cfg': PricingService.get_hand_luggage_cfg(),
             'return_discount_percent': PricingService.get_return_discount_percent(),
             'money_transfer_recipient': PricingService.get_money_transfer_recipient(),
@@ -660,6 +662,7 @@ class MultiStepBookingWizardView(View):
             'num_kids_carried': cleaned['num_kids_carried'],
             'luggage_count': cleaned['luggage_count'],
             'hand_luggage_count': cleaned.get('hand_luggage_count') or 0,
+            'other_luggage': cleaned.get('other_luggage') or '',
             'passengers_json': post_data.get('passengers_json') or '[]',
         }
 
@@ -672,6 +675,7 @@ class MultiStepBookingWizardView(View):
             'extra_instructions': cleaned['extra_instructions'],
             'salutation': cleaned.get('salutation'),
             'passenger_full_name': cleaned.get('passenger_full_name'),
+            'display_name': cleaned.get('display_name'),
         }
 
     def get(self, request, step=1):
@@ -937,6 +941,7 @@ class MultiStepBookingWizardView(View):
                             num_kids_carried=step2.get('num_kids_carried', 0),
                             luggage_count=step2.get('luggage_count', 0),
                             hand_luggage_count=step2.get('hand_luggage_count', 0),
+                            other_luggage=step2.get('other_luggage') or '',
                             stops_json=fare_breakdown.get('stops') or [],
                             is_return_trip=step1.get('is_return_trip', False),
                             return_date=step1.get('return_date'),
@@ -969,6 +974,7 @@ class MultiStepBookingWizardView(View):
                             flight_notes=step1.get('flight_notes') or '',
                             salutation=step3.get('salutation'),
                             passenger_full_name=step3.get('passenger_full_name'),
+                            display_name=step3.get('display_name') or '',
                             payment_option=payment_method,
                             paylink_card_name=form.cleaned_data.get('paylink_card_name') or '',
                             paylink_email=form.cleaned_data.get('paylink_email') or '',
@@ -1699,6 +1705,7 @@ class ChauffeurBookingWizardView(View):
                             approximate_end_time=step2.get('approximate_end_time'),
                             salutation=step3.get('salutation'),
                             passenger_full_name=step3.get('passenger_full_name'),
+                            display_name=step3.get('display_name') or '',
                             payment_option=payment_method,
                             price_breakdown=fare_breakdown,
                             total_amount=Decimal(str(fare_breakdown['total'])),

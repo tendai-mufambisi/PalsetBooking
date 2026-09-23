@@ -3,10 +3,6 @@
 {% block title %}Contact details - Book a Ride{% endblock %}
 
 {% block content %}
-<h2 class="step-heading">Contact details</h2>
-<p class="section-sub" style="margin-bottom:22px;">
-    Who the booking is for, and how we reach you. We only use these for this ride.
-</p>
 
 {% if contact_form.non_field_errors %}
     <div class="error-message">
@@ -27,14 +23,6 @@
     </div>
     {% endif %}
 
-    <div class="btn-group-wizard">
-        <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
-            <i class="bi bi-arrow-left"></i> Back
-        </button>
-        <button type="submit" class="btn btn-primary btn-grow" id="next_btn">
-            Next <i class="bi bi-arrow-right"></i>
-        </button>
-    </div>
 </form>
 
 {% include "rides/booking_wizard/partials/_contact_fields_js.html" %}
@@ -50,3 +38,15 @@
     });
 </script>
 {% endblock %}
+
+{% block actions %}
+<div class="btn-group-wizard">
+    <button type="button" class="btn btn-secondary btn-grow" id="prev_btn">
+        <i class="bi bi-arrow-left"></i> Back
+    </button>
+    <button type="submit" form="step3_form" class="btn btn-primary btn-grow" id="next_btn">
+        Next <i class="bi bi-arrow-right"></i>
+    </button>
+</div>
+{% endblock %}
+

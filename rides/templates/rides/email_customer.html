@@ -53,6 +53,7 @@
           {% if booking.baby_car_seater %}<tr><td>Baby car seats</td><td>{{ booking.baby_car_seater }}</td></tr>{% endif %}
           <tr><td>Luggage bags</td><td>{{ booking.luggage_count }}</td></tr>
           <tr><td>Hand luggage</td><td>{{ booking.hand_luggage_count }}</td></tr>
+          {% if booking.other_luggage %}<tr><td>Other luggage</td><td>{{ booking.other_luggage }}</td></tr>{% endif %}
           {% if booking.is_return_trip %}
           <tr><td>Return trip</td><td>{{ booking.return_date }} at {{ booking.return_time }}</td></tr>
           {% if booking.return_uses_different_points %}
@@ -91,9 +92,7 @@
           {% elif booking.payment_option == 'money_transfer' %}
           <tr><td colspan="2" style="padding:0">
             <div style="margin:6px 0;padding:12px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;color:#065f46;font-size:14px;line-height:1.7">
-              <strong>Send your transfer to:</strong><br>
-              {{ money_transfer_recipient.NAME }}<br>
-              {{ money_transfer_recipient.PHONE }}
+              Payment can be done via Ecocash, Western Union, WorldRemit, Mukuru, Remitly etc
             </div>
           </td></tr>
           {% endif %}

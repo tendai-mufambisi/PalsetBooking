@@ -141,22 +141,6 @@
             background: #fff;
         }
 
-        /* Only step 1 introduces the form; on later steps it is just noise. */
-        .page-intro { padding: 30px 0 2px; }
-
-        .page-intro h1 {
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.6px;
-            margin-bottom: 6px;
-        }
-
-        .page-intro p {
-            font-size: 15px;
-            color: var(--ink-soft);
-            margin: 0;
-        }
-
         /* --- Progress rail ---------------------------------------------------
            Labelled nodes on one track: finished steps carry a tick and can be
            reopened, the current one is ringed and haloed, and the fill sweeps
@@ -313,7 +297,7 @@
         }
 
         .wizard-body {
-            padding: 26px 0 52px;
+            padding: 26px 0 108px;
         }
 
         /* --- Step transition: spatial slide + fade ---------------------------
@@ -327,9 +311,16 @@
            Direction comes from data-wz-dir, written by the head script before
            first paint so nothing flashes in the wrong place. Transform and
            opacity only, so it all stays on the compositor. */
+        {% comment %}
+        `backwards`, not `both`: a finished animation that holds its last frame
+        leaves a transform on the stage forever, and a transformed ancestor
+        becomes the containing block for any `position: fixed` inside it. That
+        is what pinned the modals to the stage instead of the viewport, so a
+        dialog opened halfway down the page arrived halfway down the page.
+        `will-change: transform` does the same thing, so it goes too.
+        {% endcomment %}
         .wz-stage {
-            animation: wz-enter-plain var(--wz-in) var(--wz-ease) both;
-            will-change: transform, opacity;
+            animation: wz-enter-plain var(--wz-in) var(--wz-ease) backwards;
         }
 
         [data-wz-dir="1"] .wz-stage { animation-name: wz-enter-forward; }
@@ -340,7 +331,7 @@
            script; if that never runs they simply arrive together. */
         .wz-stage > *:not(form),
         .wz-stage > form > * {
-            animation: wz-rise calc(var(--wz-in) - 40ms) var(--wz-ease) both;
+            animation: wz-rise calc(var(--wz-in) - 40ms) var(--wz-ease) backwards;
             animation-delay: calc(var(--wz-lead) + var(--wz-i, 0) * var(--wz-stagger));
         }
 
@@ -386,14 +377,6 @@
         @keyframes wz-rise {
             from { opacity: 0; transform: translate3d(0, 14px, 0); }
             to   { opacity: 1; transform: translate3d(0, 0, 0); }
-        }
-
-        .step-heading {
-            font-size: 21px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            margin-bottom: 22px;
-            color: var(--ink);
         }
 
         .form-control, .form-select {
@@ -742,83 +725,6 @@
             margin: 0 0 16px;
         }
 
-        /* --- Trip type cards ----------------------------------------------- */
-        .trip-type-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-
-        .trip-type-card {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            padding: 20px 12px;
-            border: 2px solid var(--border-light);
-            border-radius: var(--radius-lg);
-            background: white;
-            cursor: pointer;
-            text-align: center;
-            font-family: inherit;
-            transition: transform .25s cubic-bezier(.22,.61,.36,1), border-color .2s ease, box-shadow .25s ease, background .2s ease;
-        }
-
-        .trip-type-card:hover {
-            border-color: #6ee7b7;
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .trip-type-card .tt-icon {
-            font-size: 26px;
-            color: var(--primary-dark);
-            line-height: 1;
-            transition: transform .25s cubic-bezier(.22,.61,.36,1);
-        }
-
-        .trip-type-card .tt-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--ink);
-        }
-
-        .trip-type-card .tt-sub {
-            font-size: 12px;
-            color: var(--ink-soft);
-            line-height: 1.4;
-        }
-
-        .trip-type-card .tt-check {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
-            font-size: 11px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transform: scale(.5);
-            transition: opacity .2s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
-        }
-
-        .trip-type-card.is-selected {
-            border-color: var(--primary-color);
-            background: var(--primary-soft);
-            box-shadow: 0 0 0 4px var(--primary-ring), var(--shadow-md);
-            transform: translateY(-2px);
-        }
-
-        .trip-type-card.is-selected .tt-icon { transform: scale(1.12); }
-        .trip-type-card.is-selected .tt-check { opacity: 1; transform: scale(1); }
-
         /* --- Reveal animation for conditional panels ------------------------ */
         .reveal-panel {
             display: none;
@@ -1021,6 +927,37 @@
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid var(--border-light);
+        }
+
+        /* --- Action dock -----------------------------------------------------
+           The step's buttons live outside the stage, so they hold still while
+           the step slides past them, and stay in reach without scrolling to
+           the end of a long form. */
+        .wz-dock {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 900;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-light);
+            box-shadow: 0 -6px 24px rgba(15, 23, 42, 0.06);
+            padding: 12px var(--gutter);
+            padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        }
+
+        .wz-dock-inner {
+            max-width: var(--measure);
+            margin: 0 auto;
+        }
+
+        /* In the dock the rule and the gap above it are the bar's own. */
+        .wz-dock .btn-group-wizard {
+            margin: 0;
+            padding: 0;
+            border-top: none;
         }
 
         /* Quiet secondary action beneath the main button row */
@@ -1230,6 +1167,18 @@
             background: var(--light-bg);
         }
 
+        /* A dialog on a phone has no width to spare: the chrome gives way so
+           the content keeps it. */
+        @media (max-width: 480px) {
+            .wz-modal { padding: 12px; align-items: flex-end; }
+            .wz-modal-card { max-height: 88vh; }
+            .wz-modal-head { padding: 14px 14px 12px; }
+            .wz-modal-head h4 { font-size: 15.5px; }
+            .wz-modal-body { padding: 12px 14px; }
+            .wz-modal-foot { padding: 12px 14px; }
+            .wz-modal-foot .btn { flex: 1 1 0; padding-left: 12px; padding-right: 12px; }
+        }
+
         /* --- Counter rows ----------------------------------------------------
            Five stacked label/counter/hint blocks ran to roughly 750px. Putting
            the stepper on the same line as its label turns each one into a
@@ -1362,11 +1311,8 @@
         @media (max-width: 576px) {
             :root { --gutter: 16px; }
 
-            .wizard-body { padding: 22px 0 44px; }
+            .wizard-body { padding: 22px 0 100px; }
 
-            .page-intro { padding: 22px 0 2px; }
-            .page-intro h1 { font-size: 23px; }
-            .page-intro p { font-size: 14px; }
 
             .app-brand { font-size: 15px; }
             .app-brand img { height: 26px; }
@@ -1378,15 +1324,23 @@
             .wz-node { width: 24px; height: 24px; font-size: 10.5px; }
             .wz-rail::before, .wz-rail::after { top: 10.5px; }
 
-            .trip-type-grid { grid-template-columns: 1fr; }
-
-            .btn-group-wizard {
-                flex-direction: column-reverse;
+            /* Back/Cancel and Next stay on one row on a phone: stacked, the
+               primary action drifts far enough down the page to be missed.
+               The padding gives way before the label does. */
+            .btn-group-wizard .btn {
+                flex: 1 1 0;
+                min-width: 0;
+                padding-left: 10px;
+                padding-right: 10px;
+                font-size: 13.5px;
             }
+        }
 
-            .btn {
-                width: 100%;
-            }
+        /* The confirmation page offers a Print button; the dock is a screen
+           control and has no business on the paper. */
+        @media print {
+            .wz-dock { display: none; }
+            .wizard-body { padding-bottom: 0; }
         }
 
         /* Honour an explicit request for less motion. */
@@ -1472,13 +1426,6 @@
     </header>
 
     <main class="wizard-container">
-        {% if show_banner %}
-        <div class="page-intro">
-            <h1>Book a Ride</h1>
-            <p>Fast, safe, and affordable</p>
-        </div>
-        {% endif %}
-
         <!-- Main Content -->
         <div class="wizard-body">
             {% comment %}
@@ -1497,6 +1444,14 @@
             </div>
         </div>
     </main>
+
+    {% comment %}
+    Steps put their Back/Next here rather than in the content block: the dock
+    is outside the stage, so navigating never moves it.
+    {% endcomment %}
+    <div class="wz-dock">
+        <div class="wz-dock-inner">{% block actions %}{% endblock %}</div>
+    </div>
 
     {# Bootstrap's JS bundle was never used: no component here is instantiated. #}
     <script>

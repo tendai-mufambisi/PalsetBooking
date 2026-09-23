@@ -33,6 +33,7 @@
         <h2>Booking #{{ booking.reference|default:booking.id }}</h2>
         <table>
           <tr><td>Passenger</td><td>{% if booking.passenger_full_name %}{{ booking.salutation }} {{ booking.passenger_full_name }}{% else %}{{ booking.num_adults }} adult(s){% endif %}</td></tr>
+          {% if booking.display_name %}<tr><td>Name on board</td><td>{{ booking.display_name }}</td></tr>{% endif %}
           <tr><td>Phone / Email</td><td>{{ booking.phone }} / {{ booking.email }}</td></tr>
           <tr><td>Pickup</td><td>{{ booking.pickup_display }}</td></tr>
           <tr><td>Pickup date/time</td><td>{% if booking.pickup_date %}{{ booking.pickup_date }}{% endif %}{% if booking.pickup_time %} {{ booking.pickup_time }}{% endif %}</td></tr>
@@ -51,6 +52,7 @@
           {% if booking.baby_car_seater %}<tr><td>Baby car seats</td><td>{{ booking.baby_car_seater }}</td></tr>{% endif %}
           <tr><td>Luggage bags</td><td>{{ booking.luggage_count }}</td></tr>
           <tr><td>Hand luggage</td><td>{{ booking.hand_luggage_count }}</td></tr>
+          {% if booking.other_luggage %}<tr><td>Other luggage</td><td>{{ booking.other_luggage }}</td></tr>{% endif %}
           {% if booking.is_return_trip %}
           <tr><td>Return trip</td><td>{{ booking.return_date }} at {{ booking.return_time }}</td></tr>
           {% if booking.return_uses_different_points %}
