@@ -515,7 +515,7 @@ class Step3ContactExtraForm(FloatingLabelMixin, forms.Form):
         max_length=256,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'First name',
+            'placeholder': 'Full name',
             'id': 'id_passenger_full_name',
         })
     )
