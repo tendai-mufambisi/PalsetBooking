@@ -268,6 +268,7 @@ class SiteSettings(models.Model):
     pricing_above_35_per_km = models.DecimalField(max_digits=6, decimal_places=2, default=1.0)
     pricing_base_passengers = models.PositiveSmallIntegerField(default=3)
     pricing_extra_adult_fee = models.DecimalField(max_digits=6, decimal_places=2, default=10.0)
+    pricing_baby_seat_fee = models.DecimalField(max_digits=6, decimal_places=2, default=10.0)
     pricing_free_luggage = models.PositiveSmallIntegerField(default=5)
     pricing_luggage_fee = models.DecimalField(max_digits=6, decimal_places=2, default=3.0)
 
@@ -419,6 +420,7 @@ class SiteSettings(models.Model):
             "ABOVE_35_PER_KM": float(self.pricing_above_35_per_km),
             "BASE_PASSENGERS": self.pricing_base_passengers,
             "EXTRA_ADULT_FEE": float(self.pricing_extra_adult_fee),
+            "BABY_SEAT_FEE": float(self.pricing_baby_seat_fee),
             "FREE_LUGGAGE_ITEMS": self.pricing_free_luggage,
             "LUGGAGE_FEE": float(self.pricing_luggage_fee),
             "HAND_LUGGAGE_FREE_ITEMS": int(self.hand_luggage_free or 0),

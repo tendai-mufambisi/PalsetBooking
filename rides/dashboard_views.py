@@ -480,6 +480,7 @@ class DashboardSettingsView(View):
                 site_settings.pricing_above_35_per_km = float(request.POST.get('pricing_above_35_per_km', 1.0))
                 site_settings.pricing_base_passengers = int(request.POST.get('pricing_base_passengers', 3))
                 site_settings.pricing_extra_adult_fee = float(request.POST.get('pricing_extra_adult_fee', 10.0))
+                site_settings.pricing_baby_seat_fee = float(request.POST.get('pricing_baby_seat_fee', 10.0))
                 site_settings.pricing_free_luggage = int(request.POST.get('pricing_free_luggage', 5))
                 site_settings.pricing_luggage_fee = float(request.POST.get('pricing_luggage_fee', 3.0))
 

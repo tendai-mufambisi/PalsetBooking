@@ -15,6 +15,7 @@ DEFAULT_PRICING = {
     "ABOVE_35_PER_KM": 1.0,
     "BASE_PASSENGERS": 3,
     "EXTRA_ADULT_FEE": 10.0,
+    "BABY_SEAT_FEE": 10.0,
     "FREE_LUGGAGE_ITEMS": 5,
     "LUGGAGE_FEE": 5.0,
     "HAND_LUGGAGE_FREE_ITEMS": 5,
@@ -369,15 +370,18 @@ class PricingService:
         # Extra adults
         base_passengers = int(pricing_cfg.get("BASE_PASSENGERS", DEFAULT_PRICING["BASE_PASSENGERS"]))
         extra_adults = max(0, num_adults - base_passengers)
-        extra_adults_fee = Decimal(str(pricing_cfg.get("EXTRA_ADULT_FEE", DEFAULT_PRICING["EXTRA_ADULT_FEE"]))) * extra_adults
+        extra_adult_unit_fee = Decimal(str(pricing_cfg.get("EXTRA_ADULT_FEE", DEFAULT_PRICING["EXTRA_ADULT_FEE"])))
+        extra_adults_fee = extra_adult_unit_fee * extra_adults
 
-        # Baby car seater: flat $10 fee
-        baby_car_seater_fee = cls.BABY_SEAT_FEE * Decimal(baby_car_seater)
+        # Baby car seater: flat per-seat fee (configured in the dashboard)
+        baby_seat_unit_fee = Decimal(str(pricing_cfg.get("BABY_SEAT_FEE", DEFAULT_PRICING["BABY_SEAT_FEE"])))
+        baby_car_seater_fee = baby_seat_unit_fee * Decimal(baby_car_seater)
 
         # Luggage: First N items are free
         free_luggage = int(pricing_cfg.get("FREE_LUGGAGE_ITEMS", DEFAULT_PRICING["FREE_LUGGAGE_ITEMS"]))
         chargeable_luggage = max(0, luggage_count - free_luggage)
-        luggage_fee = Decimal(str(pricing_cfg.get("LUGGAGE_FEE", DEFAULT_PRICING["LUGGAGE_FEE"]))) * Decimal(chargeable_luggage)
+        luggage_unit_fee = Decimal(str(pricing_cfg.get("LUGGAGE_FEE", DEFAULT_PRICING["LUGGAGE_FEE"])))
+        luggage_fee = luggage_unit_fee * Decimal(chargeable_luggage)
 
         # Hand luggage: first N items free, then a per-item fee (fee of 0 means always free)
         free_hand_luggage = int(pricing_cfg.get("HAND_LUGGAGE_FREE_ITEMS", DEFAULT_PRICING["HAND_LUGGAGE_FREE_ITEMS"]))
@@ -429,13 +433,17 @@ class PricingService:
             "effective_distance_km": float(effective_distance),
             "base_distance_price": float(cls._round(base_price)),
             "extra_adults": int(extra_adults),
+            "extra_adult_unit_fee": float(cls._round(extra_adult_unit_fee)),
             "extra_adults_fee": float(cls._round(extra_adults_fee)),
             "baby_car_seater": int(baby_car_seater),
+            "baby_seat_unit_fee": float(cls._round(baby_seat_unit_fee)),
             "baby_car_seater_fee": float(cls._round(baby_car_seater_fee)),
             "kids_carried": int(num_kids_carried),
             "luggage_count": int(luggage_count),
             "luggage_free": int(min(luggage_count, free_luggage)),
             "luggage_chargeable": int(chargeable_luggage),
+            "free_luggage_items": int(free_luggage),
+            "luggage_unit_fee": float(cls._round(luggage_unit_fee)),
             "luggage_fee": float(cls._round(luggage_fee)),
             "hand_luggage_count": int(hand_luggage_count),
             "hand_luggage_free": int(min(hand_luggage_count, free_hand_luggage)),
@@ -643,12 +651,11 @@ class PricingService:
         except Exception:
             return default
 
-    BABY_SEAT_FEE = Decimal("10.00")
-
     @classmethod
     def get_baby_seat_fee(cls) -> float:
         """Per-seat charge for a fitted baby car seat."""
-        return float(cls.BABY_SEAT_FEE)
+        cfg = _get_pricing_cfg() or {}
+        return float(cfg.get("BABY_SEAT_FEE", DEFAULT_PRICING["BABY_SEAT_FEE"]))
 
     @classmethod
     def get_luggage_cfg(cls) -> dict:

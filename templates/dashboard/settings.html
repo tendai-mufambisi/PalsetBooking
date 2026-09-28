@@ -115,6 +115,11 @@
             <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Luggage fee per extra bag ($)</label>
             <input type="number" name="pricing_luggage_fee" value="{{ site_settings.pricing_luggage_fee }}" step="0.01" min="0" class="form-ctrl">
           </div>
+          <div class="col-sm-4">
+            <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Baby car seat fee ($)</label>
+            <input type="number" name="pricing_baby_seat_fee" value="{{ site_settings.pricing_baby_seat_fee }}" step="0.01" min="0" class="form-ctrl">
+            <div style="font-size:11px;color:#9ca3af;margin-top:4px">Per baby car seat requested.</div>
+          </div>
         </div>
 
         <button type="submit" class="btn-green"><i class="bi bi-floppy-fill me-2"></i>Save Pricing</button>

@@ -83,6 +83,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
                 "pricing_above_35_per_km",
                 "pricing_base_passengers",
                 "pricing_extra_adult_fee",
+                "pricing_baby_seat_fee",
                 "pricing_free_luggage",
                 "pricing_luggage_fee",
             ),
